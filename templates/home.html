@@ -1,0 +1,24 @@
+{% extends 'navbar.html' %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+    <div class="container my-5">
+        <div class="jumbotron mx-auto">
+            <h1 class="display-4">¡Bienvenido, {{ user.first_name }}!</h1>
+            <p class="lead">¡Te damos la bienvenida a nuestra plataforma!</p>
+            <hr class="my-4">
+            <p>Aquí encontrarás una herramienta diseñada para ayudarte a mantener tus datos actualizados y acceder a
+                ellos fácilmente en cualquier momento.</p>
+            <p>Con esta aplicación, podrás:</p>
+            <ul>
+                <li>Registrar y gestionar información de manera eficiente.</li>
+                <li>Acceder a diversas funcionalidades diseñadas para optimizar tus tareas diarias.</li>
+            </ul>
+            <p>Explora las funcionalidades completas que ofrecemos, obten soporte, resulve tus dudas y descubre cómo
+                esta aplicación puede facilitar tu trabajo a través de nuestro manual de usuario.</p>
+            <p class="lead">
+                <a class="btn btn-outline-dark btn-lg" href="#" role="button">Más información</a>
+            </p>
+        </div>
+    </div>
+{% endblock %}
+
