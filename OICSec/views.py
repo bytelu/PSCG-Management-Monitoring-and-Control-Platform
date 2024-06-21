@@ -1,15 +1,16 @@
 from difflib import SequenceMatcher
 
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
 
 from OICSec.forms import AuditoriaForm
 from OICSec.funcs.PAA import extract_paa
-from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad
+from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad, \
+    ControlInterno
 
 
 def login_view(request):
@@ -69,6 +70,41 @@ def auditorias_view(request):
     }
 
     return render(request, 'auditorias.html', context)
+
+
+@login_required
+def control_interno_view(request):
+    nombres_oics = ControlInterno.objects.values_list('id_actividad_fiscalizacion__id_oic__nombre', flat=True).distinct()
+    lista_oics = Oic.objects.filter(nombre__in=nombres_oics).distinct()
+    lista_anyos = ActividadFiscalizacion.objects.values('anyo').distinct()
+
+    oic_id = request.GET.get('oic_id')
+    anyo = request.GET.get('anyo')
+
+    if oic_id and anyo:
+        controles_internos = ControlInterno.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id,
+                                                           id_actividad_fiscalizacion__anyo=anyo)
+    elif oic_id:
+        controles_internos = ControlInterno.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id)
+    elif anyo:
+        controles_internos = ControlInterno.objects.filter(id_actividad_fiscalizacion__anyo=anyo)
+    else:
+        controles_internos = ControlInterno.objects.all()
+
+    paginator = Paginator(controles_internos.order_by('id_actividad_fiscalizacion__anyo'), 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'lista_oics': lista_oics,
+        'lista_anyos': lista_anyos,
+        'oic_id': oic_id,
+        'anyo': anyo,
+        'controles_internos': controles_internos,
+    }
+
+    return render(request, 'control_interno.html', context)
 
 
 @login_required
