@@ -70,8 +70,8 @@
                     <select name="oic_id" id="oic" class="select2 form-control">
                         <option value="">Todos los OICs</option>
                         {% for oic in lista_oics %}
-                            <option value="{{ oic.id_oic }}"
-                                    {% if oic.id_oic|stringformat:"s" == oic_id %}selected{% endif %}>
+                            <option value="{{ oic.id }}"
+                                    {% if oic.id|stringformat:"s" == oic_id %}selected{% endif %}>
                                 {{ oic.nombre }}
                             </option>
                         {% endfor %}
@@ -102,9 +102,9 @@
         <ul class="list-group">
             {% for auditoria in page_obj %}
                 <li class="list-group-item">
-                    <a href="{% url 'auditoria_detalle' auditoria.id_auditoria %}" class="text-decoration-none">
-                        <span class="auditoria-number">A-{{ auditoria.numero }}/{{ auditoria.anyo }}</span>
-                        | {{ auditoria.id_oic }}
+                    <a href="{% url 'auditoria_detalle' auditoria.id %}" class="text_decoration_none">
+                        <span class="auditoria-number">A-{{ auditoria.numero }}/{{ auditoria.id_actividad_fiscalizacion.anyo }}</span>
+                        | {{ auditoria.id_actividad_fiscalizacion.id_oic }}
                     </a>
                 </li>
             {% endfor %}
@@ -124,9 +124,6 @@
                     </li>
                     <li class="page-item">
                         <a class="page-link" href="?page=
-
-
-
                                 {{ page_obj.previous_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Previous">
                             <span aria-hidden="true">&laquo;</span>
