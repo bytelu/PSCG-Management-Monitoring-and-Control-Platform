@@ -7,9 +7,7 @@
             <a href="{% url 'auditorias' %}" class="btn btn-outline-dark">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            
         </div>
-
     </div>
     {% if result %}
         <div class="alert alert-success mt-3" role="alert">
@@ -17,7 +15,7 @@
         </div>
     {% endif %}
     {% if error %}
-        <div class="alert alert-success mt-3" role="alert">
+        <div class="alert alert-danger mt-3" role="alert">
             <strong>Ha surgido un error con el guardado de los datos. | {{ error }}</strong>
         </div>
     {% endif %}
@@ -57,6 +55,4 @@
             </div>
         </div>
     </form>
-
-
 {% endblock %}
