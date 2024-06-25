@@ -2,7 +2,7 @@ from django.urls import path
 
 
 from .views import login_view, home_view, auditorias_view, minutas_view, perfil_view, logout_view, upload_paa_view, \
-    auditoria_detalle_view, control_interno_view
+    auditoria_detalle_view, control_interno_view, upload_paci_view
 
 urlpatterns = [
     path("", login_view, name="login"),
@@ -13,5 +13,6 @@ urlpatterns = [
     path("auditorias/PAA/", upload_paa_view, name="uploadPaa"),
     path("auditorias/<int:auditoria_id>/", auditoria_detalle_view, name="auditoria_detalle"),
     path("controlesinternos/", control_interno_view, name="controlInterno"),
+    path("controlesInternos/PACI/", upload_paci_view, name="uploadPaci"),
     path("minutas/", minutas_view, name="minutas"),
 ]
