@@ -9,8 +9,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from OICSec.forms import AuditoriaForm
 from OICSec.funcs.PAA import extract_paa
+from OICSec.funcs.PACI import extract_paci
 from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad, \
-    ControlInterno
+    ControlInterno, TipoRevision, ProgramaRevision
 
 
 def login_view(request):
@@ -198,6 +199,80 @@ def upload_paa_view(request):
 
     if request.method == 'GET':
         return render(request, 'upload_paa.html')
+
+
+@login_required
+def upload_paci_view(request):
+    lista_oics = Oic.objects.all()
+    tipos_revision = TipoRevision.objects.all()
+    programa_revision = ProgramaRevision.objects.all()
+
+    similar_oic = None
+
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES.get('excel_file')
+        try:
+            data = extract_paci(excel_file)
+            if data is None:
+                return render(request, 'upload_paci.html', {
+                    'excel_processing_error': 'Error al procesar el archivo Excel | Nombre de error: None-results | '
+                                              'Consulte manual de usuario para mas información.',
+                    'lista_oics': lista_oics, 'similar_oic': similar_oic})
+            else:
+                for excel_processing_result in data:
+                    max_similarity = 0
+                    for oic in lista_oics:
+                        similarity = SequenceMatcher(None, excel_processing_result[0], oic.nombre).ratio()
+                        if similarity > max_similarity:
+                            max_similarity = similarity
+                            similar_oic = oic
+
+                    oic_selected = similar_oic if similar_oic else None
+                    for control_data in excel_processing_result[1]:
+                        # Se verifica que hay actividad de fiscalización
+                        actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
+                            anyo=control_data['Año'],
+                            trimestre=control_data['Trimestre'],
+                            id_oic=oic_selected
+                        ).first()
+                        # Si no existe, se crea una actividad de fiscalización
+                        if not actividad_fiscalizacion:
+                            actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+                                anyo=control_data['Año'],
+                                trimestre=control_data['Trimestre'],
+                                id_oic=oic_selected
+                            )
+
+                        # Se crea un control interno nuevo con la actividad de fiscalización
+                        tipo_revision_obj = None
+                        programa_revision_obj = None
+                        if control_data["tipo_revision"]:
+                            tipo_revision_obj = TipoRevision.objects.get(id=control_data["tipo_revision"])
+                        if control_data["programa_revision"]:
+                            programa_revision_obj = ProgramaRevision.objects.get(id=control_data["programa_revision"])
+
+                        ControlInterno.objects.create(
+                            numero=control_data["Numero"],
+                            area=control_data["Area"],
+                            denominacion=control_data["Denominacion"],
+                            objetivo=control_data["Objetivo"],
+                            id_actividad_fiscalizacion=actividad_fiscalizacion,
+                            id_tipo_revision=tipo_revision_obj,
+                            id_programa_revision=programa_revision_obj
+                        )
+
+                return render(request, 'upload_paci.html',
+                              {'excel_processing_result': data,
+                               'lista_oics': lista_oics,
+                               'similar_oic': similar_oic})
+        except Exception as e:
+            excel_processing_error = f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte manual de usuario para mas información'
+            return render(request, 'upload_paa.html',
+                          {'excel_processing_error': excel_processing_error, 'lista_oics': lista_oics,
+                           'similar_oic': similar_oic})
+
+    if request.method == 'GET':
+        return render(request, 'upload_paci.html')
 
 
 @login_required

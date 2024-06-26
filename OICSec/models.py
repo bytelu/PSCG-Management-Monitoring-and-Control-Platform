@@ -138,11 +138,13 @@ class ConceptoMinuta(models.Model):
 
 class ControlInterno(models.Model):
     id = models.AutoField(primary_key=True)
-    unidad = models.CharField(max_length=500, blank=True, null=True)
+    area = models.CharField(max_length=500, blank=True, null=True)
     numero = models.IntegerField(blank=True, null=True)
-    rubro = models.CharField(max_length=500, blank=True, null=True)
+    denominacion = models.CharField(max_length=200, blank=True, null=True)
+    objetivo = models.CharField(max_length=2000, blank=True, null=True)
     ejercicio = models.CharField(max_length=4, blank=True, null=True)
     id_tipo_revision = models.ForeignKey('TipoRevision', on_delete=models.CASCADE, blank=True, null=True)
+    id_programa_revision = models.ForeignKey('ProgramaRevision', on_delete=models.CASCADE, blank=True, null=True)
     id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True,
                                                    null=True)
 
@@ -283,6 +285,15 @@ class Programacion(models.Model):
         db_table = 'programacion'
 
 
+class ProgramaRevision(models.Model):
+    id = models.AutoField(primary_key=True)
+    clave = models.CharField(max_length=2, blank=True, null=True)
+    tipo = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        db_table = 'programa_revision'
+
+
 class Temporalidad(models.Model):
     id = models.AutoField(primary_key=True)
     clave = models.IntegerField(blank=True, null=True)
@@ -317,7 +328,7 @@ class TipoMinuta(models.Model):
 
 class TipoRevision(models.Model):
     id = models.AutoField(primary_key=True)
-    clave = models.IntegerField(blank=True, null=True)
+    clave = models.CharField(max_length=2, blank=True, null=True)
     tipo = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
