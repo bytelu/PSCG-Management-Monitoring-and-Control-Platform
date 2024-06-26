@@ -186,11 +186,18 @@ class EstatusObservacion(models.Model):
 
 class Intervencion(models.Model):
     id = models.AutoField(primary_key=True)
-    unidad = models.CharField(max_length=500, blank=True, null=True)
+    unidad = models.TextField(max_length=500, blank=True, null=True)
     numero = models.IntegerField(blank=True, null=True)
-    denominacion = models.CharField(max_length=500, blank=True, null=True)
-    rubro = models.CharField(max_length=500, blank=True, null=True)
+    denominacion = models.TextField(max_length=5000, blank=True, null=True)
+    inicio = models.DateField(blank=True, null=True)
+    termino = models.DateField(blank=True, null=True)
+    objetivo = models.TextField(max_length=5000, blank=True, null=True)
+    alcance = models.TextField(max_length=5000, blank=True, null=True)
+    antecedentes = models.TextField(max_length=5000, blank=True, null=True)
     ejercicio = models.CharField(max_length=4, blank=True, null=True)
+    fuerza_supervision = models.IntegerField(blank=True, null=True)
+    fuerza_responsables = models.IntegerField(blank=True, null=True)
+    fuerza_auditores = models.IntegerField(blank=True, null=True)
     id_tipo_intervencion = models.ForeignKey('TipoIntervencion', on_delete=models.CASCADE, blank=True, null=True)
     id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True)
 
