@@ -75,7 +75,8 @@ def auditorias_view(request):
 
 @login_required
 def control_interno_view(request):
-    nombres_oics = ControlInterno.objects.values_list('id_actividad_fiscalizacion__id_oic__nombre', flat=True).distinct()
+    nombres_oics = ControlInterno.objects.values_list('id_actividad_fiscalizacion__id_oic__nombre',
+                                                      flat=True).distinct()
     lista_oics = Oic.objects.filter(nombre__in=nombres_oics).distinct()
     lista_anyos = ActividadFiscalizacion.objects.values('anyo').distinct()
 
@@ -141,8 +142,7 @@ def control_interno_detalle_view(request, control_interno_id):
                           {'form': form, 'error': form.errors, 'control_interno_id': control_interno_id})
     else:
         form = ControlForm(instance=control_interno)
-        return render(request, 'control_detalle.html', {'form': form, 'control_interno_id':control_interno_id})
-
+        return render(request, 'control_detalle.html', {'form': form, 'control_interno_id': control_interno_id})
 
 
 def upload_paa_view(request):
@@ -153,61 +153,62 @@ def upload_paa_view(request):
     if request.method == 'POST' and request.FILES.get('excel_file'):
         excel_file = request.FILES.get('excel_file')
         try:
-            excel_processing_result = extract_paa(excel_file)
-            if excel_processing_result is None:
+            data = extract_paa(excel_file)
+            if data is None:
                 return render(request, 'upload_paa.html', {
                     'excel_processing_error': 'Error al procesar el archivo Excel | Nombre de error: None-results | '
                                               'Consulte manual de usuario para mas información.',
                     'lista_oics': lista_oics, 'similar_oic': similar_oic})
             else:
-                max_similarity = 0
-                for oic in lista_oics:
-                    similarity = SequenceMatcher(None, excel_processing_result[0], oic.nombre).ratio()
-                    if similarity > max_similarity:
-                        max_similarity = similarity
-                        similar_oic = oic
+                for excel_processing_result in data:
+                    max_similarity = 0
+                    for oic in lista_oics:
+                        similarity = SequenceMatcher(None, excel_processing_result[0], oic.nombre).ratio()
+                        if similarity > max_similarity:
+                            max_similarity = similarity
+                            similar_oic = oic
 
-                oic_selected = similar_oic if similar_oic else None
-                for auditoria_data in excel_processing_result[1]:
-                    # Verificar si ya existe una auditoría con los mismos atributos
+                    oic_selected = similar_oic if similar_oic else None
+                    for auditoria_data in excel_processing_result[1]:
+                        # Verificar si ya existe una auditoría con los mismos atributos
 
-                    # Se verifica que hay actividad de fiscalización
-                    actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
-                        anyo=auditoria_data['Año'],
-                        trimestre=auditoria_data['Trimestre'],
-                        id_oic=oic_selected
-                    ).first()
-                    # Si no existe, se crea una actividad de fiscalización
-                    if not actividad_fiscalizacion:
-                        actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+                        # Se verifica que hay actividad de fiscalización
+                        actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
                             anyo=auditoria_data['Año'],
                             trimestre=auditoria_data['Trimestre'],
                             id_oic=oic_selected
+                        ).first()
+                        # Si no existe, se crea una actividad de fiscalización
+                        if not actividad_fiscalizacion:
+                            actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+                                anyo=auditoria_data['Año'],
+                                trimestre=auditoria_data['Trimestre'],
+                                id_oic=oic_selected
+                            )
+
+                        # Se crea una auditoria nueva con la actividad de fiscalización
+                        materia_obj = Materia.objects.get(id=auditoria_data["Materia"])
+                        programacion_obj = Programacion.objects.get(id=auditoria_data["Programacion"])
+                        enfoque_obj = Enfoque.objects.get(id=auditoria_data["Enfoque"])
+                        temporalidad_obj = Temporalidad.objects.get(id=auditoria_data["Temporalidad"])
+
+                        Auditoria.objects.create(
+                            denominacion=auditoria_data["Denominacion"],
+                            numero=auditoria_data["Numero"],
+                            objetivo=auditoria_data["Objetivo"],
+                            alcance=auditoria_data["Alcance"],
+                            ejercicio=auditoria_data["Ejercicio"],
+                            unidad=auditoria_data["Unidad"],
+                            id_actividad_fiscalizacion=actividad_fiscalizacion,
+                            id_materia=materia_obj,
+                            id_programacion=programacion_obj,
+                            id_enfoque=enfoque_obj,
+                            id_temporalidad=temporalidad_obj,
+
                         )
 
-                    # Se crea una auditoria nueva con la actividad de fiscalización
-                    materia_obj = Materia.objects.get(id=auditoria_data["Materia"])
-                    programacion_obj = Programacion.objects.get(id=auditoria_data["Programacion"])
-                    enfoque_obj = Enfoque.objects.get(id=auditoria_data["Enfoque"])
-                    temporalidad_obj = Temporalidad.objects.get(id=auditoria_data["Temporalidad"])
-
-                    Auditoria.objects.create(
-                        denominacion=auditoria_data["Denominacion"],
-                        numero=auditoria_data["Numero"],
-                        objetivo=auditoria_data["Objetivo"],
-                        alcance=auditoria_data["Alcance"],
-                        ejercicio=auditoria_data["Ejercicio"],
-                        unidad=auditoria_data["Unidad"],
-                        id_actividad_fiscalizacion=actividad_fiscalizacion,
-                        id_materia=materia_obj,
-                        id_programacion=programacion_obj,
-                        id_enfoque=enfoque_obj,
-                        id_temporalidad=temporalidad_obj,
-
-                    )
-
                 return render(request, 'upload_paa.html',
-                              {'excel_processing_result': excel_processing_result,
+                              {'excel_processing_result': data,
                                'lista_oics': lista_oics,
                                'similar_oic': similar_oic})
         except Exception as e:
@@ -223,8 +224,6 @@ def upload_paa_view(request):
 @login_required
 def upload_paci_view(request):
     lista_oics = Oic.objects.all()
-    tipos_revision = TipoRevision.objects.all()
-    programa_revision = ProgramaRevision.objects.all()
 
     similar_oic = None
 
