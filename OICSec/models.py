@@ -293,6 +293,9 @@ class ProgramaRevision(models.Model):
     class Meta:
         db_table = 'programa_revision'
 
+    def __str__(self):
+        return str(self.tipo)
+
 
 class Temporalidad(models.Model):
     id = models.AutoField(primary_key=True)
@@ -333,3 +336,6 @@ class TipoRevision(models.Model):
 
     class Meta:
         db_table = 'tipo_revision'
+
+    def __str__(self):
+        return str(self.tipo)

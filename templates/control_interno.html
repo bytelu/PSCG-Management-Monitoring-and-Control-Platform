@@ -20,9 +20,9 @@
             color: #000000; /* Cambia el color al azul al pasar el ratón */
         }
 
-        .auditoria-number {
+        .control-number {
             font-size: 1.2em;
-            color: #28a745; /* Verde para el número de auditoría */
+            color: #28a745; /* Verde para el número de control */
         }
 
         .pagination .page-link {
@@ -102,8 +102,8 @@
         <ul class="list-group">
             {% for control in page_obj %}
                 <li class="list-group-item">
-                    <a href="{% url 'auditoria_detalle' control.id %}" class="text_decoration_none">
-                        <span class="auditoria-number">CI-{{ control.numero }}/{{ control.id_actividad_fiscalizacion.anyo }}</span>
+                    <a href="{% url 'control_detalle' control.id %}" class="text_decoration_none">
+                        <span class="control-number">CI-{{ control.numero }}/{{ control.id_actividad_fiscalizacion.anyo }}</span>
                         | {{ control.id_actividad_fiscalizacion.id_oic }}
                     </a>
                 </li>
