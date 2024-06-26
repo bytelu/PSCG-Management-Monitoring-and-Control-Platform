@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 
-from OICSec.forms import AuditoriaForm
+from OICSec.forms import AuditoriaForm, ControlForm
 from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
 from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad, \
@@ -124,6 +124,25 @@ def auditoria_detalle_view(request, auditoria_id):
     else:
         form = AuditoriaForm(instance=auditoria)
         return render(request, 'auditoria_detalle.html', {'form': form, 'auditoria_id': auditoria_id})
+
+
+@login_required
+def control_interno_detalle_view(request, control_interno_id):
+    control_interno = get_object_or_404(ControlInterno, pk=control_interno_id)
+
+    if request.method == 'POST':
+        form = ControlForm(request.POST, instance=control_interno)
+        if form.is_valid():
+            form.save()
+            return render(request, 'control_detalle.html',
+                          {'form': form, 'result': 'result', 'control_interno_id': control_interno_id})
+        else:
+            return render(request, 'control_detalle.html',
+                          {'form': form, 'error': form.errors, 'control_interno_id': control_interno_id})
+    else:
+        form = ControlForm(instance=control_interno)
+        return render(request, 'control_detalle.html', {'form': form, 'control_interno_id':control_interno_id})
+
 
 
 def upload_paa_view(request):
