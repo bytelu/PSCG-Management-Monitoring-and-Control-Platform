@@ -103,7 +103,7 @@
             {% for control in page_obj %}
                 <li class="list-group-item">
                     <a href="{% url 'auditoria_detalle' control.id %}" class="text_decoration_none">
-                        <span class="auditoria-number">CI -{{ control.numero }}/{{ control.id_actividad_fiscalizacion.anyo }}</span>
+                        <span class="auditoria-number">CI-{{ control.numero }}/{{ control.id_actividad_fiscalizacion.anyo }}</span>
                         | {{ control.id_actividad_fiscalizacion.id_oic }}
                     </a>
                 </li>
