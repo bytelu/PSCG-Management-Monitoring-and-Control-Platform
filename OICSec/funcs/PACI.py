@@ -1,3 +1,4 @@
+import logging
 import re
 from difflib import SequenceMatcher
 
@@ -5,7 +6,31 @@ import pandas as pd
 from fuzzywuzzy import process
 
 from OICSec.models import Oic, TipoRevision, ProgramaRevision
-from PAA import clean_text, preprocess_dataframe
+from PAA import preprocess_dataframe
+
+
+def get_object_id_by_text(text, model):
+    """
+    Busca un objeto en el modelo basado en el texto proporcionado y retorna su ID.
+
+    Args:
+        text (str): Texto a buscar.
+        model (Model): Clase del modelo de Django.
+
+    Returns:
+        int or None: ID del objeto encontrado o None si no se encuentra.
+    """
+    try:
+        match = process.extractOne(text, model.objects.values_list('tipo', flat=True))
+        if match:
+            obj = model.objects.get(tipo=match[0])
+            return obj.pk
+    except model.DoesNotExist:
+        return None
+    except Exception as e:
+        logging.error(f"Error en búsqueda de {model._meta.verbose_name}: {e}")
+
+    return None
 
 
 def extract_number_and_year(number):
@@ -28,6 +53,15 @@ def extract_number_and_year(number):
 
 
 def extract_programa_tipo(text):
+    """
+    Extrae el tipo y programa de revisión basado en el texto proporcionado.
+
+    Args:
+        text (str): Cadena que contiene el tipo y programa de revisión.
+
+    Returns:
+        dict: Diccionario con las claves 'tipo_revision' y 'programa_revision' y sus respectivos IDs.
+    """
     if "-" in text:
         tipo_revision_text, programa_revision_text = map(str.strip, text.split("-", 1))
     else:
@@ -39,34 +73,11 @@ def extract_programa_tipo(text):
         "programa_revision": None
     }
 
-    # Buscar coincidencia para tipo de revisión
     if tipo_revision_text:
-        try:
-            match_tipo = process.extractOne(tipo_revision_text, TipoRevision.objects.values_list('tipo', flat=True))
-            if match_tipo:
-                tipo_revision_obj = TipoRevision.objects.get(tipo=match_tipo[0])
-                result["tipo_revision"] = tipo_revision_obj.pk
-        except TipoRevision.DoesNotExist:
-            result["tipo_revision"] = None
-        except Exception as e:
-            # Manejar excepciones específicas aquí
-            result["tipo_revision"] = None
-            # logging.error(f"Error en búsqueda de tipo de revisión: {e}")
+        result["tipo_revision"] = get_object_id_by_text(tipo_revision_text, TipoRevision)
 
-    # Buscar coincidencia para programa de revisión
     if programa_revision_text:
-        try:
-            match_programa = process.extractOne(programa_revision_text,
-                                                ProgramaRevision.objects.values_list('tipo', flat=True))
-            if match_programa:
-                programa_revision_obj = ProgramaRevision.objects.get(tipo=match_programa[0])
-                result["programa_revision"] = programa_revision_obj.pk
-        except ProgramaRevision.DoesNotExist:
-            result["programa_revision"] = None
-        except Exception as e:
-            # Manejar excepciones específicas aquí
-            result["programa_revision"] = None
-            # logging.error(f"Error en búsqueda de programa de revisión: {e}")
+        result["programa_revision"] = get_object_id_by_text(programa_revision_text, ProgramaRevision)
 
     return result
 
@@ -115,41 +126,54 @@ def get_best_match(organo, options):
 
 
 def extract_paci(path):
+    """
+    Extrae información específica de un archivo Excel de PACI.
+
+    Args:
+        path (str): Ruta al archivo Excel.
+
+    Returns: list or None: Lista de datos extraídos del archivo Excel de PACI o None si no se encuentra información
+    suficiente.
+    """
     result = []
-    sheets = pd.read_excel(path, sheet_name=None)
-    for sheet in sheets:
-        df = sheets.get(sheet)
+    try:
+        sheets = pd.read_excel(path, sheet_name=None)
+        for sheet in sheets:
+            df = sheets.get(sheet)
 
-        # Se extraen los indices de las filas que no tienen ninguna columna vacia
-        indices = df[df.notnull().all(axis=1)].index
+            # Se extraen los indices de las filas que no tienen ninguna columna vacia
+            indices = df[df.notnull().all(axis=1)].index
 
-        # Elimina el primer valor de indices que es el encabezado de datos para solo tener los controles
-        if len(indices) > 0:
-            controles_indices = indices.drop(indices[0])
-        else:
-            return None
+            # Elimina el primer valor de indices que es el encabezado de datos para solo tener los controles
+            if len(indices) > 0:
+                controles_indices = indices.drop(indices[0])
+            else:
+                return None
 
-        organo, df = preprocess_dataframe(df=df, indices=controles_indices)
+            organo, df = preprocess_dataframe(df=df, indices=controles_indices)
 
-        # Filtrar filas que no tienen valores nulos
-        df_cleaned = df.dropna().iloc[1:]
+            # Filtrar filas que no tienen valores nulos
+            df_cleaned = df.dropna().iloc[1:]
 
-        best_match, best_ratio = get_best_match(organo, list(Oic.objects.all().values_list('nombre', flat=True)))
+            best_match, best_ratio = get_best_match(organo, list(Oic.objects.all().values_list('nombre', flat=True)))
 
-        if best_ratio <= 0.5:
-            return None
+            if best_ratio <= 0.5:
+                return None
 
-        dat = [best_match, []]
+            dat = [best_match, []]
 
-        df_cleaned.apply(lambda row: dat[1].append({
-            **extract_number_and_year(row.iloc[0]),
-            "Denominacion": row.iloc[1],
-            "Objetivo": row.iloc[2],
-            "Area": row.iloc[3],
-            "Trimestre": trim_to_number(row.iloc[4]),
-            **extract_programa_tipo(row.iloc[5])
-        }), axis=1)
+            df_cleaned.apply(lambda row: dat[1].append({
+                **extract_number_and_year(row.iloc[0]),
+                "Denominacion": row.iloc[1],
+                "Objetivo": row.iloc[2],
+                "Area": row.iloc[3],
+                "Trimestre": trim_to_number(row.iloc[4]),
+                **extract_programa_tipo(row.iloc[5])
+            }), axis=1)
 
-        result.append(dat)
+            result.append(dat)
 
-    return result
+        return result if result else None
+    except Exception as e:
+        logging.error(f"Error al extraer información del archivo PACI: {e}")
+        return None
