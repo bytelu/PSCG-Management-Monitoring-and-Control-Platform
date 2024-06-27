@@ -5,7 +5,7 @@ import pandas as pd
 from fuzzywuzzy import process
 
 from OICSec.models import Oic, TipoRevision, ProgramaRevision
-from PAA import clean_text
+from PAA import clean_text, preprocess_dataframe
 
 
 def extract_number_and_year(number):
@@ -129,18 +129,7 @@ def extract_paci(path):
         else:
             return None
 
-        # Se comprueba que existan controles internos
-        if len(controles_indices) == 0:
-            return None
-
-        # Obtener el indice de la fila anterior al inicio de los controles internos
-        organo_index = controles_indices[0] - 1
-
-        # Obtener el nombre del "organo" de la primera columna de la fila de organo_index
-        organo = clean_text(str(df.iloc[organo_index, 0]))
-
-        # Limpiar todos los datos del dataframe
-        df = df.map(lambda x: clean_text(x) if pd.notnull(x) else x)
+        organo, df = preprocess_dataframe(df=df, indices=controles_indices)
 
         # Filtrar filas que no tienen valores nulos
         df_cleaned = df.dropna().iloc[1:]
