@@ -26,7 +26,7 @@ def preprocess_dataframe(df, indices):
     organo_index = indices[0] - 1
     organo = clean_text(str(df.iloc[organo_index, 0]))
 
-    df = df.applymap(lambda x: clean_text(x) if pd.notnull(x) else x)
+    df = df.apply(lambda x: x.map(clean_text) if x.notnull().all() else x)
 
     return organo, df
 
