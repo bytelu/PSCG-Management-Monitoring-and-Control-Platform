@@ -7,6 +7,28 @@ from fuzzywuzzy import process
 from OICSec.models import Materia, Programacion, Enfoque, Temporalidad, Oic
 
 
+def preprocess_dataframe(df, indices):
+    """
+    Realiza operaciones comunes de preprocesamiento en el DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame a preprocesar.
+        indices (pd.Index): Índices de filas válidas a partir de las cuales se realiza el preprocesamiento.
+
+    Returns:
+        str or None: Nombre del órgano y DataFrame preprocesado, o None si no hay índices válidos.
+    """
+    if len(indices) == 0:
+        return None
+
+    organo_index = indices[0] - 1
+    organo = clean_text(str(df.iloc[organo_index, 0]))
+
+    df = df.applymap(lambda x: clean_text(x) if pd.notnull(x) else x)
+
+    return organo, df
+
+
 def extract_number_and_year(number):
     """
     Extrae el número y el año de una cadena de formato específico.
@@ -157,18 +179,7 @@ def extract_paa(path):
         # Se extraen los indices de las auditorias: los que no tienen ninguna columna vacia
         auditorias_indices = df[df.notnull().all(axis=1)].index
 
-        # Se comprueba que existan auditorias
-        if len(auditorias_indices) == 0:
-            return None
-
-        # Obtener el indice de la fila anterior al inicio de las auditorias
-        organo_index = auditorias_indices[0] - 1
-
-        # Obtener el nombre del "organo" de la primera columna de la fila de organo_index
-        organo = clean_text(str(df.iloc[organo_index, 0]))
-
-        # Limpiar todos los datos del dataframe
-        df = df.map(lambda x: clean_text(x) if pd.notnull(x) else x)
+        organo, df = preprocess_dataframe(df=df, indices=auditorias_indices)
 
         # Filtrar filas que no tienen valores nulos
         df_cleaned = df.dropna()
