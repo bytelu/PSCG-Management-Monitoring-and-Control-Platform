@@ -1,3 +1,4 @@
+import logging
 import re
 from difflib import SequenceMatcher
 
@@ -16,7 +17,8 @@ def preprocess_dataframe(df, indices):
         indices (pd.Index): Índices de filas válidas a partir de las cuales se realiza el preprocesamiento.
 
     Returns:
-        str or None: Nombre del órgano y DataFrame preprocesado, o None si no hay índices válidos.
+        tuple or None: Tupla con el nombre del órgano y el DataFrame preprocesado,
+                       o None si no hay índices válidos.
     """
     if len(indices) == 0:
         return None
@@ -170,44 +172,47 @@ def extract_paa(path):
         list or None: Lista con el nombre del Organo Interno de Control y un diccionario de datos de auditorías
                       estructurados, o None si no se encontraron auditorías válidas.
     """
-
     result = []
-    sheets = pd.read_excel(path, sheet_name=None)
-    for sheet in sheets:
-        df = sheets.get(sheet)
+    try:
+        sheets = pd.read_excel(path, sheet_name=None)
+        for sheet in sheets:
+            df = sheets.get(sheet)
 
-        # Se extraen los indices de las auditorias: los que no tienen ninguna columna vacia
-        auditorias_indices = df[df.notnull().all(axis=1)].index
+            # Se extraen los indices de las auditorias: los que no tienen ninguna columna vacia
+            auditorias_indices = df[df.notnull().all(axis=1)].index
 
-        organo, df = preprocess_dataframe(df=df, indices=auditorias_indices)
+            organo, df = preprocess_dataframe(df=df, indices=auditorias_indices)
 
-        # Filtrar filas que no tienen valores nulos
-        df_cleaned = df.dropna()
+            # Filtrar filas que no tienen valores nulos
+            df_cleaned = df.dropna()
 
-        best_match, best_ratio = get_best_match(organo, list(Oic.objects.all().values_list('nombre', flat=True)))
+            best_match, best_ratio = get_best_match(organo, list(Oic.objects.all().values_list('nombre', flat=True)))
 
-        if best_ratio <= 0.5:
-            return None
+            if best_ratio <= 0.5:
+                return None
 
-        dat = [best_match, []]
+            dat = [best_match, []]
 
-        # Aplicar las operaciones a cada fila de manera vectorizada
-        df_cleaned.apply(lambda row: dat[1].append({
-            **extract_number_and_year(row.iloc[0]),
-            "Denominacion": row.iloc[1],
-            "Unidad": row.iloc[2],
-            "Objetivo": row.iloc[3],
-            "Alcance": row.iloc[4],
-            **extract_mpet(
-                Materia=row.iloc[5],
-                Programacion=row.iloc[6],
-                Enfoque=row.iloc[7],
-                Temporalidad=row.iloc[8]
-            ),
-            "Trimestre": trim_to_number(row.iloc[9]),
-            "Ejercicio": extract_ejercicio(row.iloc[4])
-        }), axis=1)
+            # Aplicar las operaciones a cada fila de manera vectorizada
+            df_cleaned.apply(lambda row: dat[1].append({
+                **extract_number_and_year(row.iloc[0]),
+                "Denominacion": row.iloc[1],
+                "Unidad": row.iloc[2],
+                "Objetivo": row.iloc[3],
+                "Alcance": row.iloc[4],
+                **extract_mpet(
+                    Materia=row.iloc[5],
+                    Programacion=row.iloc[6],
+                    Enfoque=row.iloc[7],
+                    Temporalidad=row.iloc[8]
+                ),
+                "Trimestre": trim_to_number(row.iloc[9]),
+                "Ejercicio": extract_ejercicio(row.iloc[4])
+            }), axis=1)
 
-        result.append(dat)
+            result.append(dat)
 
-    return result
+        return result if result else None
+    except Exception as e:
+        logging.error(f"Error al extraer información de auditorías del archivo: {e}")
+        return None
