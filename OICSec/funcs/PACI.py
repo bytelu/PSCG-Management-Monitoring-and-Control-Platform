@@ -5,6 +5,7 @@ import pandas as pd
 from fuzzywuzzy import process
 
 from OICSec.models import Oic, TipoRevision, ProgramaRevision
+from PAA import clean_text
 
 
 def extract_number_and_year(number):
@@ -89,20 +90,6 @@ def trim_to_number(trimestre):
         return None
 
 
-def clean_text(text):
-    """
-    Limpia una cadena de texto de caracteres no deseados.
-
-    Args:
-        text (str): Cadena de texto a limpiar.
-
-    Returns:
-        str: Cadena de texto limpia.
-    """
-    cleaned_text = text.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace('"', '')
-    return cleaned_text
-
-
 def get_best_match(organo, options):
     """
     Encuentra la mejor coincidencia entre una cadena de texto y una lista de opciones.
@@ -177,4 +164,3 @@ def extract_paci(path):
         result.append(dat)
 
     return result
-
