@@ -6,7 +6,7 @@ import pandas as pd
 from fuzzywuzzy import process
 
 from OICSec.models import Oic, TipoRevision, ProgramaRevision
-from PAA import preprocess_dataframe
+from OICSec.funcs.PAA import preprocess_dataframe
 
 
 def get_object_id_by_text(text, model):
