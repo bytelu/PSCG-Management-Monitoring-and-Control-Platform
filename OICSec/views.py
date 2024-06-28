@@ -1,3 +1,4 @@
+import datetime
 from difflib import SequenceMatcher
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -10,7 +11,7 @@ from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
 from OICSec.funcs.PINT import extract_pint
 from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad, \
-    ControlInterno, TipoRevision, ProgramaRevision, Intervencion
+    ControlInterno, TipoRevision, ProgramaRevision, Intervencion, TipoIntervencion
 
 
 def login_view(request):
@@ -35,6 +36,16 @@ def login_view(request):
 @login_required
 def home_view(request):
     return render(request, 'home.html')
+
+
+def convert_to_date(date_str):
+    try:
+        if date_str:
+            return datetime.datetime.strptime(date_str, "%d/%m/%Y").date()
+        else:
+            return None
+    except ValueError:
+        return None
 
 
 @login_required
@@ -288,59 +299,61 @@ def upload_pint_view(request):
     similar_oic = None
 
     if request.method == 'POST' and request.FILES.get('excel_file'):
-        excel_file = request.FILES.get('excel_file')
+        word_file = request.FILES.get('excel_file')
         try:
-            data = extract_pint(excel_file)
-            if data is None:
+            word_processing_result = extract_pint(word_file)
+            if word_processing_result is None:
                 return render(request, 'upload_pint.html', {
                     'excel_processing_error': 'Error al procesar el archivo Excel | Nombre de error: None-results | '
                                               'Consulte manual de usuario para mas información.',
                     'lista_oics': lista_oics, 'similar_oic': similar_oic})
             else:
-                for excel_processing_result in data:
-                    max_similarity = 0
-                    for oic in lista_oics:
-                        similarity = SequenceMatcher(None, excel_processing_result[0], oic.nombre).ratio()
-                        if similarity > max_similarity:
-                            max_similarity = similarity
-                            similar_oic = oic
+                max_similarity = 0
+                for oic in lista_oics:
+                    similarity = SequenceMatcher(None, word_processing_result.get('Ente Público'), oic.nombre).ratio()
+                    if similarity > max_similarity:
+                        max_similarity = similarity
+                        similar_oic = oic
+                oic_selected = similar_oic if similar_oic else None
 
-                    oic_selected = similar_oic if similar_oic else None
-                    for control_data in excel_processing_result[1]:
-                        # Se verifica que hay actividad de fiscalización
-                        actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
-                            anyo=control_data['Año'],
-                            trimestre=control_data['Trimestre'],
-                            id_oic=oic_selected
-                        ).first()
-                        # Si no existe, se crea una actividad de fiscalización
-                        if not actividad_fiscalizacion:
-                            actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
-                                anyo=control_data['Año'],
-                                trimestre=control_data['Trimestre'],
-                                id_oic=oic_selected
-                            )
+                # Se verifica que hay actividad de fiscalización
+                actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
+                    anyo=word_processing_result['Año'],
+                    trimestre=word_processing_result['Trimestre'],
+                    id_oic=oic_selected
+                ).first()
+                # Si no existe, se crea una actividad de fiscalización
+                if not actividad_fiscalizacion:
+                    actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+                        anyo=word_processing_result['Año'],
+                        trimestre=word_processing_result['Trimestre'],
+                        id_oic=oic_selected
+                    )
 
-                        # Se crea un control interno nuevo con la actividad de fiscalización
-                        tipo_revision_obj = None
-                        programa_revision_obj = None
-                        if control_data["tipo_revision"]:
-                            tipo_revision_obj = TipoRevision.objects.get(id=control_data["tipo_revision"])
-                        if control_data["programa_revision"]:
-                            programa_revision_obj = ProgramaRevision.objects.get(id=control_data["programa_revision"])
+                # Se crea una intervencion nueva con la actividad de fiscalización
+                tipo_intervencion_obj = None
+                if word_processing_result["Clave"]:
+                    tipo_intervencion_obj = TipoIntervencion.objects.get(clave=word_processing_result["Clave"])
 
-                        ControlInterno.objects.create(
-                            numero=control_data["Numero"],
-                            area=control_data["Area"],
-                            denominacion=control_data["Denominacion"],
-                            objetivo=control_data["Objetivo"],
-                            id_actividad_fiscalizacion=actividad_fiscalizacion,
-                            id_tipo_revision=tipo_revision_obj,
-                            id_programa_revision=programa_revision_obj
-                        )
+                Intervencion.objects.create(
+                    unidad=word_processing_result.get('Área'),
+                    numero=word_processing_result.get('Numero'),
+                    denominacion=word_processing_result.get('Denominación'),
+                    ejercicio=word_processing_result.get('Ejercicio'),
+                    alcance=word_processing_result.get('Alcance y periodo'),
+                    antecedentes=word_processing_result.get('Antecedentes'),
+                    fuerza_auditores=word_processing_result.get('Auditores'),
+                    fuerza_responsables=word_processing_result.get('Responsable'),
+                    fuerza_supervision=word_processing_result.get('Supervisión'),
+                    inicio=convert_to_date(word_processing_result.get('Inicio')),
+                    termino=convert_to_date(word_processing_result.get('Termino')),
+                    objetivo=word_processing_result.get('Objetivo'),
+                    id_actividad_fiscalizacion=actividad_fiscalizacion,
+                    id_tipo_intervencion=tipo_intervencion_obj
+                )
 
                 return render(request, 'upload_pint.html',
-                              {'excel_processing_result': data,
+                              {'excel_processing_result': word_processing_result,
                                'lista_oics': lista_oics,
                                'similar_oic': similar_oic})
         except Exception as e:
