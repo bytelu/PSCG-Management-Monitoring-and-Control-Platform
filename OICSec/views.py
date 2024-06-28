@@ -7,11 +7,11 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 
-from OICSec.forms import AuditoriaForm, ControlForm
+from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm
 from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
 from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad, \
-    ControlInterno, TipoRevision, ProgramaRevision
+    ControlInterno, TipoRevision, ProgramaRevision, Intervencion
 
 
 def login_view(request):
@@ -38,9 +38,13 @@ def home_view(request):
     return render(request, 'home.html')
 
 
-@login_required
-def auditorias_view(request):
-    nombres_oics = Auditoria.objects.values_list('id_actividad_fiscalizacion__id_oic__nombre', flat=True).distinct()
+def get_filtered_objects(request, model, template_name):
+    mapping = {
+        Auditoria: "auditorias",
+        ControlInterno: "controles_internos",
+        Intervencion: "intervenciones"
+    }
+    nombres_oics = model.objects.values_list('id_actividad_fiscalizacion__id_oic__nombre', flat=True).distinct()
     lista_oics = Oic.objects.filter(nombre__in=nombres_oics).distinct()
     lista_anyos = ActividadFiscalizacion.objects.values('anyo').distinct()
 
@@ -48,16 +52,16 @@ def auditorias_view(request):
     anyo = request.GET.get('anyo')
 
     if oic_id and anyo:
-        auditorias = Auditoria.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id,
-                                              id_actividad_fiscalizacion__anyo=anyo)
+        objects = model.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id,
+                                       id_actividad_fiscalizacion__anyo=anyo)
     elif oic_id:
-        auditorias = Auditoria.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id)
+        objects = model.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id)
     elif anyo:
-        auditorias = Auditoria.objects.filter(id_actividad_fiscalizacion__anyo=anyo)
+        objects = model.objects.filter(id_actividad_fiscalizacion__anyo=anyo)
     else:
-        auditorias = Auditoria.objects.all()
+        objects = model.objects.all()
 
-    paginator = Paginator(auditorias.order_by('id_actividad_fiscalizacion__anyo'), 10)
+    paginator = Paginator(objects.order_by('id_actividad_fiscalizacion__anyo'), 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -67,46 +71,26 @@ def auditorias_view(request):
         'lista_anyos': lista_anyos,
         'oic_id': oic_id,
         'anyo': anyo,
-        'auditorias': auditorias,
     }
 
-    return render(request, 'auditorias.html', context)
+    context.update({mapping.get(model): objects})
+
+    return render(request, template_name, context)
+
+
+@login_required
+def auditorias_view(request):
+    return get_filtered_objects(request, Auditoria, 'auditorias.html')
 
 
 @login_required
 def control_interno_view(request):
-    nombres_oics = ControlInterno.objects.values_list('id_actividad_fiscalizacion__id_oic__nombre',
-                                                      flat=True).distinct()
-    lista_oics = Oic.objects.filter(nombre__in=nombres_oics).distinct()
-    lista_anyos = ActividadFiscalizacion.objects.values('anyo').distinct()
+    return get_filtered_objects(request, ControlInterno, 'control_interno.html')
 
-    oic_id = request.GET.get('oic_id')
-    anyo = request.GET.get('anyo')
 
-    if oic_id and anyo:
-        controles_internos = ControlInterno.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id,
-                                                           id_actividad_fiscalizacion__anyo=anyo)
-    elif oic_id:
-        controles_internos = ControlInterno.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id)
-    elif anyo:
-        controles_internos = ControlInterno.objects.filter(id_actividad_fiscalizacion__anyo=anyo)
-    else:
-        controles_internos = ControlInterno.objects.all()
-
-    paginator = Paginator(controles_internos.order_by('id_actividad_fiscalizacion__anyo'), 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'page_obj': page_obj,
-        'lista_oics': lista_oics,
-        'lista_anyos': lista_anyos,
-        'oic_id': oic_id,
-        'anyo': anyo,
-        'controles_internos': controles_internos,
-    }
-
-    return render(request, 'control_interno.html', context)
+@login_required
+def intervenciones_view(request):
+    return get_filtered_objects(request, Intervencion, 'intervenciones.html')
 
 
 @login_required
@@ -143,6 +127,23 @@ def control_interno_detalle_view(request, control_interno_id):
     else:
         form = ControlForm(instance=control_interno)
         return render(request, 'control_detalle.html', {'form': form, 'control_interno_id': control_interno_id})
+
+
+def intervencion_detalle_view(request, intervencion_id):
+    intervencion = get_object_or_404(Intervencion, pk=intervencion_id)
+
+    if request.method == 'POST':
+        form = IntervencionForm(request.POST, instance=intervencion)
+        if form.is_valid():
+            form.save()
+            return render(request, 'intervencion_detalle.html',
+                          {'form': form, 'result': 'result', 'intervencion_id': intervencion_id})
+        else:
+            return render(request, 'intervencion_detalle.html',
+                          {'form': form, 'error': form.errors, 'intervencion_id': intervencion_id})
+    else:
+        form = IntervencionForm(instance=intervencion)
+        return render(request, 'intervencion_detalle.html', {'form': form, 'intervencion_id': intervencion_id})
 
 
 def upload_paa_view(request):
@@ -212,7 +213,8 @@ def upload_paa_view(request):
                                'lista_oics': lista_oics,
                                'similar_oic': similar_oic})
         except Exception as e:
-            excel_processing_error = f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte manual de usuario para mas información'
+            excel_processing_error = (f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte '
+                                      f'manual de usuario para mas información')
             return render(request, 'upload_paa.html',
                           {'excel_processing_error': excel_processing_error, 'lista_oics': lista_oics,
                            'similar_oic': similar_oic})
@@ -284,13 +286,19 @@ def upload_paci_view(request):
                                'lista_oics': lista_oics,
                                'similar_oic': similar_oic})
         except Exception as e:
-            excel_processing_error = f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte manual de usuario para mas información'
+            excel_processing_error = (f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte '
+                                      f'manual de usuario para mas información')
             return render(request, 'upload_paa.html',
                           {'excel_processing_error': excel_processing_error, 'lista_oics': lista_oics,
                            'similar_oic': similar_oic})
 
     if request.method == 'GET':
         return render(request, 'upload_paci.html')
+
+
+@login_required
+def upload_pint_view(request):
+    pass
 
 
 @login_required
@@ -304,7 +312,6 @@ def perfil_view(request):
         last_name = request.POST.get('last_name')
         password = request.POST.get('password')
         new_password = request.POST.get('new_password')
-        confirm_password = request.POST.get('confirm_password')
 
         # Verificar contraseñas
         user = authenticate(username=user.username, password=password)
