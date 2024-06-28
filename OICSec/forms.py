@@ -1,11 +1,24 @@
 from django import forms
-from .models import Auditoria, ActividadFiscalizacion, Oic, ControlInterno
+from .models import Auditoria, ActividadFiscalizacion, Oic, ControlInterno, Intervencion
 
 
 class AuditoriaForm(forms.ModelForm):
-    anyo = forms.IntegerField(label='Año de actividad de fiscalización', required=False, widget=forms.NumberInput(attrs={'class': 'form-control'}))
-    trimestre = forms.IntegerField(label='Trimestre de actividad de fiscalización', required=False, widget=forms.NumberInput(attrs={'class': 'form-control'}))
-    id_oic = forms.ModelChoiceField(queryset=Oic.objects.all(), label='OIC', required=False, widget=forms.Select(attrs={'class': 'form-control select2'}))
+    anyo = forms.IntegerField(
+        label='Año de actividad de fiscalización',
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    trimestre = forms.IntegerField(
+        label='Trimestre de actividad de fiscalización',
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    id_oic = forms.ModelChoiceField(
+        queryset=Oic.objects.all(),
+        label='OIC',
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control select2'})
+    )
 
     class Meta:
         model = Auditoria
@@ -84,7 +97,7 @@ class ControlForm(forms.ModelForm):
                   'objetivo',
                   'id_tipo_revision',
                   'id_programa_revision',
-                  'id_oic']
+                  ]
         labels = {
             'numero': 'Número:',
             'area': 'Area:',
@@ -93,7 +106,7 @@ class ControlForm(forms.ModelForm):
             'objetivo': 'Objetivo:',
             'id_tipo_revision': 'Tipo de revision:',
             'id_programa_revision': 'Programa de revision:',
-            'id_oic': 'OIC:'
+
         }
 
         widgets = {
@@ -104,7 +117,93 @@ class ControlForm(forms.ModelForm):
             'objetivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'id_tipo_revision': forms.Select(attrs={'class': 'form-control select2'}),
             'id_programa_revision': forms.Select(attrs={'class': 'form-control select2'}),
-            'id_oic': forms.Select(attrs={'class': 'form-control select2'}),
+
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.id_actividad_fiscalizacion:
+            self.fields['anyo'].initial = self.instance.id_actividad_fiscalizacion.anyo
+            self.fields['trimestre'].initial = self.instance.id_actividad_fiscalizacion.trimestre
+            self.fields['id_oic'].initial = self.instance.id_actividad_fiscalizacion.id_oic
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if instance.id_actividad_fiscalizacion is None:
+            instance.id_actividad_fiscalizacion = ActividadFiscalizacion()
+        instance.id_actividad_fiscalizacion.anyo = self.cleaned_data.get('anyo')
+        instance.id_actividad_fiscalizacion.trimestre = self.cleaned_data.get('trimestre')
+        instance.id_actividad_fiscalizacion.id_oic = self.cleaned_data.get('id_oic')
+        if commit:
+            instance.id_actividad_fiscalizacion.save()
+            instance.save()
+        return instance
+
+
+class IntervencionForm(forms.ModelForm):
+    anyo = forms.IntegerField(
+        label='Año de actividad de fiscalización',
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    trimestre = forms.IntegerField(
+        label='Trimestre de actividad de fiscalización',
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    id_oic = forms.ModelChoiceField(
+        queryset=Oic.objects.all(),
+        label='OIC',
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control select2'})
+    )
+
+    class Meta:
+        model = Intervencion
+        fields = ['numero',
+                  'unidad',
+                  'denominacion',
+                  'ejercicio',
+                  'alcance',
+                  'antecedentes',
+                  'fuerza_auditores',
+                  'fuerza_responsables',
+                  'fuerza_supervision',
+                  'inicio',
+                  'termino',
+                  'objetivo',
+                  'id_tipo_intervencion'
+                  ]
+        labels = {
+            'numero': 'Número:',
+            'unidad': 'Unidad:',
+            'ejercicio': 'Ejercicio:',
+            'denominacion': 'Denominación:',
+            'alcance': 'Alcance:',
+            'antecedentes': 'Antecedentes:',
+            'fuerza_auditores': 'Numero de Auditores',
+            'fuerza_responsables': 'Numero de responsables',
+            'fuerza_supervision': 'Numero de supervisores',
+            'inicio': 'Inicio:',
+            'termino': 'Termino:',
+            'objetivo': 'Objetivo:',
+            'id_tipo_intervencion': 'Tipo de Intervencion:'
+        }
+
+        widgets = {
+            'numero': forms.NumberInput(attrs={'class': 'form-control'}),
+            'unidad': forms.TextInput(attrs={'class': 'form-control'}),
+            'ejercicio': forms.NumberInput(attrs={'class': 'form-control'}),
+            'denominacion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'alcance': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'antecedentes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'fuerza_auditores': forms.NumberInput(attrs={'class': 'form-control'}),
+            'fuerza_responsables': forms.NumberInput(attrs={'class': 'form-control'}),
+            'fuerza_supervision': forms.NumberInput(attrs={'class': 'form-control'}),
+            'inicio': forms.DateInput(attrs={'class': 'form-control'}),
+            'termino': forms.DateInput(attrs={'class': 'form-control'}),
+            'objetivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'id_tipo_intervencion': forms.Select(attrs={'class': 'form-control select2'}),
         }
 
     def __init__(self, *args, **kwargs):
