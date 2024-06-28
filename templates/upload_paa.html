@@ -1,79 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subir Auditorias</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <style>
-        /* Estilos personalizados para el botón de carga de archivo */
-        .custom-file-upload {
-            border: 1px solid #ccc;
-            display: inline-block;
-            padding: 6px 12px;
-            cursor: pointer;
-            background-color: #f8f9fa;
-        }
-
-        .custom-file-upload:hover {
-            background-color: #e9ecef;
-        }
-
-        #fileInput {
-            display: none; /* Oculta el input de archivo original */
-        }
-
-        #fileNameLabel {
-            text-align: center; /* Centra el texto */
-        }
-    </style>
-</head>
-<body>
 {% extends 'navbar.html' %}
 
+{% block title %}
+    Subir Auditorias
+{% endblock %}
+
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center">
-        <h1 class="display-4">Subir auditoria</h1>
-        <a href="{% url 'auditorias' %}" class="btn btn-outline-dark">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-    </div>
-    <div class="container my-5 d-flex justify-content-center align-items-center">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title d-flex justify-content-center align-items-center">Subir PAA</h2>
-            </div>
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <!-- Nuevo botón personalizado para cargar archivos -->
-                        <label for="formFile" class="form-label text-center">Aquí deberás seleccionar únicamente un
-                            archivo excel de tipo PAA:</label>
-                        <label for="fileInput" class="custom-file-upload btn btn-outline-dark btn-lg btn-block">Seleccionar
-                            Archivo</label>
-                        <!-- Nuevo input de archivo oculto -->
-                        <input type="file" id="fileInput" name="excel_file"
-                               onchange="document.getElementById('fileNameLabel').innerText = 'Archivo seleccionado: ' + this.files[0].name">
-                        <!-- Etiqueta para mostrar el nombre del archivo seleccionado -->
-                        <p id="fileNameLabel"></p>
-                    </div>
-                    <button type="submit" class="btn btn-outline-dark btn-lg btn-block">Subir Archivo</button>
-                </form>
-                {% if excel_processing_result %}
-                    <div class="alert alert-success mt-3" role="alert">
-                        <strong>Éxito al procesar el archivo!! | Los datos han sido guardados con exito!!</strong>
-                    </div>
-                {% endif %}
-                {% if excel_processing_error %}
-                    <div class="alert alert-danger mt-3" role="alert">
-                        <strong>Error:</strong> {{ excel_processing_error }}
-                    </div>
-                {% endif %}
-            </div>
+<div class="d-flex justify-content-between align-items-center">
+    <h1 class="display-4">Subir auditoria</h1>
+    <a href="{% url 'auditorias' %}" class="btn btn-outline-dark">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+</div>
+<div class="container my-5 d-flex justify-content-center align-items-center">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title d-flex justify-content-center align-items-center">Subir PAA</h2>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <!-- Nuevo botón personalizado para cargar archivos -->
+                    <label for="formFile" class="form-label text-center">Aquí deberás seleccionar únicamente un archivo excel de tipo PAA:</label>
+                    <label for="fileInput" class="btn btn-outline-dark btn-lg btn-block">Seleccionar Archivo</label>
+                    <!-- Nuevo input de archivo oculto -->
+                    <input type="file" id="fileInput" name="excel_file"
+                           onchange="document.getElementById('fileNameLabel').innerText = 'Archivo seleccionado: ' + this.files[0].name">
+                    <!-- Etiqueta para mostrar el nombre del archivo seleccionado -->
+                    <p id="fileNameLabel"></p>
+                </div>
+                <button type="submit" class="btn btn-outline-dark btn-lg btn-block">Subir Archivo</button>
+            </form>
+            {% if excel_processing_result %}
+                <div class="alert alert-success mt-3" role="alert">
+                    <strong>Éxito al procesar el archivo!! | Los datos han sido guardados con éxito!!</strong>
+                </div>
+            {% endif %}
+            {% if excel_processing_error %}
+                <div class="alert alert-danger mt-3" role="alert">
+                    <strong>Error:</strong> {{ excel_processing_error }}
+                </div>
+            {% endif %}
         </div>
     </div>
+</div>
 {% endblock %}
-</body>
-</html>
+
+{% block styles %}
+<style>
+    /* Estilos personalizados para el botón de carga de archivo */
+
+    #fileInput {
+        display: none; /* Oculta el input de archivo original */
+    }
+
+    #fileNameLabel {
+        text-align: center; /* Centra el texto */
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        $('.select2').select2({
+            theme: "bootstrap-5"
+        });
+    });
+</script>
+{% endblock %}
