@@ -20,7 +20,7 @@
             color: #000000; /* Cambia el color al azul al pasar el ratón */
         }
 
-        .auditoria-number {
+        .intervencion-number {
             font-size: 1.2em;
             color: #28a745; /* Verde para el número de auditoría */
         }
@@ -103,7 +103,7 @@
             {% for intervencion in page_obj %}
                 <li class="list-group-item">
                     <a href="{% url 'intervencion_detalle' intervencion.id %}" class="text_decoration_none">
-                        <span class="intervencion-number">A-{{ intervencion.numero }}/{{ intervencion.id_actividad_fiscalizacion.anyo }}</span>
+                        <span class="intervencion-number">{% if intervencion.id_tipo_intervencion.clave == 13 %}R{% elif intervencion.id_tipo_intervencion.clave == 14 %}V{% else %}O{% endif %}-0{{ intervencion.numero }}/{{ intervencion.id_actividad_fiscalizacion.anyo }}</span>
                         | {{ intervencion.id_actividad_fiscalizacion.id_oic }}
                     </a>
                 </li>

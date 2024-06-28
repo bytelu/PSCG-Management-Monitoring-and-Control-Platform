@@ -324,6 +324,9 @@ class TipoIntervencion(models.Model):
     class Meta:
         db_table = 'tipo_intervencion'
 
+    def __str__(self):
+        return str(self.tipo)
+
 
 class TipoMinuta(models.Model):
     id = models.AutoField(primary_key=True)
