@@ -339,19 +339,19 @@ def upload_pint_view(request):
                             id_programa_revision=programa_revision_obj
                         )
 
-                return render(request, 'upload_paci.html',
+                return render(request, 'upload_pint.html',
                               {'excel_processing_result': data,
                                'lista_oics': lista_oics,
                                'similar_oic': similar_oic})
         except Exception as e:
             excel_processing_error = (f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte '
                                       f'manual de usuario para mas información')
-            return render(request, 'upload_paa.html',
+            return render(request, 'upload_pint.html',
                           {'excel_processing_error': excel_processing_error, 'lista_oics': lista_oics,
                            'similar_oic': similar_oic})
 
     if request.method == 'GET':
-        return render(request, 'upload_paci.html')
+        return render(request, 'upload_pint.html')
 
 
 @login_required
