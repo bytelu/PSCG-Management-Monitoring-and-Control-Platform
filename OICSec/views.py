@@ -1,15 +1,14 @@
 from difflib import SequenceMatcher
-
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
-
 from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm
 from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
+from OICSec.funcs.PINT import extract_pint
 from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad, \
     ControlInterno, TipoRevision, ProgramaRevision, Intervencion
 
@@ -38,6 +37,7 @@ def home_view(request):
     return render(request, 'home.html')
 
 
+@login_required
 def get_filtered_objects(request, model, template_name):
     mapping = {
         Auditoria: "auditorias",
@@ -94,56 +94,41 @@ def intervenciones_view(request):
 
 
 @login_required
-def auditoria_detalle_view(request, auditoria_id):
-    auditoria = get_object_or_404(Auditoria, pk=auditoria_id)
-
+def handle_detail_view(request, model, form_class, object_id, template_name):
+    obj = get_object_or_404(model, pk=object_id)
     if request.method == 'POST':
-        form = AuditoriaForm(request.POST, instance=auditoria)
+        form = form_class(request.POST, instance=obj)
         if form.is_valid():
             form.save()
-            return render(request, 'auditoria_detalle.html',
-                          {'form': form, 'result': 'result', 'auditoria_id': auditoria_id})
+            return render(request, template_name, {
+                'form': form,
+                'result': 'result',
+                'object_id': object_id
+            })
         else:
-            return render(request, 'auditoria_detalle.html',
-                          {'form': form, 'error': form.errors, 'auditoria_id': auditoria_id})
+            return render(request, template_name, {
+                'form': form,
+                'error': form.errors,
+                'object_id': object_id
+            })
     else:
-        form = AuditoriaForm(instance=auditoria)
-        return render(request, 'auditoria_detalle.html', {'form': form, 'auditoria_id': auditoria_id})
+        form = form_class(instance=obj)
+        return render(request, template_name, {'form': form, 'object_id': object_id})
+
+
+@login_required
+def auditoria_detalle_view(request, auditoria_id):
+    return handle_detail_view(request, Auditoria, AuditoriaForm, auditoria_id, 'auditoria_detalle.html')
 
 
 @login_required
 def control_interno_detalle_view(request, control_interno_id):
-    control_interno = get_object_or_404(ControlInterno, pk=control_interno_id)
-
-    if request.method == 'POST':
-        form = ControlForm(request.POST, instance=control_interno)
-        if form.is_valid():
-            form.save()
-            return render(request, 'control_detalle.html',
-                          {'form': form, 'result': 'result', 'control_interno_id': control_interno_id})
-        else:
-            return render(request, 'control_detalle.html',
-                          {'form': form, 'error': form.errors, 'control_interno_id': control_interno_id})
-    else:
-        form = ControlForm(instance=control_interno)
-        return render(request, 'control_detalle.html', {'form': form, 'control_interno_id': control_interno_id})
+    return handle_detail_view(request, ControlInterno, ControlForm, control_interno_id, 'control_detalle.html')
 
 
+@login_required
 def intervencion_detalle_view(request, intervencion_id):
-    intervencion = get_object_or_404(Intervencion, pk=intervencion_id)
-
-    if request.method == 'POST':
-        form = IntervencionForm(request.POST, instance=intervencion)
-        if form.is_valid():
-            form.save()
-            return render(request, 'intervencion_detalle.html',
-                          {'form': form, 'result': 'result', 'intervencion_id': intervencion_id})
-        else:
-            return render(request, 'intervencion_detalle.html',
-                          {'form': form, 'error': form.errors, 'intervencion_id': intervencion_id})
-    else:
-        form = IntervencionForm(instance=intervencion)
-        return render(request, 'intervencion_detalle.html', {'form': form, 'intervencion_id': intervencion_id})
+    return handle_detail_view(request, Intervencion, IntervencionForm, intervencion_id, 'intervencion_detalle.html')
 
 
 def upload_paa_view(request):
@@ -298,7 +283,75 @@ def upload_paci_view(request):
 
 @login_required
 def upload_pint_view(request):
-    pass
+    lista_oics = Oic.objects.all()
+
+    similar_oic = None
+
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES.get('excel_file')
+        try:
+            data = extract_pint(excel_file)
+            if data is None:
+                return render(request, 'upload_pint.html', {
+                    'excel_processing_error': 'Error al procesar el archivo Excel | Nombre de error: None-results | '
+                                              'Consulte manual de usuario para mas información.',
+                    'lista_oics': lista_oics, 'similar_oic': similar_oic})
+            else:
+                for excel_processing_result in data:
+                    max_similarity = 0
+                    for oic in lista_oics:
+                        similarity = SequenceMatcher(None, excel_processing_result[0], oic.nombre).ratio()
+                        if similarity > max_similarity:
+                            max_similarity = similarity
+                            similar_oic = oic
+
+                    oic_selected = similar_oic if similar_oic else None
+                    for control_data in excel_processing_result[1]:
+                        # Se verifica que hay actividad de fiscalización
+                        actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
+                            anyo=control_data['Año'],
+                            trimestre=control_data['Trimestre'],
+                            id_oic=oic_selected
+                        ).first()
+                        # Si no existe, se crea una actividad de fiscalización
+                        if not actividad_fiscalizacion:
+                            actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+                                anyo=control_data['Año'],
+                                trimestre=control_data['Trimestre'],
+                                id_oic=oic_selected
+                            )
+
+                        # Se crea un control interno nuevo con la actividad de fiscalización
+                        tipo_revision_obj = None
+                        programa_revision_obj = None
+                        if control_data["tipo_revision"]:
+                            tipo_revision_obj = TipoRevision.objects.get(id=control_data["tipo_revision"])
+                        if control_data["programa_revision"]:
+                            programa_revision_obj = ProgramaRevision.objects.get(id=control_data["programa_revision"])
+
+                        ControlInterno.objects.create(
+                            numero=control_data["Numero"],
+                            area=control_data["Area"],
+                            denominacion=control_data["Denominacion"],
+                            objetivo=control_data["Objetivo"],
+                            id_actividad_fiscalizacion=actividad_fiscalizacion,
+                            id_tipo_revision=tipo_revision_obj,
+                            id_programa_revision=programa_revision_obj
+                        )
+
+                return render(request, 'upload_paci.html',
+                              {'excel_processing_result': data,
+                               'lista_oics': lista_oics,
+                               'similar_oic': similar_oic})
+        except Exception as e:
+            excel_processing_error = (f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte '
+                                      f'manual de usuario para mas información')
+            return render(request, 'upload_paa.html',
+                          {'excel_processing_error': excel_processing_error, 'lista_oics': lista_oics,
+                           'similar_oic': similar_oic})
+
+    if request.method == 'GET':
+        return render(request, 'upload_paci.html')
 
 
 @login_required
