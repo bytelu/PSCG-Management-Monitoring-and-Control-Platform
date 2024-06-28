@@ -200,8 +200,8 @@ class IntervencionForm(forms.ModelForm):
             'fuerza_auditores': forms.NumberInput(attrs={'class': 'form-control'}),
             'fuerza_responsables': forms.NumberInput(attrs={'class': 'form-control'}),
             'fuerza_supervision': forms.NumberInput(attrs={'class': 'form-control'}),
-            'inicio': forms.DateInput(attrs={'class': 'form-control'}),
-            'termino': forms.DateInput(attrs={'class': 'form-control'}),
+            'inicio': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'termino': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'objetivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'id_tipo_intervencion': forms.Select(attrs={'class': 'form-control select2'}),
         }
