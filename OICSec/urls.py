@@ -1,8 +1,7 @@
 from django.urls import path
 
 
-from .views import login_view, home_view, auditorias_view, minutas_view, perfil_view, logout_view, upload_paa_view, \
-    auditoria_detalle_view, control_interno_view, upload_paci_view, control_interno_detalle_view
+from .views import *
 
 urlpatterns = [
     path("", login_view, name="login"),
@@ -15,5 +14,8 @@ urlpatterns = [
     path("controlesinternos/", control_interno_view, name="controlInterno"),
     path("controlesInternos/PACI/", upload_paci_view, name="uploadPaci"),
     path("controlesInternos/<int:control_interno_id>/", control_interno_detalle_view, name="control_detalle"),
+    path("intervenciones/", intervenciones_view, name="intervenciones"),
+    path("intervenciones/PINT/", upload_pint_view, name="uploadPint"),
+    path("intervenciones/<int:intervencion_id>/", intervencion_detalle_view, name="intervencion_detalle"),
     path("minutas/", minutas_view, name="minutas"),
 ]
