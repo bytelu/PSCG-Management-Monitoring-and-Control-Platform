@@ -438,6 +438,7 @@ def perfil_view(request):
     else:
         return render(request, 'profile.html')
 
+
 @login_required
 def logout_view(request):
     logout(request)
