@@ -53,26 +53,46 @@ def get_filtered_objects(request, model, template_name):
     mapping = {
         Auditoria: "auditorias",
         ControlInterno: "controles_internos",
-        Intervencion: "intervenciones"
+        Intervencion: "intervenciones",
+        ActividadFiscalizacion: "actividad_fiscalizacion"
     }
-    nombres_oics = model.objects.values_list('id_actividad_fiscalizacion__id_oic__nombre', flat=True).distinct()
+    mode = mapping.get(model) == 'actividad_fiscalizacion'
+    if mode:
+        oics_name_query = 'id_oic__nombre'
+        order_query = 'trimestre'
+    else:
+        oics_name_query = 'id_actividad_fiscalizacion__id_oic__nombre'
+        order_query = 'id_actividad_fiscalizacion__anyo'
+
+    nombres_oics = model.objects.values_list(oics_name_query, flat=True).distinct()
     lista_oics = Oic.objects.filter(nombre__in=nombres_oics).distinct()
     lista_anyos = ActividadFiscalizacion.objects.values('anyo').distinct()
 
     oic_id = request.GET.get('oic_id')
     anyo = request.GET.get('anyo')
 
-    if oic_id and anyo:
-        objects = model.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id,
-                                       id_actividad_fiscalizacion__anyo=anyo)
-    elif oic_id:
-        objects = model.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id)
-    elif anyo:
-        objects = model.objects.filter(id_actividad_fiscalizacion__anyo=anyo)
+    if mode:
+        if oic_id and anyo:
+            objects = model.objects.filter(id_oic=oic_id,
+                                           anyo=anyo)
+        elif oic_id:
+            objects = model.objects.filter(id_oic=oic_id)
+        elif anyo:
+            objects = model.objects.filter(anyo=anyo)
+        else:
+            objects = model.objects.all()
     else:
-        objects = model.objects.all()
+        if oic_id and anyo:
+            objects = model.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id,
+                                           id_actividad_fiscalizacion__anyo=anyo)
+        elif oic_id:
+            objects = model.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id)
+        elif anyo:
+            objects = model.objects.filter(id_actividad_fiscalizacion__anyo=anyo)
+        else:
+            objects = model.objects.all()
 
-    paginator = Paginator(objects.order_by('id_actividad_fiscalizacion__anyo'), 10)
+    paginator = Paginator(objects.order_by(order_query), 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -102,6 +122,11 @@ def control_interno_view(request):
 @login_required
 def intervenciones_view(request):
     return get_filtered_objects(request, Intervencion, 'intervenciones.html')
+
+
+@login_required
+def supervision_view(request):
+    return get_filtered_objects(request, ActividadFiscalizacion, 'supervision.html')
 
 
 @login_required
@@ -412,12 +437,6 @@ def perfil_view(request):
             return render(request, 'profile.html', {'error_password': 'La contraseña es incorrecta.'})
     else:
         return render(request, 'profile.html')
-
-
-@login_required
-def minutas_view(request):
-    return render(request, 'minuta.html')
-
 
 @login_required
 def logout_view(request):
