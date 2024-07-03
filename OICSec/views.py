@@ -393,6 +393,23 @@ def upload_pint_view(request):
 
 
 @login_required
+def cedula_view(request, fiscalizacion_id):
+    auditoria = Auditoria.objects.filter(id_actividad_fiscalizacion=fiscalizacion_id).first()
+    intervencion = Intervencion.objects.filter(id_actividad_fiscalizacion=fiscalizacion_id).first()
+    control_interno = ControlInterno.objects.filter(id_actividad_fiscalizacion=fiscalizacion_id).first()
+    actividad = ActividadFiscalizacion.objects.get(id=fiscalizacion_id)
+
+    context = {
+        'auditoria': auditoria,
+        'intervencion': intervencion,
+        'control_interno': control_interno,
+        'fiscalizacion': actividad
+    }
+
+    return render(request, 'cedula.html', context)
+
+
+@login_required
 def perfil_view(request):
     if request.method == 'POST':
         # Se obtiene el usuario autenticado

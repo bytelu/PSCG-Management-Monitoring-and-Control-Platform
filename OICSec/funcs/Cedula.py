@@ -139,7 +139,7 @@ def write_concepto(sheet: Worksheet, concepto: Concepto, cell_row: str, styles: 
         sheet[observacion_cell] = concepto.Comentario
 
 
-def write_conceptos(conceptos: ConceptosLista, sheet: Worksheet, kind: str, styles: Styles):
+def write_conceptos(conceptos: ConceptosLista, sheet: Worksheet, kind: str, styles: Styles, trimestre: int):
     """
     Escribe los conceptos evaluados, los comentarios y sus estados en celdas específicas de una hoja de cálculo,
     aplicando estilos de acuerdo a su estado.
@@ -149,16 +149,36 @@ def write_conceptos(conceptos: ConceptosLista, sheet: Worksheet, kind: str, styl
         sheet (Worksheet): Hoja de cálculo donde se escribirán los conceptos.
         kind (str): Tipo de supervisión ("Auditoria", "Intervención", "Control interno").
         styles (Styles): Estilos a aplicar a las celdas.
+        trimestre (int): Trimestre de la actividad de fiscalizacion.
     """
     mappings = {
+        #        'Auditoria': {
+        #            0: "30", 1: "31", 2: "32", 3: "33", 4: "37", 5: "38", 6: "39", 7: "40", 8: "41", 9: "42",
+        #            10: "43", 11: "44", 12: "45", 13: "46", 14: "53", 15: "54", 16: "55", 17: "56", 18: "58",
+        #            19: "59", 20: "60", 21: "61", 22: "62", 23: "63", 24: "65", 25: "66", 26: "67", 27: "69",
+        #            28: "70", 29: "71", 30: "72", 31: "73", 32: "75", 33: "76", 34: "77", 35: "78", 36: "80",
+        #            37: "81", 38: "82", 39: "83", 40: "84", 41: "86", 42: "87", 43: "88", 44: "89", 45: "90",
+        #            46: "92", 47: "94", 48: "96", 49: "97", 50: "98", 51: "99", 52: "100", 53: "101", 54: "102",
+        #            55: "103", 56: "107", 57: "111", 58: "113", 59: "115"
+        #        },
         'Auditoria': {
-            0: "30", 1: "31", 2: "32", 3: "33", 4: "37", 5: "38", 6: "39", 7: "40", 8: "41", 9: "42",
-            10: "43", 11: "44", 12: "45", 13: "46", 14: "53", 15: "54", 16: "55", 17: "56", 18: "58",
-            19: "59", 20: "60", 21: "61", 22: "62", 23: "63", 24: "65", 25: "66", 26: "67", 27: "69",
-            28: "70", 29: "71", 30: "72", 31: "73", 32: "75", 33: "76", 34: "77", 35: "78", 36: "80",
-            37: "81", 38: "82", 39: "83", 40: "84", 41: "86", 42: "87", 43: "88", 44: "89", 45: "90",
-            46: "92", 47: "94", 48: "96", 49: "97", 50: "98", 51: "99", 52: "100", 53: "101", 54: "102",
-            55: "103", 56: "107", 57: "111", 58: "113", 59: "115"
+            1: {
+                0: "30", 1: "31", 2: "32", 3: "33", 4: "37", 5: "38", 6: "39", 7: "40", 8: "41", 9: "42",
+                10: "43", 11: "44", 12: "45", 13: "46", 14: "53", 15: "54", 16: "55", 17: "56", 18: "58",
+                19: "59", 20: "60", 21: "61", 22: "62", 23: "63", 24: "65", 25: "66", 26: "67", 27: "69",
+                28: "70", 29: "71", 30: "72", 31: "73", 32: "75", 33: "76", 34: "77", 35: "78",
+            },
+            2: {
+                36: "80", 37: "81", 38: "82", 39: "83", 40: "84", 41: "86",
+                42: "87", 43: "88", 44: "89", 45: "90", 46: "92",
+            },
+            3: {
+                47: "94", 48: "96", 49: "97", 50: "98", 51: "99", 52: "100",
+                53: "101", 54: "102", 55: "103",56: "107",
+            },
+            4: {
+                57: "111", 58: "113", 59: "115"
+            }
         },
         'Intervención': {
             0: "30", 1: "31", 2: "35", 3: "36", 4: "37", 5: "38", 6: "39", 7: "40", 8: "42", 9: "43",
@@ -178,21 +198,23 @@ def write_conceptos(conceptos: ConceptosLista, sheet: Worksheet, kind: str, styl
         }
     }
 
-    mapping = mappings.get(kind, {})
-
+    mapping = mappings.get(kind, {}).get(trimestre, {})
+    if kind == 'Auditoria':
+        order = 0 if trimestre == 1 else 36 if trimestre == 2 else 47 if trimestre == 3 else 57
     for idx, concepto in enumerate(conceptos.Conceptos):
-        cell_row = mapping.get(idx)
+        cell_row = mapping.get(idx + order)
         if cell_row:
             write_concepto(sheet=sheet, concepto=concepto, cell_row=cell_row, styles=styles)
 
 
-def cedula(kind: int, data: SupervisionData, conceptos: ConceptosLista) -> Optional[str]:
+def cedula(kind: int, trimestre: int, data: SupervisionData, conceptos: ConceptosLista) -> Optional[str]:
     """
     Genera una hoja de cálculo de supervisión, rellenando datos generales y conceptos evaluados,
     y ocultando las hojas que no son relevantes.
 
     Args:
         kind (int): Tipo de supervisión (1: Auditoria, 2: Intervención, 3: Control interno).
+        trimestre (int): Trimestre de la actividad de fiscalizacion.
         data (SupervisionData): Datos generales de la supervisión.
         conceptos (List[Concepto]): Lista de conceptos con estado y comentario.
 
@@ -219,7 +241,7 @@ def cedula(kind: int, data: SupervisionData, conceptos: ConceptosLista) -> Optio
 
     estilos = Styles(workbook['styles'])
 
-    write_conceptos(conceptos=conceptos, sheet=sheet, kind=sheet_name, styles=estilos)
+    write_conceptos(conceptos=conceptos, sheet=sheet, kind=sheet_name, styles=estilos, trimestre=trimestre)
 
     for sheet_kind, sheet_title in sheet_names.items():
         if sheet_kind != kind:
@@ -262,7 +284,7 @@ def main():
         ]
     )
 
-    print(cedula(kind=1, data=data, conceptos=conceptos))
+    print(cedula(kind=1, data=data, conceptos=conceptos, trimestre=2))
 
 
 if __name__ == '__main__':
