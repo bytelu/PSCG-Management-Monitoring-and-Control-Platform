@@ -1,5 +1,217 @@
 {% extends 'navbar.html' %}
 {% block title %}Cedula{% endblock %}
 {% block content %}
-    
+    <h1 class="display-2">Cedula</h1>
+    <p>{{ fiscalizacion }}</p>
+    <label for="formSelector">Selecciona el tipo de cedula:</label>
+    <div class="flex-container mb-3">
+        <select onchange="showForm(this.value)" id="formSelector" class="select2 form-control">
+            <option value="">Selecciona una opción</option>
+            <option value="form_a">Auditoria</option>
+            <option value="form_b">Intervención</option>
+            <option value="form_c">Control Interno</option>
+        </select>
+    </div>
+
+    <!-- Card for Auditoria -->
+    <div id="form_a" class="form-container card" style="display: none;">
+        {% if auditoria %}
+            <div class="card-header text-center">
+                <h5>Revisión Mensual a los Órganos Internos de Control en el cumplimiento de sus actividades.</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <h5 class="card-title">Datos de auditoria</h5>
+                    <fieldset disabled>
+                        <div class="mb-3">
+                            <label for="denominacion" class="form-label">Número</label>
+                            <input type="text" class="form-control" id="numero" name="numero"
+                                   value="A-{{ auditoria.numero }}/{{ fiscalizacion.anyo }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre de la auditoria</label>
+                            <textarea class="form-control" id="nombre"
+                                      name="nombre">{{ auditoria.denominacion }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="clave" class="form-label">Clave de la auditoría</label>
+                            <input type="text" class="form-control" id="clave" name="clave"
+                                   value="{{ auditoria.id_materia.clave }}-{{ auditoria.id_programacion.clave }}-{{ auditoria.id_enfoque.clave }}-{{ auditoria.id_temporalidad.clave }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="anyotrimestre" class="form-label">Año y trimestre de ejecución</label>
+                            <input type="text" class="form-control" id="anyotrimestre" name="anyotrimestre"
+                                   value="0{{ fiscalizacion.trimestre }}/{{ fiscalizacion.anyo }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="objetivo" class="form-label">Objetivo de la Auditoria de acuerdo a lo señalado
+                                en el PAA</label>
+                            <textarea class="form-control" id="objetivo"
+                                      name="objetivo">{{ auditoria.objetivo }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="area" class="form-label">Áreas auditadas</label>
+                            <textarea class="form-control" id="area"
+                                      name="area">{{ auditoria.unidad }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ejercicio" class="form-label">Ejercicio auditado</label>
+                            <input type="text" class="form-control" id="ejercicio" name="ejercicio"
+                                   value="{{ auditoria.ejercicio }}">
+                        </div>
+                    </fieldset>
+                    <h5 class="card-title">Revisión a la documentación</h5>
+                    <!-- Aqui se colocaran todas las entradas, y de acuerdo a el trimestre que aplique se mostraran unas u otras -->
+                    <button class="btn btn-outline-dark" type="submit" name="form_a_submit">Guardar</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="card-body">
+                <h6 style="color: red" class="display-6">Lo sentimos, pero no existe alguna auditoria de esta actividad
+                    de fiscalización</h6>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Card for Intervencion -->
+    <div id="form_b" class="form-container card" style="display: none;">
+        {% if intervencion %}
+            <div class="card-header text-center">
+                <h5>Revisión Mensual a los Órganos Internos de Control en el cumplimiento de sus actividades.</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <h5 class="card-title">Datos de la intervención</h5>
+                    <fieldset disabled>
+                        <div class="mb-3">
+                            <label for="numero" class="form-label">Número de la intervención</label>
+                            <input type="text" class="form-control" id="numero" name="numero"
+                                   value="{% if intervencion.id_tipo_intervencion.clave == 13 %}R{% elif intervencion.id_tipo_intervencion.clave == 14 %}V{% else %}O{% endif %}-{{ intervencion.numero }}/{{ fiscalizacion.anyo }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre de la intervención</label>
+                            <textarea class="form-control" id="nombre"
+                                      name="nombre">{{ intervencion.denominacion }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="clave" class="form-label">Clave de la intervención</label>
+                            <input type="number" class="form-control" id="clave" name="clave"
+                                   value="{{ intervencion.id_tipo_intervencion.clave }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="anyotrimestre" class="form-label">Año y trimestre de ejecución</label>
+                            <input type="text" class="form-control" id="anyotrimestre" name="anyotrimestre"
+                                   value="0{{ fiscalizacion.trimestre }}/{{ fiscalizacion.anyo }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="objetivo" class="form-label">Objetivo de la Intervención</label>
+                            <textarea class="form-control" id="objetivo"
+                                      name="objetivo">{{ intervencion.objetivo }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="area" class="form-label">Área revisada</label>
+                            <textarea class="form-control" id="area"
+                                      name="area">{{ intervencion.unidad }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ejercicio" class="form-label">Ejercicio Revisado</label>
+                            <input type="text" class="form-control" id="ejercicio" name="ejercicio"
+                                   value="{{ intervencion.ejercicio }}">
+                        </div>
+
+                    </fieldset>
+                    <h5 class="card-title">Revisión a la documentación</h5>
+                    <!-- Aqui se colocaran todas las entradas, y de acuerdo a el trimestre que aplique se mostraran unas u otras -->
+                    <button class="btn btn-outline-dark" type="submit" name="form_b_submit">Guardar</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="card-body">
+                <h6 style="color: red" class="display-6">Lo sentimos, pero no existe alguna intervención de esta
+                    actividad de fiscalización</h6>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Card for Control Interno -->
+    <div id="form_c" class="form-container card" style="display: none;">
+        {% if control_interno %}
+            <div class="card-header text-center">
+                <h5>Revisión Mensual a los Órganos Internos de Control en el cumplimiento de sus actividades.</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <h5 class="card-title">Datos del control interno</h5>
+                    <fieldset disabled>
+
+                        <div class="mb-3">
+                            <label for="numero" class="form-label">Número del control interno</label>
+                            <input type="text" class="form-control" id="numero" name="numero"
+                                   value="CI {{ control_interno.numero }}/{{ fiscalizacion.anyo }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre del control interno</label>
+                            <textarea class="form-control" id="nombre"
+                                      name="nombre">{{ control_interno.denominacion }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="clave" class="form-label">Clave del control interno</label>
+                            <input type="text" class="form-control" id="clave" name="clave"
+                                   value="{{ control_interno.id_tipo_revision.clave }}-{{ control_interno.id_programa_revision.clave }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="anyotrimestre" class="form-label">Año y trimestre de ejecución</label>
+                            <input type="text" class="form-control" id="anyotrimestre" name="anyotrimestre"
+                                   value="0{{ fiscalizacion.trimestre }}/{{ fiscalizacion.anyo }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="objetivo" class="form-label">Objetivo del contrl interno de acuerdo a lo señalado en el PACI</label>
+                            <textarea class="form-control" id="objetivo"
+                                      name="objetivo">{{ control_interno.objetivo }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="area" class="form-label">Área revisada</label>
+                            <textarea class="form-control" id="area"
+                                      name="area">{{ control_interno.area }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ejercicio" class="form-label">Ejercicio Revisado</label>
+                            <input type="text" class="form-control" id="ejercicio" name="ejercicio" 
+                                   value="{{ control_interno.ejercicio }}">
+                        </div>
+
+                    </fieldset>
+                    <h5 class="card-title">Revisión a la documentación</h5>
+                    <!-- Aqui se colocaran todas las entradas, y de acuerdo a el trimestre que aplique se mostraran unas u otras -->
+                    
+                    <button class="btn btn-outline-dark" type="submit" name="form_c_submit">Guardar</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="card-body">
+                <h6 style="color: red" class="display-6">Lo sentimos, pero no existe algun control interno de esta
+                    actividad de fiscalización</h6>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function showForm(formId) {
+            document.getElementById('form_a').style.display = 'none';
+            document.getElementById('form_b').style.display = 'none';
+            document.getElementById('form_c').style.display = 'none';
+            if (formId) {
+                document.getElementById(formId).style.display = 'block';
+            }
+        }
+    </script>
 {% endblock %}

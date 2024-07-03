@@ -41,6 +41,9 @@ class ActividadFiscalizacion(models.Model):
     class Meta:
         db_table = 'actividad_fiscalizacion'
 
+    def __str__(self):
+        return f'Año: {self.anyo}   Trimestre: {self.trimestre}   OIC: {self.id_oic}'
+
 
 class Archivo(models.Model):
     id = models.AutoField(primary_key=True)
