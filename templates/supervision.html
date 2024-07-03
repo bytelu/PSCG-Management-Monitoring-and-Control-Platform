@@ -104,24 +104,32 @@
                     <!-- Button trigger modal -->
                     <div class="card-body">
                         <button type="button" class="btn btn-outline-dark btn-sm btn-block" data-toggle="modal"
-                                data-target="#myModal">
+                                data-target="#modal-{{ actividad.id }}">
                             Mostrar
                         </button>
                     </div>
                     <!-- Modal -->
-                    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                    <div class="modal fade" id="modal-{{ actividad.id }}" tabindex="-1" role="dialog"
+                         aria-labelledby="modalLabel-{{ actividad.id }}"
                          aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered" role="document">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel">Selecciona una opción:</h5>
+                                    <h5 class="modal-title" id="modalLabel-{{ actividad.id }}">Selecciona una
+                                        opción:</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
                                 </div>
                                 <div class="modal-body text-center">
+                                    <div class="mb-2">
+                                        Actividad de fiscalización:
+                                        <span class="auditoria-number">{{ actividad.anyo }} | {{ actividad.trimestre }}</span>
+                                        {{ actividad.id_oic }}
+                                    </div>
                                     <a href="#" class="btn btn-block btn-outline-dark mb-2">Minuta</a>
-                                    <a href="#" class="btn btn-block btn-outline-dark mb-2">Cedula</a>
+                                    <a href="{% url 'cedula' actividad.id %}"
+                                       class="btn btn-block btn-outline-dark mb-2">Cedula</a>
                                 </div>
                                 <div class="modal-footer">
                                     <p>
@@ -156,6 +164,8 @@
 
 
 
+
+                                
                                 {{ page_obj.previous_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Previous">
                             <span aria-hidden="true">&laquo;</span>
@@ -183,6 +193,8 @@
 
 
 
+
+                                
                                 {{ num }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}">{{ num }}</a>
                         </li>
                     {% endif %}
@@ -199,6 +211,8 @@
 
 
 
+
+                                
                                 {{ page_obj.next_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
@@ -214,6 +228,8 @@
 
 
 
+
+                                
                                 {{ page_obj.paginator.num_pages }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Last">
                             <span aria-hidden="true">&raquo;&raquo;</span>
