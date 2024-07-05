@@ -392,6 +392,50 @@ def upload_pint_view(request):
         return render(request, 'upload_pint.html')
 
 
+def cedula(request, model, id):
+    mapping = {
+        Auditoria: 1,
+        ControlInterno: 2,
+        Intervencion: 3
+    }
+    kind = mapping.get(model)
+    auditoria = None
+    intervencion = None
+    control_interno = None
+    fiscalizacion = None
+    if kind == 1:
+        auditoria = get_object_or_404(Auditoria, pk=id)
+        fiscalizacion = auditoria.id_actividad_fiscalizacion
+    elif kind == 2:
+        control_interno = get_object_or_404(ControlInterno, pk=id)
+        fiscalizacion = control_interno.id_actividad_fiscalizacion
+    elif kind == 3:
+        intervencion = get_object_or_404(Intervencion, pk=id)
+        fiscalizacion = intervencion.id_actividad_fiscalizacion
+    context = {
+        'auditoria': auditoria,
+        'intervencion': intervencion,
+        'control_interno': control_interno,
+        'fiscalizacion': fiscalizacion
+    }
+    return render(request, 'cedula.html', context)
+
+
+@login_required
+def auditoria_cedula_view(request, auditoria_id):
+    return cedula(request, model=Auditoria, id=auditoria_id)
+
+
+@login_required
+def control_cedula_view(request, control_id):
+    return cedula(request, model=ControlInterno, id=control_id)
+
+
+@login_required
+def intervencion_cedula_view(request, intervencion_id):
+    return cedula(request, model=Intervencion, id=intervencion_id)
+
+
 @login_required
 def cedula_view(request, fiscalizacion_id):
     auditoria = Auditoria.objects.filter(id_actividad_fiscalizacion=fiscalizacion_id).first()

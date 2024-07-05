@@ -156,6 +156,9 @@ class ControlInterno(models.Model):
     class Meta:
         db_table = 'control_interno'
 
+    def __str__(self):
+        return f'CI {self.numero}/{self.id_actividad_fiscalizacion.anyo} | {self.id_actividad_fiscalizacion.id_oic}'
+
 
 class ControlInternoObservacion(models.Model):
     id = models.AutoField(primary_key=True)
@@ -208,6 +211,11 @@ class Intervencion(models.Model):
 
     class Meta:
         db_table = 'intervencion'
+
+    def __str__(self):
+        character = "R" if self.id_tipo_intervencion.clave == 13 else (
+            "V" if self.id_tipo_intervencion.clave == 14 else "O")
+        return f"{character}-{self.numero}/{self.id_actividad_fiscalizacion.anyo} | {self.id_actividad_fiscalizacion.id_oic}"
 
 
 class IntervencionObservacion(models.Model):
