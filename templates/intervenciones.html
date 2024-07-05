@@ -60,7 +60,8 @@
         </div>
 
         <!-- Filtro de OIC -->
-        <form id="filtroForm" action="{% url 'intervenciones' %}" method="GET" class="container-fluid mb-4 align-items-center">
+        <form id="filtroForm" action="{% url 'intervenciones' %}" method="GET"
+              class="container-fluid mb-4 align-items-center">
             <!-- Fila para el filtro de OIC -->
             <div class="row mt-xl-4">
                 <div class="col-3">
@@ -101,12 +102,50 @@
         <!-- Intervenciones -->
         <ul class="list-group">
             {% for intervencion in page_obj %}
-                <li class="list-group-item">
-                    <a href="{% url 'intervencion_detalle' intervencion.id %}" class="text_decoration_none">
-                        <span class="intervencion-number">{% if intervencion.id_tipo_intervencion.clave == 13 %}R{% elif intervencion.id_tipo_intervencion.clave == 14 %}V{% else %}O{% endif %}-0{{ intervencion.numero }}/{{ intervencion.id_actividad_fiscalizacion.anyo }}</span>
-                        | {{ intervencion.id_actividad_fiscalizacion.id_oic }}
-                    </a>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{% url 'intervencion_detalle' intervencion.id %}" class="text_decoration_none">
+                            <span class="intervencion-number">{% if intervencion.id_tipo_intervencion.clave == 13 %}
+                                R{% elif intervencion.id_tipo_intervencion.clave == 14 %}V{% else %}O{% endif %}
+                                -0{{ intervencion.numero }}/{{ intervencion.id_actividad_fiscalizacion.anyo }}</span>
+                            | {{ intervencion.id_actividad_fiscalizacion.id_oic }}
+                        </a>
+                    </div>
+                    <!-- Button trigger modal -->
+                    <div>
+                        <button type="button" class="btn btn-outline-dark fas fa-plus" data-toggle="modal"
+                                data-target="#modal-{{ intervencion.id }}"></button>
+                    </div>
                 </li>
+                <!-- Modal -->
+                <div class="modal fade" id="modal-{{ intervencion.id }}" tabindex="-1" role="dialog"
+                     aria-labelledby="modalLabel-{{ intervencion.id }}"
+                     aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalLabel-{{ intervencion.id }}">Selecciona una
+                                    opción:</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <p>{{ intervencion }}</p>
+                                <a href="#" class="btn btn-block btn-outline-dark mb-2">Minuta</a>
+                                <a href="{% url 'intervencion_cedula' intervencion.id %}"
+                                   class="btn btn-block btn-outline-dark mb-2">Cedula</a>
+                            </div>
+                            <div class="modal-footer">
+                                <p>
+                                    <button type="button" class="btn btn-outline-danger btn-block"
+                                            data-dismiss="modal">Cerrar
+                                    </button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
         </ul>
     </div>
@@ -124,6 +163,9 @@
                     </li>
                     <li class="page-item">
                         <a class="page-link" href="?page=
+                                
+                                
+                                
                                 {{ page_obj.previous_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Previous">
                             <span aria-hidden="true">&laquo;</span>
@@ -146,6 +188,9 @@
 
 
 
+                                
+                                
+                                
                                 {{ num }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}">{{ num }}</a>
                         </li>
                     {% endif %}
@@ -157,6 +202,9 @@
 
 
 
+                                
+                                
+                                
                                 {{ page_obj.next_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
@@ -167,6 +215,9 @@
 
 
 
+                                
+                                
+                                
                                 {{ page_obj.paginator.num_pages }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Last">
                             <span aria-hidden="true">&raquo;&raquo;</span>
@@ -183,7 +234,7 @@
             </ul>
         </nav>
     </div>
-    
+
     <script>
         $(document).ready(function () {
             $('.select2').select2({

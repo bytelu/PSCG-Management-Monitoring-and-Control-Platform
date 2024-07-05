@@ -3,19 +3,10 @@
 {% block content %}
     <h1 class="display-2">Cedula</h1>
     <p>{{ fiscalizacion }}</p>
-    <label for="formSelector">Selecciona el tipo de cedula:</label>
-    <div class="flex-container mb-3">
-        <select onchange="showForm(this.value)" id="formSelector" class="select2 form-control">
-            <option value="">Selecciona una opción</option>
-            <option value="form_a">Auditoria</option>
-            <option value="form_b">Intervención</option>
-            <option value="form_c">Control Interno</option>
-        </select>
-    </div>
-
+    
     <!-- Card for Auditoria -->
-    <div id="form_a" class="form-container card" style="display: none;">
-        {% if auditoria %}
+    {% if auditoria %}
+        <div id="form_a" class="form-container card">
             <div class="card-header text-center">
                 <h5>Revisión Mensual a los Órganos Internos de Control en el cumplimiento de sus actividades.</h5>
             </div>
@@ -70,7 +61,8 @@
                     <!-- Dato 0 -->
                     <div class="container justify-content-center align-items-center">
                         <div class="mb-3">
-                            <p>Indica a que sector pertenece (central, desconcentrado, paraestatal o delegaciones). Asi como el Fundamento Legal.</p>
+                            <p>Indica a que sector pertenece (central, desconcentrado, paraestatal o delegaciones). Asi
+                                como el Fundamento Legal.</p>
                             <div class="mb-2">
                                 <div class="row">
                                     <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
@@ -94,7 +86,9 @@
                     <!-- Dato 1 -->
                     <div class="container justify-content-center align-items-center">
                         <div class="mb-3">
-                            <p>Señala los sistemas contables, presupuestales y/o financieros con que cuenta el ente público especificando su denominación, si son informáticos, manuales o de cualquier otro tipo, medidas de seguridad y supervisión con que cuentan.</p>
+                            <p>Señala los sistemas contables, presupuestales y/o financieros con que cuenta el ente
+                                público especificando su denominación, si son informáticos, manuales o de cualquier otro
+                                tipo, medidas de seguridad y supervisión con que cuentan.</p>
                             <div class="mb-2">
                                 <div class="row">
                                     <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
@@ -118,7 +112,9 @@
                     <!-- Dato 2 -->
                     <div class="container justify-content-center align-items-center">
                         <div class="mb-3">
-                            <p>Indica las metas, proyectos operativos funcionales y sustantivos con que cuente el ente público a auditar, previstos en el POA de que se trate o cualquiera otro instrumento que los sustente.</p>
+                            <p>Indica las metas, proyectos operativos funcionales y sustantivos con que cuente el ente
+                                público a auditar, previstos en el POA de que se trate o cualquiera otro instrumento que
+                                los sustente.</p>
                             <div class="mb-2">
                                 <div class="row">
                                     <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
@@ -142,7 +138,8 @@
                     <!-- Dato 3 -->
                     <div class="container justify-content-center align-items-center">
                         <div class="mb-3">
-                            <p>Cuenta con nombre completo, cargo y firma de la persona que elaboró, asesoró, asi como la del  titular  Órgano Interno de Control.</p>
+                            <p>Cuenta con nombre completo, cargo y firma de la persona que elaboró, asesoró, asi como la
+                                del titular Órgano Interno de Control.</p>
                             <div class="mb-2">
                                 <div class="row">
                                     <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
@@ -166,11 +163,13 @@
 
 
                     <h5 class="card-subtitle mb-4 text-body-secondary">Etapa 2: Programación</h5>
-                    <h6 class="card-subtitle mb-4 text-body-secondary text-muted">  Formato A-2 Programa Anual de Auditoría, deberá considerar los puntos</h6>
+                    <h6 class="card-subtitle mb-4 text-body-secondary text-muted"> Formato A-2 Programa Anual de
+                        Auditoría, deberá considerar los puntos</h6>
                     <!-- Dato 4 -->
                     <div class="container justify-content-center align-items-center">
                         <div class="mb-3">
-                            <p>Incluye la clave para la codificación de la Auditoría de conformidad con los lineamientos.</p>
+                            <p>Incluye la clave para la codificación de la Auditoría de conformidad con los
+                                lineamientos.</p>
                             <div class="mb-2">
                                 <div class="row">
                                     <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
@@ -266,7 +265,8 @@
                     <!-- Dato 8 -->
                     <div class="container justify-content-center align-items-center">
                         <div class="mb-3">
-                            <p>Señalar las circunstancias u oportunidades que propiciaron la programación de la auditoría.</p>
+                            <p>Señalar las circunstancias u oportunidades que propiciaron la programación de la
+                                auditoría.</p>
                             <div class="mb-2">
                                 <div class="row">
                                     <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
@@ -290,7 +290,9 @@
                     <!-- Dato 9 -->
                     <div class="container justify-content-center align-items-center">
                         <div class="mb-3">
-                            <p>Señala claramente las razones o criterios utilizados para la selección de la auditoría, como en la especie serían impacto financiero o social, resultados de auditorías anteriores, quejas y denuncias, riesgos existentes.</p>
+                            <p>Señala claramente las razones o criterios utilizados para la selección de la auditoría,
+                                como en la especie serían impacto financiero o social, resultados de auditorías
+                                anteriores, quejas y denuncias, riesgos existentes.</p>
                             <div class="mb-2">
                                 <div class="row">
                                     <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
@@ -1512,22 +1514,16 @@
                         </div>
                     </div>
 
-
                     <!-- Boton para guardar -->
                     <button class="btn btn-outline-dark" type="submit" name="form_a_submit">Guardar</button>
                 </form>
             </div>
-        {% else %}
-            <div class="card-body">
-                <h6 style="color: red" class="display-6">Lo sentimos, pero no existe alguna auditoria de esta actividad
-                    de fiscalización</h6>
-            </div>
-        {% endif %}
-    </div>
+        </div>
+    {% endif %}
 
     <!-- Card for Intervencion -->
-    <div id="form_b" class="form-container card" style="display: none;">
-        {% if intervencion %}
+    {% if intervencion %}
+        <div id="form_b" class="form-container card">
             <div class="card-header text-center">
                 <h5>Revisión Mensual a los Órganos Internos de Control en el cumplimiento de sus actividades.</h5>
             </div>
@@ -1580,17 +1576,12 @@
                     <button class="btn btn-outline-dark" type="submit" name="form_b_submit">Guardar</button>
                 </form>
             </div>
-        {% else %}
-            <div class="card-body">
-                <h6 style="color: red" class="display-6">Lo sentimos, pero no existe alguna intervención de esta
-                    actividad de fiscalización</h6>
-            </div>
-        {% endif %}
-    </div>
+        </div>
+    {% endif %}
 
     <!-- Card for Control Interno -->
-    <div id="form_c" class="form-container card" style="display: none;">
-        {% if control_interno %}
+    {% if control_interno %}
+        <div id="form_c" class="form-container card">
             <div class="card-header text-center">
                 <h5>Revisión Mensual a los Órganos Internos de Control en el cumplimiento de sus actividades.</h5>
             </div>
@@ -1645,26 +1636,10 @@
                     </fieldset>
                     <h5 class="card-title">Revisión a la documentación</h5>
                     <!-- Aqui se colocaran todas las entradas, y de acuerdo a el trimestre que aplique se mostraran unas u otras -->
-
                     <button class="btn btn-outline-dark" type="submit" name="form_c_submit">Guardar</button>
                 </form>
             </div>
-        {% else %}
-            <div class="card-body">
-                <h6 style="color: red" class="display-6">Lo sentimos, pero no existe algun control interno de esta
-                    actividad de fiscalización</h6>
-            </div>
-        {% endif %}
-    </div>
-
-    <script>
-        function showForm(formId) {
-            document.getElementById('form_a').style.display = 'none';
-            document.getElementById('form_b').style.display = 'none';
-            document.getElementById('form_c').style.display = 'none';
-            if (formId) {
-                document.getElementById(formId).style.display = 'block';
-            }
-        }
-    </script>
+        </div>
+    {% endif %}
+    
 {% endblock %}
