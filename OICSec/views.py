@@ -16,7 +16,7 @@ from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
 from OICSec.funcs.PINT import extract_pint
 from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad, \
-    ControlInterno, TipoRevision, ProgramaRevision, Intervencion, TipoIntervencion
+    ControlInterno, TipoRevision, ProgramaRevision, Intervencion, TipoIntervencion, Cedula, ConceptoCedula
 
 
 def login_view(request):
@@ -218,7 +218,7 @@ def upload_paa_view(request):
                         programacion_obj = Programacion.objects.get(id=auditoria_data["Programacion"])
                         enfoque_obj = Enfoque.objects.get(id=auditoria_data["Enfoque"])
                         temporalidad_obj = Temporalidad.objects.get(id=auditoria_data["Temporalidad"])
-
+                        cedula_obj = Cedula.objects.create()
                         Auditoria.objects.create(
                             denominacion=auditoria_data["Denominacion"],
                             numero=auditoria_data["Numero"],
@@ -231,8 +231,16 @@ def upload_paa_view(request):
                             id_programacion=programacion_obj,
                             id_enfoque=enfoque_obj,
                             id_temporalidad=temporalidad_obj,
-
+                            id_cedula=cedula_obj
                         )
+
+                        for i in range(60):
+                            ConceptoCedula.objects.create(
+                                celda=str(i),
+                                estado=None,
+                                comentario=None,
+                                id_cedula=cedula_obj
+                            )
 
                 return render(request, 'upload_paa.html',
                               {'excel_processing_result': data,
@@ -297,6 +305,7 @@ def upload_paci_view(request):
                         if control_data["programa_revision"]:
                             programa_revision_obj = ProgramaRevision.objects.get(id=control_data["programa_revision"])
 
+                        cedula_obj = Cedula.objects.create()
                         ControlInterno.objects.create(
                             numero=control_data["Numero"],
                             area=control_data["Area"],
@@ -304,8 +313,17 @@ def upload_paci_view(request):
                             objetivo=control_data["Objetivo"],
                             id_actividad_fiscalizacion=actividad_fiscalizacion,
                             id_tipo_revision=tipo_revision_obj,
-                            id_programa_revision=programa_revision_obj
+                            id_programa_revision=programa_revision_obj,
+                            id_cedula=cedula_obj
                         )
+
+                        for i in range(55):
+                            ConceptoCedula.objects.create(
+                                celda=str(i),
+                                estado=None,
+                                comentario=None,
+                                id_cedula=cedula_obj
+                            )
 
                 return render(request, 'upload_paci.html',
                               {'excel_processing_result': data,
@@ -365,6 +383,7 @@ def upload_pint_view(request):
                 if word_processing_result["Clave"]:
                     tipo_intervencion_obj = TipoIntervencion.objects.get(clave=word_processing_result["Clave"])
 
+                cedula_obj = Cedula.objects.create()
                 Intervencion.objects.create(
                     unidad=word_processing_result.get('Área'),
                     numero=word_processing_result.get('Numero'),
@@ -379,8 +398,17 @@ def upload_pint_view(request):
                     termino=convert_to_date(word_processing_result.get('Termino')),
                     objetivo=word_processing_result.get('Objetivo'),
                     id_actividad_fiscalizacion=actividad_fiscalizacion,
-                    id_tipo_intervencion=tipo_intervencion_obj
+                    id_tipo_intervencion=tipo_intervencion_obj,
+                    id_cedula=cedula_obj
                 )
+
+                for i in range(54):
+                    ConceptoCedula.objects.create(
+                        celda=str(i),
+                        estado=None,
+                        comentario=None,
+                        id_cedula=cedula_obj
+                    )
 
                 return render(request, 'upload_pint.html',
                               {'excel_processing_result': word_processing_result,

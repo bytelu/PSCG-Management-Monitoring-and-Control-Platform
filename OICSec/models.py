@@ -69,6 +69,7 @@ class Auditoria(models.Model):
     id_enfoque = models.ForeignKey('Enfoque', on_delete=models.CASCADE, blank=True, null=True)
     id_programacion = models.ForeignKey('Programacion', on_delete=models.CASCADE, blank=True, null=True)
     id_temporalidad = models.ForeignKey('Temporalidad', on_delete=models.CASCADE, blank=True, null=True)
+    id_cedula = models.ForeignKey('Cedula', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         db_table = 'auditoria'
@@ -99,8 +100,6 @@ class Cargo(models.Model):
 
 class Cedula(models.Model):
     id = models.AutoField(primary_key=True)
-    id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True,
-                                                   null=True)
     id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
@@ -178,6 +177,7 @@ class ControlInterno(models.Model):
     id_programa_revision = models.ForeignKey('ProgramaRevision', on_delete=models.CASCADE, blank=True, null=True)
     id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True,
                                                    null=True)
+    id_cedula = models.ForeignKey('Cedula', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         db_table = 'control_interno'
@@ -234,6 +234,7 @@ class Intervencion(models.Model):
     fuerza_auditores = models.IntegerField(blank=True, null=True)
     id_tipo_intervencion = models.ForeignKey('TipoIntervencion', on_delete=models.CASCADE, blank=True, null=True)
     id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True)
+    id_cedula = models.ForeignKey('Cedula', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         db_table = 'intervencion'
