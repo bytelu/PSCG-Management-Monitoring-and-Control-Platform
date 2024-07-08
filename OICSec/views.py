@@ -1,12 +1,17 @@
 import datetime
+import os
 from difflib import SequenceMatcher
+from django.http import FileResponse, HttpResponse
+import mimetypes
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
+
 from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm
+from OICSec.funcs.Cedula import SupervisionData, cedula, ConceptosLista, Concepto
 from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
 from OICSec.funcs.PINT import extract_pint
@@ -392,7 +397,7 @@ def upload_pint_view(request):
         return render(request, 'upload_pint.html')
 
 
-def cedula(request, model, id):
+def cedula_view(request, model, id_model):
     mapping = {
         Auditoria: 1,
         ControlInterno: 2,
@@ -404,13 +409,13 @@ def cedula(request, model, id):
     control_interno = None
     fiscalizacion = None
     if kind == 1:
-        auditoria = get_object_or_404(Auditoria, pk=id)
+        auditoria = get_object_or_404(Auditoria, pk=id_model)
         fiscalizacion = auditoria.id_actividad_fiscalizacion
     elif kind == 2:
-        control_interno = get_object_or_404(ControlInterno, pk=id)
+        control_interno = get_object_or_404(ControlInterno, pk=id_model)
         fiscalizacion = control_interno.id_actividad_fiscalizacion
     elif kind == 3:
-        intervencion = get_object_or_404(Intervencion, pk=id)
+        intervencion = get_object_or_404(Intervencion, pk=id_model)
         fiscalizacion = intervencion.id_actividad_fiscalizacion
     context = {
         'auditoria': auditoria,
@@ -418,39 +423,84 @@ def cedula(request, model, id):
         'control_interno': control_interno,
         'fiscalizacion': fiscalizacion
     }
-    return render(request, 'cedula.html', context)
+    if request.method == 'GET':
+        return render(request, 'cedula.html', context)
+    if request.method == 'POST':
+        # Para una cedula de auditoria
+        file_path = None
+        if kind == 1:
+            data = []
+            for i in range(60):
+                estado = request.POST.get(f'estado-{i}') if request.POST.get(
+                    f'estado-{i}') != 'Selecciona una opción' else None
+                comentario = request.POST.get(f'comentario-{i}')
+                data.append((estado, comentario))
+            conceptos = ConceptosLista(
+                Conceptos=[Concepto(Estado=estado, Comentario=comentario) for estado, comentario in data]
+            )
+
+            data = SupervisionData(
+                OIC=str(auditoria.id_actividad_fiscalizacion.id_oic.nombre)
+                if auditoria.id_actividad_fiscalizacion.id_oic.nombre else '',
+                Numero=f'A-{auditoria.numero}/{fiscalizacion.anyo}'
+                if all([auditoria.numero, fiscalizacion.anyo]) else '',
+                Nombre=str(auditoria.denominacion)
+                if auditoria.denominacion else '',
+                Fecha=datetime.datetime.strptime(
+                    request.POST.get('fecha'), '%Y-%m-%d'
+                ).strftime('%d/%m/%Y')
+                if request.POST.get('fecha') else '',
+                Clave=(
+                    f'{auditoria.id_materia.clave}-{auditoria.id_programacion.clave}-{auditoria.id_enfoque.clave}-{auditoria.id_temporalidad.clave}'
+                    if all(
+                        [
+                            auditoria.id_materia.clave,
+                            auditoria.id_programacion.clave,
+                            auditoria.id_enfoque.clave,
+                            auditoria.id_temporalidad.clave
+                        ]
+                    ) else ''),
+                Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}'
+                if fiscalizacion.trimestre else '',
+                Objetivo=auditoria.objetivo
+                if auditoria.objetivo else '',
+                Area=auditoria.unidad
+                if auditoria.unidad else '',
+                Ejercicio=auditoria.ejercicio
+                if auditoria.ejercicio else ''
+            )
+
+            # Se guarda en el sistema de archivos
+            file_path = cedula(kind=1, data=data, conceptos=conceptos)
+
+        if file_path:
+            # Cargar el archivo y enviarlo como respuesta para descargar
+            with open(file_path, 'rb') as file:
+                response = HttpResponse(file.read(),
+                                        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                file_name = os.path.basename(file_path)
+                response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+                return response
+        else:
+            # Manejar el caso en el que no se haya generado el archivo
+            return HttpResponse("No se pudo generar la cédula.", status=500)
+
+
 
 
 @login_required
 def auditoria_cedula_view(request, auditoria_id):
-    return cedula(request, model=Auditoria, id=auditoria_id)
+    return cedula_view(request, model=Auditoria, id_model=auditoria_id)
 
 
 @login_required
 def control_cedula_view(request, control_id):
-    return cedula(request, model=ControlInterno, id=control_id)
+    return cedula_view(request, model=ControlInterno, id_model=control_id)
 
 
 @login_required
 def intervencion_cedula_view(request, intervencion_id):
-    return cedula(request, model=Intervencion, id=intervencion_id)
-
-
-@login_required
-def cedula_view(request, fiscalizacion_id):
-    auditoria = Auditoria.objects.filter(id_actividad_fiscalizacion=fiscalizacion_id).first()
-    intervencion = Intervencion.objects.filter(id_actividad_fiscalizacion=fiscalizacion_id).first()
-    control_interno = ControlInterno.objects.filter(id_actividad_fiscalizacion=fiscalizacion_id).first()
-    actividad = ActividadFiscalizacion.objects.get(id=fiscalizacion_id)
-
-    context = {
-        'auditoria': auditoria,
-        'intervencion': intervencion,
-        'control_interno': control_interno,
-        'fiscalizacion': actividad
-    }
-
-    return render(request, 'cedula.html', context)
+    return cedula_view(request, model=Intervencion, id_model=intervencion_id)
 
 
 @login_required

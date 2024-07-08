@@ -20,5 +20,4 @@ urlpatterns = [
     path("intervenciones/cedula/<int:intervencion_id>/", intervencion_cedula_view, name="intervencion_cedula"),
     path("intervenciones/<int:intervencion_id>/", intervencion_detalle_view, name="intervencion_detalle"),
     path("supervision/", supervision_view, name="supervision"),
-    path("supervision/cedula/<int:fiscalizacion_id>/", cedula_view, name="cedula"),
 ]
