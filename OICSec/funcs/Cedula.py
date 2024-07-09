@@ -236,7 +236,7 @@ def cedula(kind: int, data: SupervisionData, conceptos: ConceptosLista) -> Optio
         if sheet_kind != kind:
             workbook[sheet_title].sheet_state = "hidden"
 
-    file_name = f"Supervision - {data.Anyo_Trimestre} - {data.OIC}.xlsx"
+    file_name = f"Supervision - {data.Numero} - {data.OIC} - {data.Anyo_Trimestre}.xlsx"
     file_name = file_name.replace('/', '_')
     output_dir = os.path.normpath(os.path.join(script_dir, '../../media/cedulas'))
     abs_output_path = os.path.join(output_dir, file_name)
