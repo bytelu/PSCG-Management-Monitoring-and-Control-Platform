@@ -47,8 +47,8 @@ class ActividadFiscalizacion(models.Model):
 
 class Archivo(models.Model):
     id = models.AutoField(primary_key=True)
-    archivo = models.FileField(upload_to='archivos/')
-    nombre = models.CharField(max_length=400, blank=True, null=True)
+    archivo = models.FileField(upload_to='archivos/', max_length=1000, blank=True, null=True)
+    nombre = models.CharField(max_length=4000, blank=True, null=True)
 
     class Meta:
         db_table = 'archivo'

@@ -21,24 +21,24 @@
                 {% csrf_token %}
                 <div class="mb-3">
                     <!-- Nuevo botón personalizado para cargar archivos -->
-                    <label for="formFile" class="form-label text-center">Aquí deberás seleccionar únicamente un archivo excel de tipo Programa de Intervención:</label>
+                    <label for="formFile" class="form-label text-center">Aquí deberás seleccionar únicamente un archivo word de tipo Programa de Intervención:</label>
                     <label for="fileInput" class="btn btn-outline-dark btn-lg btn-block">Seleccionar Archivo</label>
                     <!-- Nuevo input de archivo oculto -->
-                    <input type="file" id="fileInput" name="excel_file"
+                    <input type="file" id="fileInput" name="word_file"
                            onchange="document.getElementById('fileNameLabel').innerText = 'Archivo seleccionado: ' + this.files[0].name">
                     <!-- Etiqueta para mostrar el nombre del archivo seleccionado -->
                     <p id="fileNameLabel"></p>
                 </div>
                 <button type="submit" class="btn btn-outline-dark btn-lg btn-block">Subir Archivo</button>
             </form>
-            {% if excel_processing_result %}
+            {% if word_processing_result %}
                 <div class="alert alert-success mt-3" role="alert">
                     <strong>Éxito al procesar el archivo!! | Los datos han sido guardados con éxito!!</strong>
                 </div>
             {% endif %}
-            {% if excel_processing_error %}
+            {% if word_processing_error %}
                 <div class="alert alert-danger mt-3" role="alert">
-                    <strong>Error:</strong> {{ excel_processing_error }}
+                    <strong>Error:</strong> {{ word_processing_error }}
                 </div>
             {% endif %}
         </div>

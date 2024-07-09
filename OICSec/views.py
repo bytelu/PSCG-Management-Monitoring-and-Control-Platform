@@ -1,8 +1,7 @@
 import datetime
 import os
 from difflib import SequenceMatcher
-from django.http import FileResponse, HttpResponse
-import mimetypes
+from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -11,12 +10,13 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 
 from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm
-from OICSec.funcs.Cedula import SupervisionData, cedula, ConceptosLista, Concepto
+from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
+from OICSec.funcs.Cedula import cedula as create_cedula
 from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
 from OICSec.funcs.PINT import extract_pint
 from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad, \
-    ControlInterno, TipoRevision, ProgramaRevision, Intervencion, TipoIntervencion, Cedula, ConceptoCedula
+    ControlInterno, TipoRevision, ProgramaRevision, Intervencion, TipoIntervencion, Cedula, ConceptoCedula, Archivo
 
 
 def login_view(request):
@@ -346,13 +346,13 @@ def upload_pint_view(request):
 
     similar_oic = None
 
-    if request.method == 'POST' and request.FILES.get('excel_file'):
-        word_file = request.FILES.get('excel_file')
+    if request.method == 'POST' and request.FILES.get('word_file'):
+        word_file = request.FILES.get('word_file')
         try:
             word_processing_result = extract_pint(word_file)
             if word_processing_result is None:
                 return render(request, 'upload_pint.html', {
-                    'excel_processing_error': 'Error al procesar el archivo Excel | Nombre de error: None-results | '
+                    'word_processing_error': 'Error al procesar el archivo Word | Nombre de error: None-results | '
                                               'Consulte manual de usuario para mas información.',
                     'lista_oics': lista_oics, 'similar_oic': similar_oic})
             else:
@@ -411,14 +411,14 @@ def upload_pint_view(request):
                     )
 
                 return render(request, 'upload_pint.html',
-                              {'excel_processing_result': word_processing_result,
+                              {'word_processing_result': word_processing_result,
                                'lista_oics': lista_oics,
                                'similar_oic': similar_oic})
         except Exception as e:
-            excel_processing_error = (f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte '
+            word_processing_error = (f'Error al procesar el archivo Word | Nombre de error: {str(e)} | Consulte '
                                       f'manual de usuario para mas información')
             return render(request, 'upload_pint.html',
-                          {'excel_processing_error': excel_processing_error, 'lista_oics': lista_oics,
+                          {'word_processing_error': word_processing_error, 'lista_oics': lista_oics,
                            'similar_oic': similar_oic})
 
     if request.method == 'GET':
@@ -452,16 +452,39 @@ def cedula_view(request, model, id_model):
         'fiscalizacion': fiscalizacion
     }
     if request.method == 'GET':
+        # Caso de Auditoria
+        if kind == 1:
+            cedula = get_object_or_404(Cedula, pk=auditoria.id_cedula_id)
+            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
+            auditoria_conceptos = {
+                concepto.celda: {
+                    'estado': concepto.estado,
+                    'comentario': concepto.comentario if concepto.comentario is not None else ''
+                }
+                for concepto in conceptos
+            }
+            context.update({'conceptos': auditoria_conceptos})
         return render(request, 'cedula.html', context)
     if request.method == 'POST':
-        # Para una cedula de auditoria
         file_path = None
+        # Caso de Auditoria
         if kind == 1:
             data = []
+            cedula = get_object_or_404(Cedula, pk=auditoria.id_cedula_id)
+            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
             for i in range(60):
                 estado = request.POST.get(f'estado-{i}') if request.POST.get(
                     f'estado-{i}') != 'Selecciona una opción' else None
                 comentario = request.POST.get(f'comentario-{i}')
+                # Se actualizan los valores en la base de datos
+                try:
+                    concepto = conceptos.get(celda=str(i))
+                    concepto.estado = estado
+                    concepto.comentario = comentario
+                    concepto.save()
+                except ConceptoCedula.DoesNotExist:
+                    pass
+                # Se preparan para la generación del archivo
                 data.append((estado, comentario))
             conceptos = ConceptosLista(
                 Conceptos=[Concepto(Estado=estado, Comentario=comentario) for estado, comentario in data]
@@ -499,21 +522,30 @@ def cedula_view(request, model, id_model):
             )
 
             # Se guarda en el sistema de archivos
-            file_path = cedula(kind=1, data=data, conceptos=conceptos)
+            file_path = create_cedula(kind=1, data=data, conceptos=conceptos)
+            # Se guarda la ubicacion en la base de datos y se asigna a cedula
+            archivo = cedula.id_archivo
+            if not archivo:
+                archivo = Archivo.objects.create(
+                    archivo=file_path,
+                    nombre=f"Supervision - {data.Numero} - {data.OIC} - {data.Anyo_Trimestre}.xlsx"
+                )
+                cedula.id_archivo = archivo
+                cedula.save()
 
-        if file_path:
-            # Cargar el archivo y enviarlo como respuesta para descargar
-            with open(file_path, 'rb') as file:
-                response = HttpResponse(file.read(),
-                                        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                file_name = os.path.basename(file_path)
-                response['Content-Disposition'] = f'attachment; filename="{file_name}"'
-                return response
-        else:
-            # Manejar el caso en el que no se haya generado el archivo
-            return HttpResponse("No se pudo generar la cédula.", status=500)
-
-
+            if file_path:
+                # Cargar el archivo y enviarlo como respuesta para descargar
+                with open(file_path, 'rb') as file:
+                    response = HttpResponse(
+                        file.read(),
+                        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
+                    file_name = os.path.basename(file_path)
+                    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+                    return response
+            else:
+                # Manejar el caso en el que no se haya generado el archivo
+                return HttpResponse("No se pudo generar la cédula.", status=500)
 
 
 @login_required
