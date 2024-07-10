@@ -19,5 +19,5 @@ urlpatterns = [
     path("intervenciones/PINT/", upload_pint_view, name="uploadPint"),
     path("intervenciones/cedula/<int:intervencion_id>/", intervencion_cedula_view, name="intervencion_cedula"),
     path("intervenciones/<int:intervencion_id>/", intervencion_detalle_view, name="intervencion_detalle"),
-    path("supervision/", supervision_view, name="supervision"),
+    path("minuta/<int:fiscalizacion_id>/", minuta_view, name="minuta"),
 ]

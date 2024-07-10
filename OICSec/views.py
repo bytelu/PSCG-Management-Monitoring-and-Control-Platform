@@ -130,11 +130,6 @@ def intervenciones_view(request):
 
 
 @login_required
-def supervision_view(request):
-    return get_filtered_objects(request, ActividadFiscalizacion, 'supervision.html')
-
-
-@login_required
 def handle_detail_view(request, model, form_class, object_id, template_name):
     obj = get_object_or_404(model, pk=object_id)
     if request.method == 'POST':
@@ -592,6 +587,15 @@ def control_cedula_view(request, control_id):
 @login_required
 def intervencion_cedula_view(request, intervencion_id):
     return cedula_view(request, model=Intervencion, id_model=intervencion_id)
+
+
+@login_required
+def minuta_view(request, fiscalizacion_id):
+    fiscalizacion = get_object_or_404(ActividadFiscalizacion, pk=fiscalizacion_id)
+    context = {
+        'fiscalizacion': fiscalizacion
+    }
+    return render(request, 'minuta.html', context)
 
 
 @login_required
