@@ -464,6 +464,28 @@ def cedula_view(request, model, id_model):
                 for concepto in conceptos
             }
             context.update({'conceptos': auditoria_conceptos})
+        if kind == 2:
+            cedula = get_object_or_404(Cedula, pk=control_interno.id_cedula_id)
+            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
+            control_interno_conceptos = {
+                concepto.celda: {
+                    'estado': concepto.estado,
+                    'comentario': concepto.comentario if concepto.comentario is not None else ''
+                }
+                for concepto in conceptos
+            }
+            context.update({'conceptos': control_interno_conceptos})
+        if kind == 3:
+            cedula = get_object_or_404(Cedula, pk=intervencion.id_cedula_id)
+            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
+            intervencion_conceptos = {
+                concepto.celda: {
+                    'estado': concepto.estado,
+                    'comentario': concepto.comentario if concepto.comentario is not None else ''
+                }
+                for concepto in conceptos
+            }
+            context.update({'conceptos': intervencion_conceptos})
         return render(request, 'cedula.html', context)
     if request.method == 'POST':
         file_path = None
@@ -523,6 +545,75 @@ def cedula_view(request, model, id_model):
 
             # Se guarda en el sistema de archivos
             file_path = create_cedula(kind=1, data=data, conceptos=conceptos)
+            # Se guarda la ubicacion en la base de datos y se asigna a cedula
+            archivo = cedula.id_archivo
+            if not archivo:
+                archivo = Archivo.objects.create(
+                    archivo=file_path,
+                    nombre=f"Supervision - {data.Numero} - {data.OIC} - {data.Anyo_Trimestre}.xlsx"
+                )
+                cedula.id_archivo = archivo
+                cedula.save()
+
+            if file_path:
+                # Cargar el archivo y enviarlo como respuesta para descargar
+                with open(file_path, 'rb') as file:
+                    response = HttpResponse(
+                        file.read(),
+                        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
+                    file_name = os.path.basename(file_path)
+                    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+                    return response
+            else:
+                # Manejar el caso en el que no se haya generado el archivo
+                return HttpResponse("No se pudo generar la cédula.", status=500)
+        if kind == 3:
+            data = []
+            cedula = get_object_or_404(Cedula, pk=intervencion.id_cedula_id)
+            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
+            for i in range(60):
+                estado = request.POST.get(f'estado-{i}') if request.POST.get(
+                    f'estado-{i}') != 'Selecciona una opción' else None
+                comentario = request.POST.get(f'comentario-{i}')
+                # Se actualizan los valores en la base de datos
+                try:
+                    concepto = conceptos.get(celda=str(i))
+                    concepto.estado = estado
+                    concepto.comentario = comentario
+                    concepto.save()
+                except ConceptoCedula.DoesNotExist:
+                    pass
+                # Se preparan para la generación del archivo
+                data.append((estado, comentario))
+            conceptos = ConceptosLista(
+                Conceptos=[Concepto(Estado=estado, Comentario=comentario) for estado, comentario in data]
+            )
+
+            clave = 'R' if intervencion.id_tipo_intervencion.clave == 13 else ('V' if intervencion.id_tipo_intervencion.clave == 14 else 'O')
+            data = SupervisionData(
+                OIC=str(intervencion.id_actividad_fiscalizacion.id_oic.nombre)
+                if intervencion.id_actividad_fiscalizacion.id_oic.nombre else '',
+                Numero=f'{clave}-{intervencion.numero}/{fiscalizacion.anyo}',
+                Nombre=str(intervencion.denominacion)
+                if intervencion.denominacion else '',
+                Fecha=datetime.datetime.strptime(
+                    request.POST.get('fecha'), '%Y-%m-%d'
+                ).strftime('%d/%m/%Y')
+                if request.POST.get('fecha') else '',
+                Clave=f'{intervencion.id_tipo_intervencion.clave}',
+                Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}'
+                if fiscalizacion.trimestre else '',
+                Objetivo=intervencion.objetivo
+                if intervencion.objetivo else '',
+                Area=intervencion.unidad
+                if intervencion.unidad else '',
+                Ejercicio=intervencion.ejercicio
+                if intervencion.ejercicio else ''
+            )
+
+            # Se guarda en el sistema de archivos
+            file_path = create_cedula(kind=2, data=data, conceptos=conceptos)
             # Se guarda la ubicacion en la base de datos y se asigna a cedula
             archivo = cedula.id_archivo
             if not archivo:
