@@ -132,7 +132,7 @@
                             </div>
                             <div class="modal-body text-center">
                                 <p>{{ intervencion }}</p>
-                                <a href="#" class="btn btn-block btn-outline-dark mb-2">Minuta</a>
+                                <a href="{% url 'minuta' intervencion.id_actividad_fiscalizacion.id %}" class="btn btn-block btn-outline-dark mb-2">Minuta</a>
                                 <a href="{% url 'intervencion_cedula' intervencion.id %}"
                                    class="btn btn-block btn-outline-dark mb-2">Cedula</a>
                             </div>

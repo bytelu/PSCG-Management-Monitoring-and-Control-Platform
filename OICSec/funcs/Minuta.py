@@ -245,12 +245,16 @@ def minuta(data: List[str],
     Returns:
         Optional[str]: Ruta donde ha sido guardado el archivo final en caso de éxito, o None si no se pudo generar.
     """
-    destino = "C:/Users/angel/Testing/pythonProject1/temp"
-    origen = (
-        "C:/Users/angel/Testing/pythonProject1/files/minuta_papeles.docx"
-        if kind
-        else "C:/Users/angel/Testing/pythonProject1/files/minuta_proyectos.docx"
-    )
+    # Obtén la ruta absoluta al directorio del script
+    script_dir = os.path.dirname(__file__)
+    # Construye la ruta relativa al archivo Word dependiendo de el tipo de archivo
+    rel_path = '../../media/templatedocs/minuta_papeles.docx'
+    papeles_trabajo = os.path.normpath(os.path.join(script_dir, rel_path))
+    rel_path = '../../media/templatedocs/minuta_proyectos.docx'
+    proyectos_observaciones = os.path.normpath(os.path.join(script_dir, rel_path))
+    rel_path = '../../media/minutas'
+    destino = os.path.normpath(os.path.join(script_dir, rel_path))
+    origen = papeles_trabajo if kind else proyectos_observaciones
 
     if not kind and revision is None:
         return None

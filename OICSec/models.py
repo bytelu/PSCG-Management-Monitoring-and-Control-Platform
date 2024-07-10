@@ -42,7 +42,7 @@ class ActividadFiscalizacion(models.Model):
         db_table = 'actividad_fiscalizacion'
 
     def __str__(self):
-        return f'Año: {self.anyo}   Trimestre: {self.trimestre}   OIC: {self.id_oic}'
+        return f'{self.id_oic} | 0{self.trimestre}/{self.anyo}'
 
 
 class Archivo(models.Model):
@@ -242,7 +242,9 @@ class Intervencion(models.Model):
     def __str__(self):
         character = "R" if self.id_tipo_intervencion.clave == 13 else (
             "V" if self.id_tipo_intervencion.clave == 14 else "O")
-        return f"{character}-{self.numero}/{self.id_actividad_fiscalizacion.anyo} | {self.id_actividad_fiscalizacion.id_oic}"
+        anyo = self.id_actividad_fiscalizacion.anyo
+        oic = self.id_actividad_fiscalizacion.id_oic
+        return f"{character}-{self.numero}/{anyo} | {oic}"
 
 
 class IntervencionObservacion(models.Model):

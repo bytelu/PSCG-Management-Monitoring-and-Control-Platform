@@ -130,7 +130,7 @@
                             </div>
                             <div class="modal-body text-center">
                                 <p>{{ control }}</p>
-                                <a href="#" class="btn btn-block btn-outline-dark mb-2">Minuta</a>
+                                <a href="{% url 'minuta' control.id_actividad_fiscalizacion.id %}" class="btn btn-block btn-outline-dark mb-2">Minuta</a>
                                 <a href="{% url 'control_cedula' control.id %}"
                                    class="btn btn-block btn-outline-dark mb-2">Cedula</a>
                             </div>
