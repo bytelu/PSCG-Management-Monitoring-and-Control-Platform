@@ -353,7 +353,7 @@ def upload_pint_view(request):
             if word_processing_result is None:
                 return render(request, 'upload_pint.html', {
                     'word_processing_error': 'Error al procesar el archivo Word | Nombre de error: None-results | '
-                                              'Consulte manual de usuario para mas información.',
+                                             'Consulte manual de usuario para mas información.',
                     'lista_oics': lista_oics, 'similar_oic': similar_oic})
             else:
                 max_similarity = 0
@@ -416,7 +416,7 @@ def upload_pint_view(request):
                                'similar_oic': similar_oic})
         except Exception as e:
             word_processing_error = (f'Error al procesar el archivo Word | Nombre de error: {str(e)} | Consulte '
-                                      f'manual de usuario para mas información')
+                                     f'manual de usuario para mas información')
             return render(request, 'upload_pint.html',
                           {'word_processing_error': word_processing_error, 'lista_oics': lista_oics,
                            'similar_oic': similar_oic})
@@ -425,218 +425,158 @@ def upload_pint_view(request):
         return render(request, 'upload_pint.html')
 
 
+def get_cedula_conceptos(model_instance):
+    cedula = get_object_or_404(Cedula, pk=model_instance.id_cedula_id)
+    conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
+    conceptos_dict = {
+        concepto.celda: {
+            'estado': concepto.estado,
+            'comentario': concepto.comentario if concepto.comentario is not None else ''
+        }
+        for concepto in conceptos
+    }
+    return cedula, conceptos, conceptos_dict
+
+
+def update_conceptos(conceptos, request):
+    data = []
+    for i in range(60):
+        estado = request.POST.get(f'estado-{i}') if request.POST.get(f'estado-{i}') != 'Selecciona una opción' else None
+        comentario = request.POST.get(f'comentario-{i}')
+        # Se actualizan los valores en la base de datos
+        try:
+            concepto = conceptos.get(celda=str(i))
+            concepto.estado = estado
+            concepto.comentario = comentario
+            concepto.save()
+        except ConceptoCedula.DoesNotExist:
+            pass
+        # Se preparan para la generación del archivo
+        data.append((estado, comentario))
+    conceptos_lista = ConceptosLista(
+        Conceptos=[Concepto(Estado=estado, Comentario=comentario) for estado, comentario in data]
+    )
+    return conceptos_lista
+
+
+def get_supervision_data(kind, model_instance, fiscalizacion, request):
+    data = None
+    if kind == 1:
+        materia = model_instance.id_materia.clave
+        programacion = model_instance.id_programacion.clave
+        enfoque = model_instance.id_enfoque.clave
+        temporalidad = model_instance.id_temporalidad.clave
+        data = SupervisionData(
+            OIC=str(
+                model_instance.id_actividad_fiscalizacion.id_oic.nombre)
+            if model_instance.id_actividad_fiscalizacion.id_oic.nombre else '',
+            Numero=f'A-{model_instance.numero}/{fiscalizacion.anyo}' if all(
+                [model_instance.numero, fiscalizacion.anyo]) else '',
+            Nombre=str(model_instance.denominacion) if model_instance.denominacion else '',
+            Fecha=datetime.datetime.strptime(request.POST.get('fecha'), '%Y-%m-%d').strftime(
+                '%d/%m/%Y') if request.POST.get('fecha') else '',
+            Clave=(
+                f'{materia}-{programacion}-{enfoque}-{temporalidad}'
+                if all(
+                    [model_instance.id_materia.clave, model_instance.id_programacion.clave,
+                     model_instance.id_enfoque.clave, model_instance.id_temporalidad.clave]) else ''),
+            Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}' if fiscalizacion.trimestre else '',
+            Objetivo=model_instance.objetivo if model_instance.objetivo else '',
+            Area=model_instance.unidad if model_instance.unidad else '',
+            Ejercicio=model_instance.ejercicio if model_instance.ejercicio else ''
+        )
+    elif kind == 2:
+        clave = 'R' if model_instance.id_tipo_intervencion.clave == 13 else (
+            'V' if model_instance.id_tipo_intervencion.clave == 14 else 'O')
+        data = SupervisionData(
+            OIC=str(
+                model_instance.id_actividad_fiscalizacion.id_oic.nombre)
+            if model_instance.id_actividad_fiscalizacion.id_oic.nombre else '',
+            Numero=f'{clave}-{model_instance.numero}/{fiscalizacion.anyo}',
+            Nombre=str(model_instance.denominacion) if model_instance.denominacion else '',
+            Fecha=datetime.datetime.strptime(request.POST.get('fecha'), '%Y-%m-%d').strftime(
+                '%d/%m/%Y') if request.POST.get('fecha') else '',
+            Clave=f'{model_instance.id_tipo_intervencion.clave}',
+            Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}' if fiscalizacion.trimestre else '',
+            Objetivo=model_instance.objetivo if model_instance.objetivo else '',
+            Area=model_instance.unidad if model_instance.unidad else '',
+            Ejercicio=model_instance.ejercicio if model_instance.ejercicio else ''
+        )
+    elif kind == 3:
+        data = SupervisionData(
+            OIC=str(
+                model_instance.id_actividad_fiscalizacion.id_oic.nombre)
+            if model_instance.id_actividad_fiscalizacion.id_oic.nombre else '',
+            Numero=f'CI {model_instance.numero}/{fiscalizacion.anyo}',
+            Nombre=str(model_instance.denominacion) if model_instance.denominacion else '',
+            Fecha=datetime.datetime.strptime(request.POST.get('fecha'), '%Y-%m-%d').strftime(
+                '%d/%m/%Y') if request.POST.get('fecha') else '',
+            Clave=f'{model_instance.id_tipo_revision.clave}-{model_instance.id_programa_revision.clave}',
+            Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}' if fiscalizacion.trimestre else '',
+            Objetivo=model_instance.objetivo if model_instance.objetivo else '',
+            Area=model_instance.area if model_instance.area else '',
+            Ejercicio=model_instance.ejercicio if model_instance.ejercicio else ''
+        )
+    return data
+
+
+def save_file_and_respond(file_path, cedula, data):
+    archivo = cedula.id_archivo
+    if not archivo:
+        archivo = Archivo.objects.create(
+            archivo=file_path,
+            nombre=f"Supervision - {data.Numero} - {data.OIC} - {data.Anyo_Trimestre}.xlsx"
+        )
+        cedula.id_archivo = archivo
+        cedula.save()
+
+    if file_path:
+        # Cargar el archivo y enviarlo como respuesta para descargar
+        with open(file_path, 'rb') as file:
+            response = HttpResponse(
+                file.read(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            file_name = os.path.basename(file_path)
+            response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+            return response
+    else:
+        # Manejar el caso en el que no se haya generado el archivo
+        return HttpResponse("No se pudo generar la cédula.", status=500)
+
+
+@login_required
 def cedula_view(request, model, id_model):
     mapping = {
         Auditoria: 1,
-        ControlInterno: 2,
-        Intervencion: 3
+        Intervencion: 2,
+        ControlInterno: 3,
     }
     kind = mapping.get(model)
-    auditoria = None
-    intervencion = None
-    control_interno = None
-    fiscalizacion = None
-    if kind == 1:
-        auditoria = get_object_or_404(Auditoria, pk=id_model)
-        fiscalizacion = auditoria.id_actividad_fiscalizacion
-    elif kind == 2:
-        control_interno = get_object_or_404(ControlInterno, pk=id_model)
-        fiscalizacion = control_interno.id_actividad_fiscalizacion
-    elif kind == 3:
-        intervencion = get_object_or_404(Intervencion, pk=id_model)
-        fiscalizacion = intervencion.id_actividad_fiscalizacion
+    model_instance = get_object_or_404(model, pk=id_model)
+    fiscalizacion = model_instance.id_actividad_fiscalizacion
+
     context = {
-        'auditoria': auditoria,
-        'intervencion': intervencion,
-        'control_interno': control_interno,
+        'auditoria': model_instance if kind == 1 else None,
+        'intervencion': model_instance if kind == 2 else None,
+        'control_interno': model_instance if kind == 3 else None,
         'fiscalizacion': fiscalizacion
     }
     if request.method == 'GET':
-        # Caso de Auditoria
-        if kind == 1:
-            cedula = get_object_or_404(Cedula, pk=auditoria.id_cedula_id)
-            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
-            auditoria_conceptos = {
-                concepto.celda: {
-                    'estado': concepto.estado,
-                    'comentario': concepto.comentario if concepto.comentario is not None else ''
-                }
-                for concepto in conceptos
-            }
-            context.update({'conceptos': auditoria_conceptos})
-        if kind == 2:
-            cedula = get_object_or_404(Cedula, pk=control_interno.id_cedula_id)
-            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
-            control_interno_conceptos = {
-                concepto.celda: {
-                    'estado': concepto.estado,
-                    'comentario': concepto.comentario if concepto.comentario is not None else ''
-                }
-                for concepto in conceptos
-            }
-            context.update({'conceptos': control_interno_conceptos})
-        if kind == 3:
-            cedula = get_object_or_404(Cedula, pk=intervencion.id_cedula_id)
-            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
-            intervencion_conceptos = {
-                concepto.celda: {
-                    'estado': concepto.estado,
-                    'comentario': concepto.comentario if concepto.comentario is not None else ''
-                }
-                for concepto in conceptos
-            }
-            context.update({'conceptos': intervencion_conceptos})
+        _, _, conceptos_dict = get_cedula_conceptos(model_instance)
+        context.update({'conceptos': conceptos_dict})
         return render(request, 'cedula.html', context)
+
     if request.method == 'POST':
-        file_path = None
-        # Caso de Auditoria
-        if kind == 1:
-            data = []
-            cedula = get_object_or_404(Cedula, pk=auditoria.id_cedula_id)
-            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
-            for i in range(60):
-                estado = request.POST.get(f'estado-{i}') if request.POST.get(
-                    f'estado-{i}') != 'Selecciona una opción' else None
-                comentario = request.POST.get(f'comentario-{i}')
-                # Se actualizan los valores en la base de datos
-                try:
-                    concepto = conceptos.get(celda=str(i))
-                    concepto.estado = estado
-                    concepto.comentario = comentario
-                    concepto.save()
-                except ConceptoCedula.DoesNotExist:
-                    pass
-                # Se preparan para la generación del archivo
-                data.append((estado, comentario))
-            conceptos = ConceptosLista(
-                Conceptos=[Concepto(Estado=estado, Comentario=comentario) for estado, comentario in data]
-            )
-
-            data = SupervisionData(
-                OIC=str(auditoria.id_actividad_fiscalizacion.id_oic.nombre)
-                if auditoria.id_actividad_fiscalizacion.id_oic.nombre else '',
-                Numero=f'A-{auditoria.numero}/{fiscalizacion.anyo}'
-                if all([auditoria.numero, fiscalizacion.anyo]) else '',
-                Nombre=str(auditoria.denominacion)
-                if auditoria.denominacion else '',
-                Fecha=datetime.datetime.strptime(
-                    request.POST.get('fecha'), '%Y-%m-%d'
-                ).strftime('%d/%m/%Y')
-                if request.POST.get('fecha') else '',
-                Clave=(
-                    f'{auditoria.id_materia.clave}-{auditoria.id_programacion.clave}-{auditoria.id_enfoque.clave}-{auditoria.id_temporalidad.clave}'
-                    if all(
-                        [
-                            auditoria.id_materia.clave,
-                            auditoria.id_programacion.clave,
-                            auditoria.id_enfoque.clave,
-                            auditoria.id_temporalidad.clave
-                        ]
-                    ) else ''),
-                Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}'
-                if fiscalizacion.trimestre else '',
-                Objetivo=auditoria.objetivo
-                if auditoria.objetivo else '',
-                Area=auditoria.unidad
-                if auditoria.unidad else '',
-                Ejercicio=auditoria.ejercicio
-                if auditoria.ejercicio else ''
-            )
-
+        cedula, conceptos, _ = get_cedula_conceptos(model_instance)
+        conceptos_lista = update_conceptos(conceptos, request)
+        supervision_data = get_supervision_data(kind, model_instance, fiscalizacion, request)
+        if supervision_data:
             # Se guarda en el sistema de archivos
-            file_path = create_cedula(kind=1, data=data, conceptos=conceptos)
-            # Se guarda la ubicacion en la base de datos y se asigna a cedula
-            archivo = cedula.id_archivo
-            if not archivo:
-                archivo = Archivo.objects.create(
-                    archivo=file_path,
-                    nombre=f"Supervision - {data.Numero} - {data.OIC} - {data.Anyo_Trimestre}.xlsx"
-                )
-                cedula.id_archivo = archivo
-                cedula.save()
-
-            if file_path:
-                # Cargar el archivo y enviarlo como respuesta para descargar
-                with open(file_path, 'rb') as file:
-                    response = HttpResponse(
-                        file.read(),
-                        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                    )
-                    file_name = os.path.basename(file_path)
-                    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
-                    return response
-            else:
-                # Manejar el caso en el que no se haya generado el archivo
-                return HttpResponse("No se pudo generar la cédula.", status=500)
-        if kind == 3:
-            data = []
-            cedula = get_object_or_404(Cedula, pk=intervencion.id_cedula_id)
-            conceptos = ConceptoCedula.objects.filter(id_cedula=cedula.id)
-            for i in range(60):
-                estado = request.POST.get(f'estado-{i}') if request.POST.get(
-                    f'estado-{i}') != 'Selecciona una opción' else None
-                comentario = request.POST.get(f'comentario-{i}')
-                # Se actualizan los valores en la base de datos
-                try:
-                    concepto = conceptos.get(celda=str(i))
-                    concepto.estado = estado
-                    concepto.comentario = comentario
-                    concepto.save()
-                except ConceptoCedula.DoesNotExist:
-                    pass
-                # Se preparan para la generación del archivo
-                data.append((estado, comentario))
-            conceptos = ConceptosLista(
-                Conceptos=[Concepto(Estado=estado, Comentario=comentario) for estado, comentario in data]
-            )
-
-            clave = 'R' if intervencion.id_tipo_intervencion.clave == 13 else ('V' if intervencion.id_tipo_intervencion.clave == 14 else 'O')
-            data = SupervisionData(
-                OIC=str(intervencion.id_actividad_fiscalizacion.id_oic.nombre)
-                if intervencion.id_actividad_fiscalizacion.id_oic.nombre else '',
-                Numero=f'{clave}-{intervencion.numero}/{fiscalizacion.anyo}',
-                Nombre=str(intervencion.denominacion)
-                if intervencion.denominacion else '',
-                Fecha=datetime.datetime.strptime(
-                    request.POST.get('fecha'), '%Y-%m-%d'
-                ).strftime('%d/%m/%Y')
-                if request.POST.get('fecha') else '',
-                Clave=f'{intervencion.id_tipo_intervencion.clave}',
-                Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}'
-                if fiscalizacion.trimestre else '',
-                Objetivo=intervencion.objetivo
-                if intervencion.objetivo else '',
-                Area=intervencion.unidad
-                if intervencion.unidad else '',
-                Ejercicio=intervencion.ejercicio
-                if intervencion.ejercicio else ''
-            )
-
-            # Se guarda en el sistema de archivos
-            file_path = create_cedula(kind=2, data=data, conceptos=conceptos)
-            # Se guarda la ubicacion en la base de datos y se asigna a cedula
-            archivo = cedula.id_archivo
-            if not archivo:
-                archivo = Archivo.objects.create(
-                    archivo=file_path,
-                    nombre=f"Supervision - {data.Numero} - {data.OIC} - {data.Anyo_Trimestre}.xlsx"
-                )
-                cedula.id_archivo = archivo
-                cedula.save()
-
-            if file_path:
-                # Cargar el archivo y enviarlo como respuesta para descargar
-                with open(file_path, 'rb') as file:
-                    response = HttpResponse(
-                        file.read(),
-                        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                    )
-                    file_name = os.path.basename(file_path)
-                    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
-                    return response
-            else:
-                # Manejar el caso en el que no se haya generado el archivo
-                return HttpResponse("No se pudo generar la cédula.", status=500)
+            file_path = create_cedula(kind=kind, data=supervision_data, conceptos=conceptos_lista)
+            return save_file_and_respond(file_path, cedula, supervision_data)
+        else:
+            return HttpResponse("No se pudo generar la cédula.", status=500)
 
 
 @login_required
