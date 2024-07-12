@@ -106,8 +106,9 @@
                     <div>
                         <a href="{% url 'intervencion_detalle' intervencion.id %}" class="text_decoration_none">
                             <span class="intervencion-number">{% if intervencion.id_tipo_intervencion.clave == 13 %}
-                                R{% elif intervencion.id_tipo_intervencion.clave == 14 %}V{% else %}O{% endif %}
-                                -0{{ intervencion.numero }}/{{ intervencion.id_actividad_fiscalizacion.anyo }}</span>
+                                R{% elif intervencion.id_tipo_intervencion.clave == 14 %}V{% else %}O
+                            {% endif %}-0{{ intervencion.numero }}/{{ intervencion.id_actividad_fiscalizacion.anyo }}
+                            </span>
                             | {{ intervencion.id_actividad_fiscalizacion.id_oic }}
                         </a>
                     </div>
@@ -132,7 +133,8 @@
                             </div>
                             <div class="modal-body text-center">
                                 <p>{{ intervencion }}</p>
-                                <a href="{% url 'minuta' intervencion.id_actividad_fiscalizacion.id %}" class="btn btn-block btn-outline-dark mb-2">Minuta</a>
+                                <a href="{% url 'minuta' intervencion.id_actividad_fiscalizacion.id %}"
+                                   class="btn btn-block btn-outline-dark mb-2">Minuta</a>
                                 <a href="{% url 'intervencion_cedula' intervencion.id %}"
                                    class="btn btn-block btn-outline-dark mb-2">Cedula</a>
                             </div>
@@ -166,6 +168,7 @@
                                 
                                 
                                 
+
                                 {{ page_obj.previous_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Previous">
                             <span aria-hidden="true">&laquo;</span>
@@ -191,6 +194,7 @@
                                 
                                 
                                 
+
                                 {{ num }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}">{{ num }}</a>
                         </li>
                     {% endif %}
@@ -205,6 +209,7 @@
                                 
                                 
                                 
+
                                 {{ page_obj.next_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
@@ -218,6 +223,7 @@
                                 
                                 
                                 
+
                                 {{ page_obj.paginator.num_pages }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Last">
                             <span aria-hidden="true">&raquo;&raquo;</span>
