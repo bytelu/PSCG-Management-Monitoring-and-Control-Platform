@@ -2535,11 +2535,42 @@
                             </div>
                         {% endwith %}
                     </div>
-
-                    <!-- Boton para guardar -->
-                    <button class="btn btn-outline-dark btn-block btn-sm" type="submit" name="form_a_submit">Guardar
-                        cambios y descargar
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-outline-dark btn-block btn-sm" data-toggle="modal"
+                            data-target="#myModal_a">
+                        Guardar Cambios
                     </button>
+                    <!-- Modal -->
+                    <div class="modal fade" id="myModal_a" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Confirmar cambios</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <p>¿Estas seguro de que deseas guardar cualquier cambio realizado y guardar el
+                                        documento?</p>
+                                    <p style="color: red">Esta accion es irreversible</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <p>
+                                        <button type="button" class="btn btn-outline-dark btn-block"
+                                                data-dismiss="modal">Cerrar
+                                        </button>
+                                    </p>
+                                    <p>
+                                        <button name="form_a_submit" type="submit"
+                                                class="btn btn-outline-danger btn-block">Aceptar
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -4911,11 +4942,42 @@
                             </div>
                         {% endwith %}
                     </div>
-
-
-                    <button class="btn btn-outline-dark btn-sm btn-block" type="submit" name="form_b_submit">Guardar
-                        cambios y descargar
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-outline-dark btn-block btn-sm" data-toggle="modal"
+                            data-target="#myModal_b">
+                        Guardar Cambios
                     </button>
+                    <!-- Modal -->
+                    <div class="modal fade" id="myModal_b" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Confirmar cambios</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <p>¿Estas seguro de que deseas guardar cualquier cambio realizado y guardar el
+                                        documento?</p>
+                                    <p style="color: red">Esta accion es irreversible</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <p>
+                                        <button type="button" class="btn btn-outline-dark btn-block"
+                                                data-dismiss="modal">Cerrar
+                                        </button>
+                                    </p>
+                                    <p>
+                                        <button name="form_b_submit" type="submit"
+                                                class="btn btn-outline-danger btn-block">Aceptar
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -7895,11 +7957,42 @@
                             </div>
                         {% endwith %}
                     </div>
-
-                    <button class="btn btn-outline-dark btn-block btn-sm" type="submit" name="form_c_submit">Guardar
-                        cambios y
-                        descargar
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-outline-dark btn-block btn-sm" data-toggle="modal"
+                            data-target="#myModal_c">
+                        Guardar Cambios
                     </button>
+                    <!-- Modal -->
+                    <div class="modal fade" id="myModal_c" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Confirmar cambios</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <p>¿Estas seguro de que deseas guardar cualquier cambio realizado y guardar el
+                                        documento?</p>
+                                    <p style="color: red">Esta accion es irreversible</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <p>
+                                        <button type="button" class="btn btn-outline-dark btn-block"
+                                                data-dismiss="modal">Cerrar
+                                        </button>
+                                    </p>
+                                    <p>
+                                        <button name="form_c_submit" type="submit"
+                                                class="btn btn-outline-danger btn-block">Aceptar
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
