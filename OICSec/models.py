@@ -53,6 +53,10 @@ class Archivo(models.Model):
     class Meta:
         db_table = 'archivo'
 
+    def delete(self, *args, **kwargs):
+        self.archivo.delete(save=False)
+        super().delete(*args, **kwargs)
+
 
 class Auditoria(models.Model):
     id = models.AutoField(primary_key=True)
@@ -104,33 +108,6 @@ class Cedula(models.Model):
 
     class Meta:
         db_table = 'cedula'
-
-
-class CedulaAuditoria(models.Model):
-    id = models.AutoField(primary_key=True)
-    id_cedula = models.ForeignKey('Cedula', on_delete=models.CASCADE, blank=True, null=True)
-    id_auditoria = models.ForeignKey('Auditoria', on_delete=models.CASCADE, blank=True, null=True)
-
-    class Meta:
-        db_table = 'cedula_auditoria'
-
-
-class CedulaIntervencion(models.Model):
-    id = models.AutoField(primary_key=True)
-    id_cedula = models.ForeignKey('Cedula', on_delete=models.CASCADE, blank=True, null=True)
-    id_intervencion = models.ForeignKey('Intervencion', on_delete=models.CASCADE, blank=True, null=True)
-
-    class Meta:
-        db_table = "cedula_intervencion"
-
-
-class CedulaControlInterno(models.Model):
-    id = models.AutoField(primary_key=True)
-    id_cedula = models.ForeignKey('Cedula', on_delete=models.CASCADE, blank=True, null=True)
-    id_control_interno = models.ForeignKey('ControlInterno', on_delete=models.CASCADE, blank=True, null=True)
-
-    class Meta:
-        db_table = "cedula_control_interno"
 
 
 class Clasificacion(models.Model):
