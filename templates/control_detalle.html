@@ -4,6 +4,9 @@
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="display-4">Detalle de control interno</h1>
         <div>
+            <a href="{% url 'controlinterno-delete' object_id %}" class="btn btn-outline-dark">
+                Borrar
+            </a>
             <a href="{% url 'controlInterno' %}" class="btn btn-outline-dark">
                 <i class="fas fa-arrow-left"></i>
             </a>

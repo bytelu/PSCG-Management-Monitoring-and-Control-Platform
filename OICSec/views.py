@@ -172,7 +172,7 @@ def upload_paa_view(request):
 
     similar_oic = None
 
-    if request.method == 'POST' and request.FILES.get('excel_file'):
+    if request.method == 'POST':
         excel_file = request.FILES.get('excel_file')
         try:
             data = extract_paa(excel_file)
@@ -258,7 +258,7 @@ def upload_paci_view(request):
 
     similar_oic = None
 
-    if request.method == 'POST' and request.FILES.get('excel_file'):
+    if request.method == 'POST':
         excel_file = request.FILES.get('excel_file')
         try:
             data = extract_paci(excel_file)
@@ -341,8 +341,13 @@ def upload_pint_view(request):
 
     similar_oic = None
 
-    if request.method == 'POST' and request.FILES.get('word_file'):
+    if request.method == 'POST':
         word_file = request.FILES.get('word_file')
+        if word_file is None:
+            return render(request, 'upload_pint.html', {
+                'word_processing_error': 'Error al procesar el archivo Word | Nombre de error: None-results | '
+                                         'Consulte manual de usuario para mas información.',
+                'lista_oics': lista_oics, 'similar_oic': similar_oic})
         try:
             word_processing_result = extract_pint(word_file)
             if word_processing_result is None:
@@ -418,6 +423,27 @@ def upload_pint_view(request):
 
     if request.method == 'GET':
         return render(request, 'upload_pint.html')
+
+
+@login_required
+def delete_auditoria(request, pk):
+    auditoria = get_object_or_404(Auditoria, pk=pk)
+    auditoria.delete()
+    return redirect('auditorias')
+
+
+@login_required
+def delete_intervencion(request, pk):
+    intervencion = get_object_or_404(Intervencion, pk=pk)
+    intervencion.delete()
+    return redirect('intervenciones')
+
+
+@login_required
+def delete_controlinterno(request, pk):
+    controlinterno = get_object_or_404(ControlInterno, pk=pk)
+    controlinterno.delete()
+    return redirect('controlInterno')
 
 
 def get_cedula_conceptos(model_instance):
