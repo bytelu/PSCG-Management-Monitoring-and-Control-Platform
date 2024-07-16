@@ -672,6 +672,16 @@ def perfil_view(request):
 
 
 @login_required
+def directorios_view(request):
+    return render(request, 'directorios.html')
+
+
+@login_required
+def personas_view(request):
+    return render(request, 'personas.html')
+
+
+@login_required
 def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')

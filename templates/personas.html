@@ -1,0 +1,95 @@
+{% extends 'navbar.html' %}
+{% block title %}Directorio de Personas{% endblock %}
+{% block content %}
+
+    <style>
+        .list-group-item {
+            margin-bottom: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-group-item a {
+            font-weight: bold;
+            color: #a9a9a9;
+            text-decoration: none;
+        }
+
+        .list-group-item a:hover {
+            color: #000000; /* Cambia el color al azul al pasar el ratón */
+        }
+
+        .auditoria-number {
+            font-size: 1.2em;
+            color: #28a745; /* Verde para el número de auditoría */
+        }
+
+        .pagination .page-link {
+            background-color: #ffffff;
+            border: 1px solid #343a40;
+            color: #000000;
+            padding-top: .375rem;
+        }
+
+        .pagination .page-link:hover {
+            background-color: #23272b;
+            border-color: #23272b;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #23272b;
+            border-color: #23272b;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background-color: #ffffff;
+            border-color: #6c757d;
+        }
+
+    </style>
+
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-4">Directorio de Personas</h1>
+            <div class="d-flex">
+                <a href="{% url 'directorios' %}" class="btn btn-outline-dark mr-2">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtro de OIC -->
+        <form id="filtroForm" action="{% url 'auditorias' %}" method="GET"
+              class="container-fluid mb-4 align-items-center">
+            <!-- Fila para el filtro de nombre -->
+            <div class="row mt-xl-4">
+                <div class="col-3">
+                    <label for="nombre" class="form-label">Seleccionar nombre:</label>
+                </div>
+                <div class="col-9">
+                    <select name="nombre" id="nombre" class="select2 form-control">
+                        <option value="">Todos</option>
+                        {% for oic in lista_oics %}
+                            <option value="{{ oic.id }}"
+                                    {% if oic.id|stringformat:"s" == oic_id %}selected{% endif %}>
+                                {{ oic.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: "bootstrap-5"
+            }).on('change', function () {
+                $(this).closest('form').submit();
+            });
+        });
+    </script>
+{% endblock %}
