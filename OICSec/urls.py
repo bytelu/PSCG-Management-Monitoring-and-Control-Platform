@@ -25,4 +25,6 @@ urlpatterns = [
     path("minuta/<int:fiscalizacion_id>/", minuta_view, name="minuta"),
     path("directorios/", directorios_view, name="directorios"),
     path("directorios/personas", personas_view, name="personas"),
+    path("directorios/personas/<int:persona_id>/", persona_detalle_view, name="persona_detalle"),
+    path('persona/<int:pk>/delete/', delete_persona, name='persona-delete'),
 ]
