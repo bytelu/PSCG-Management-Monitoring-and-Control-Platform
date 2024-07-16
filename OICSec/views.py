@@ -9,15 +9,13 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 
-from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm
+from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
 from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
 from OICSec.funcs.PINT import extract_pint
-from OICSec.models import Oic, Auditoria, ActividadFiscalizacion, Materia, Programacion, Enfoque, Temporalidad, \
-    ControlInterno, TipoRevision, ProgramaRevision, Intervencion, TipoIntervencion, Cedula, ConceptoCedula, Archivo, \
-    Persona
+from OICSec.models import *
 
 
 def login_view(request):
@@ -446,13 +444,6 @@ def delete_controlinterno(request, pk):
     controlinterno.delete()
     return redirect('controlInterno')
 
-@login_required
-def delete_persona(request, pk):
-    persona = get_object_or_404(Persona, pk=pk)
-    persona.estado = 0
-    persona.save()
-    return redirect('personas')
-
 
 def get_cedula_conceptos(model_instance):
     cedula = get_object_or_404(Cedula, pk=model_instance.id_cedula_id)
@@ -677,39 +668,6 @@ def perfil_view(request):
             return render(request, 'profile.html', {'error_password': 'La contraseña es incorrecta.'})
     else:
         return render(request, 'profile.html')
-
-
-@login_required
-def directorios_view(request):
-    return render(request, 'directorios.html')
-
-
-@login_required
-def personas_view(request):
-    lista_personas = Persona.objects.filter(estado=1).values_list('nombre', flat=True).distinct()
-    nombre = request.GET.get('nombre')
-
-    if nombre:
-        objects = Persona.objects.filter(nombre=nombre, estado=1)
-    else:
-        objects = Persona.objects.filter(estado=1)
-
-    paginator = Paginator(objects.order_by('nombre'), 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'page_obj': page_obj,
-        'lista_personas': lista_personas,
-        'nombre': nombre,
-    }
-
-    return render(request, 'personas.html', context)
-
-
-@login_required
-def persona_detalle_view(request, persona_id):
-    return handle_detail_view(request, Persona, PersonaForm, persona_id, 'persona_detalle.html')
 
 
 @login_required
