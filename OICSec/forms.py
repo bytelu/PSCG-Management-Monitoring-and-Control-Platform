@@ -1,5 +1,5 @@
 from django import forms
-from .models import Auditoria, ActividadFiscalizacion, Oic, ControlInterno, Intervencion
+from .models import Auditoria, ActividadFiscalizacion, Oic, ControlInterno, Intervencion, Persona
 
 
 class BaseForm(forms.ModelForm):
@@ -139,4 +139,33 @@ class IntervencionForm(BaseForm):
             'termino': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'objetivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'id_tipo_intervencion': forms.Select(attrs={'class': 'form-control select2'})
+        }
+
+
+class PersonaForm(forms.ModelForm):
+    class Meta:
+        model = Persona
+        fields = [
+            'nombramiento',
+            'nombre',
+            'apellido',
+            'sexo',
+            'id_cargo',
+            'id_oic'
+        ]
+        labels = {
+            'nombramiento': 'Honorifico:',
+            'nombre': 'Nombre:',
+            'apellido': 'Apellido:',
+            'sexo': 'Sexo:',
+            'id_cargo': 'Cargo:',
+            'id_oic': 'OIC:'
+        }
+        widgets = {
+            'nombramiento': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido': forms.TextInput(attrs={'class': 'form-control'}),
+            'sexo': forms.Select(attrs={'class': 'form-control select2'}),
+            'id_cargo': forms.Select(attrs={'class': 'form-control select2'}),
+            'id_oic': forms.Select(attrs={'class': 'form-control select2'}),
         }

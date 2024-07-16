@@ -287,16 +287,28 @@ class Oic(models.Model):
 
 
 class Persona(models.Model):
+    SEXO_CHOICES = [
+        ('M', 'Masculino'),
+        ('F', 'Femenino')
+    ]
+    ESTADO_CHOICES = [
+        (0, 'Inactivo'),
+        (1, 'Activo')
+    ]
     id = models.AutoField(primary_key=True)
-    sexo = models.CharField(max_length=30, blank=True, null=True)
+    sexo = models.CharField(max_length=30, blank=True, null=True, choices=SEXO_CHOICES)
     nombramiento = models.CharField(max_length=50, blank=True, null=True)
     nombre = models.CharField(max_length=200, blank=True, null=True)
     apellido = models.CharField(max_length=200, blank=True, null=True)
+    estado = models.IntegerField(blank=True, null=True, choices=ESTADO_CHOICES)
     id_cargo = models.ForeignKey('Cargo', on_delete=models.CASCADE, blank=True, null=True)
     id_oic = models.ForeignKey('Oic', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         db_table = 'persona'
+
+    def __str__(self):
+        return f'{self.apellido} {self.nombre} | {self.id_cargo} | {self.id_oic}'
 
 
 class Programacion(models.Model):
