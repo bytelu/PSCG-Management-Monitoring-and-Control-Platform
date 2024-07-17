@@ -24,4 +24,6 @@ urlpatterns = [
     path("intervenciones/<int:intervencion_id>/", intervencion_detalle_view, name="intervencion_detalle"),
     path("minuta/<int:fiscalizacion_id>/", minuta_view, name="minuta"),
     path("personal/", personal_view, name="personal"),
+    path("personal/oics", oics_view, name="oics"),
+    path("personal/oics/<int:oic_id>/", personal_oic_view, name="personal_oic"),
 ]
