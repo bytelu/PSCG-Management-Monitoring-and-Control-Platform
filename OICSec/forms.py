@@ -1,5 +1,5 @@
 from django import forms
-from .models import Auditoria, ActividadFiscalizacion, Oic, ControlInterno, Intervencion
+from .models import *
 
 
 class BaseForm(forms.ModelForm):
@@ -139,4 +139,15 @@ class IntervencionForm(BaseForm):
             'termino': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'objetivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'id_tipo_intervencion': forms.Select(attrs={'class': 'form-control select2'})
+        }
+
+
+class PersonaForm(forms.ModelForm):
+    class Meta:
+        model = Persona
+        fields = ['honorifico', 'nombre', 'apellido']
+        widgets = {
+            'honorifico': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido': forms.TextInput(attrs={'class': 'form-control'}),
         }

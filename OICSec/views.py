@@ -10,7 +10,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm
+from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
 from OICSec.funcs.PAA import extract_paa
@@ -702,6 +702,43 @@ def personal_oic_view(request, oic_id):
     }
 
     return render(request, 'personal_oic.html', context)
+
+
+@login_required
+def editar_titular_view(request, personal_id):
+    personal = get_object_or_404(Personal, id=personal_id)
+    persona = personal.id_persona
+
+    if request.method == 'POST':
+        form = PersonaForm(request.POST, instance=persona)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_titular_view', personal_id=personal_id)
+    else:
+        form = PersonaForm(instance=persona)
+
+    tipo_cargos = TipoCargo.objects.filter(id__in=[3, 4, 5])
+    cargos_asignados = CargoPersonal.objects.filter(id_personal=personal).values_list('id_tipo_cargo', flat=True)
+
+    return render(request, 'editar_titular.html', {
+        'form': form,
+        'personal': personal,
+        'tipo_cargos': tipo_cargos,
+        'cargos_asignados': list(cargos_asignados),
+    })
+
+
+@login_required
+def asignar_cargo_titular(request, personal_id, tipo_cargo_id):
+    personal = get_object_or_404(Personal, id=personal_id)
+    tipo_cargo = get_object_or_404(TipoCargo, id=tipo_cargo_id)
+
+    cargo_personal, created = CargoPersonal.objects.get_or_create(id_personal=personal, id_tipo_cargo=tipo_cargo)
+
+    if not created:
+        cargo_personal.delete()
+
+    return redirect('editar_titular_view', personal_id=personal_id)
 
 
 @login_required
