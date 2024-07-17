@@ -750,6 +750,51 @@ def eliminar_titular_view(request, personal_id):
 
 
 @login_required
+def editar_personal_view(request, personal_id):
+    personal = get_object_or_404(Personal, id=personal_id)
+    persona = personal.id_persona
+
+    if request.method == 'POST':
+        form = PersonaForm(request.POST, instance=persona)
+        if form.is_valid():
+            form.save()
+            return redirect('editar_personal_view', personal_id=personal_id)
+    else:
+        form = PersonaForm(instance=persona)
+
+    tipo_cargos = TipoCargo.objects.filter(id__in=[3, 4, 5, 7])
+    cargos_asignados = CargoPersonal.objects.filter(id_personal=personal).values_list('id_tipo_cargo', flat=True)
+
+    return render(request, 'editar_personal.html', {
+        'form': form,
+        'personal': personal,
+        'tipo_cargos': tipo_cargos,
+        'cargos_asignados': list(cargos_asignados),
+    })
+
+
+@login_required
+def asignar_cargo_personal(request, personal_id, tipo_cargo_id):
+    personal = get_object_or_404(Personal, id=personal_id)
+    tipo_cargo = get_object_or_404(TipoCargo, id=tipo_cargo_id)
+
+    cargo_personal, created = CargoPersonal.objects.get_or_create(id_personal=personal, id_tipo_cargo=tipo_cargo)
+
+    if not created:
+        cargo_personal.delete()
+
+    return redirect('editar_personal_view', personal_id=personal_id)
+
+
+@login_required
+def eliminar_personal_view(request, personal_id):
+    personal = get_object_or_404(Personal, id=personal_id)
+    personal.estado = 0
+    personal.save()
+    return redirect('personal_oic', personal.id_oic_id)
+
+
+@login_required
 def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')

@@ -1,5 +1,5 @@
 {% extends 'navbar.html' %}
-{% block title %}Editar titular{% endblock %}
+{% block title %}Editar Personal{% endblock %}
 {% block content %}
     <div class="container mt-5 mb-3">
         <!-- Mensaje de advertencia -->
@@ -7,11 +7,11 @@
             <strong>Alerta:</strong> Cualquier cambio realizado en esta pantalla es permanente.
         </div>
         <div class="row">
-            <!-- Columna para editar titular -->
+            <!-- Columna para editar personal -->
             <div class="col-md-6 d-flex justify-content-center">
                 <div class="card w-100">
                     <div class="card-body d-flex flex-column justify-content-center">
-                        <h2 class="text-center">Editar Titular</h2>
+                        <h2 class="text-center">Editar Personal</h2>
                         <form method="post" class="text-center">
                             {% csrf_token %}
                             {{ form.as_p }}
@@ -29,10 +29,10 @@
                         <div class="d-flex flex-column align-items-center">
                             {% for tipo_cargo in tipo_cargos %}
                                 {% if tipo_cargo.id in cargos_asignados %}
-                                    <a href="{% url 'asignar_cargo_titular' personal.id tipo_cargo.id %}"
+                                    <a href="{% url 'asignar_cargo_personal' personal.id tipo_cargo.id %}"
                                        class="btn btn-dark mb-2 w-75">{{ tipo_cargo.nombre }}</a>
                                 {% else %}
-                                    <a href="{% url 'asignar_cargo_titular' personal.id tipo_cargo.id %}"
+                                    <a href="{% url 'asignar_cargo_personal' personal.id tipo_cargo.id %}"
                                        class="btn btn-light mb-2 w-75">{{ tipo_cargo.nombre }}</a>
                                 {% endif %}
                             {% endfor %}
@@ -46,6 +46,6 @@
         <a href="{% url 'personal_oic' personal.id_oic_id %}" class="btn btn-outline-dark btn-lg">
             <i class="fas fa-arrow-left"></i>
         </a>
-        <a href="{% url 'eliminar_titular' personal.id %}" class="btn btn-danger btn-lg ml-3">Eliminar</a>
+        <a href="{% url 'eliminar_personal' personal.id %}" class="btn btn-danger btn-lg ml-3">Eliminar</a>
     </div>
 {% endblock %}
