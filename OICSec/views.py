@@ -795,6 +795,46 @@ def eliminar_personal_view(request, personal_id):
 
 
 @login_required
+def crear_titular_view(request, oic_id):
+    if request.method == 'POST':
+        titular_form = PersonaForm(request.POST)
+        if titular_form.is_valid():
+            titular = titular_form.save()
+
+            # Buscar y desactivar el titular actual
+            tipo_cargo_titular = get_object_or_404(TipoCargo, id=6)
+            personal_actual = Personal.objects.filter(id_oic=oic_id, cargopersonal__id_tipo_cargo=tipo_cargo_titular, estado=1).first()
+            if personal_actual:
+                personal_actual.estado = 0
+                personal_actual.save()
+
+            # Crear el nuevo personal con el nuevo titular
+            nuevo_personal = Personal.objects.create(
+                estado=1,
+                id_oic_id=oic_id,
+                id_persona=titular
+            )
+
+            # Asignar el cargo de titular al nuevo personal
+            CargoPersonal.objects.create(
+                nombre=f'Titular del Órgano Interno de Control en {Oic.objects.get(id=oic_id).nombre}',
+                id_tipo_cargo=tipo_cargo_titular,
+                id_personal=nuevo_personal
+            )
+
+            return redirect('personal_oic', oic_id)
+
+    else:
+        titular_form = PersonaForm()
+
+    context = {
+        'oic_id': oic_id,
+        'titular_form': titular_form
+    }
+    return render(request, 'crear_titular.html', context)
+
+
+@login_required
 def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')

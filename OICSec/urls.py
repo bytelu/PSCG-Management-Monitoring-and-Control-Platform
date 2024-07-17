@@ -60,4 +60,6 @@ urlpatterns = [
          asignar_cargo_personal, name='asignar_cargo_personal'),
     path('personal/oics/eliminar-personal/<int:personal_id>/',
          eliminar_personal_view, name='eliminar_personal'),
+    path("personal/oics/crear_titular/<int:oic_id>",
+         crear_titular_view, name='crear_titular')
 ]
