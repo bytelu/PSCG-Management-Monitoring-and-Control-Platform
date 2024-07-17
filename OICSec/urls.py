@@ -28,4 +28,5 @@ urlpatterns = [
     path("personal/oics/<int:oic_id>/", personal_oic_view, name="personal_oic"),
     path('editar-titular/<int:personal_id>/', editar_titular_view, name='editar_titular_view'),
     path('asignar-cargo/<int:personal_id>/<int:tipo_cargo_id>/', asignar_cargo_titular, name='asignar_cargo'),
+    path('eliminar-titular/<int:personal_id>/', eliminar_titular_view, name='eliminar_titular'),
 ]

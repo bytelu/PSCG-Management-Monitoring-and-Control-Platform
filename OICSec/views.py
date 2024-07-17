@@ -742,6 +742,14 @@ def asignar_cargo_titular(request, personal_id, tipo_cargo_id):
 
 
 @login_required
+def eliminar_titular_view(request, personal_id):
+    personal = get_object_or_404(Personal, id=personal_id)
+    personal.estado = 0
+    personal.save()
+    return redirect('personal_oic', personal.id_oic_id)
+
+
+@login_required
 def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')
