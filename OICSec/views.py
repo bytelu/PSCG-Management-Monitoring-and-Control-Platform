@@ -1,12 +1,13 @@
 import datetime
 import os
 from difflib import SequenceMatcher
-from django.http import HttpResponse
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm
@@ -673,6 +674,34 @@ def perfil_view(request):
 @login_required
 def personal_view(request):
     return render(request, 'personal.html')
+
+
+@login_required
+def oics_view(request):
+    oics = Oic.objects.all()
+    return render(request, 'oics.html', {'oics': oics})
+
+
+@login_required
+def personal_oic_view(request, oic_id):
+    oic = get_object_or_404(Oic, pk=oic_id)
+    personal = Personal.objects.filter(id_oic=oic_id, estado=1)
+
+    try:
+        titular = CargoPersonal.objects.get(id_personal__in=personal, id_tipo_cargo=6).id_personal
+    except CargoPersonal.DoesNotExist:
+        titular = None
+
+    if titular:
+        personal = personal.exclude(id=titular.id)
+
+    context = {
+        'oic': oic,
+        'titular': titular,
+        'personal': personal
+    }
+
+    return render(request, 'personal_oic.html', context)
 
 
 @login_required
