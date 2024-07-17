@@ -1,0 +1,23 @@
+{% extends 'navbar.html' %}
+{% block title %}Crear Titular{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Crear Titular</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ titular_form.honorifico.label_tag }}
+            {{ titular_form.honorifico }}
+        </div>
+        <div class="form-group">
+            {{ titular_form.nombre.label_tag }}
+            {{ titular_form.nombre }}
+        </div>
+        <div class="form-group">
+            {{ titular_form.apellido.label_tag }}
+            {{ titular_form.apellido }}
+        </div>
+        <button type="submit" class="btn btn-outline-dark btn-block">Guardar</button>
+    </form>
+</div>
+{% endblock %}
