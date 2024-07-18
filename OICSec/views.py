@@ -705,6 +705,25 @@ def personal_oic_view(request, oic_id):
 
 
 @login_required
+def personal_direccion_view(request):
+    personal = Personal.objects.filter(id_oic=None, estado=1)
+    try:
+        director = CargoPersonal.objects.get(id_personal__in=personal, id_tipo_cargo=1).id_personal
+    except CargoPersonal.DoesNotExist:
+        director = None
+
+    if director:
+        personal = personal.exclude(id=director.id)
+
+    context = {
+        'director': director,
+        'personal': personal
+    }
+
+    return render(request, 'personal_direccion.html', context)
+
+
+@login_required
 def editar_titular_view(request, personal_id):
     personal = get_object_or_404(Personal, id=personal_id)
     persona = personal.id_persona
@@ -745,6 +764,25 @@ def editar_titular_view(request, personal_id):
 
 
 @login_required
+def editar_director_view(request, personal_id):
+    personal = get_object_or_404(Personal, id=personal_id)
+    persona = personal.id_persona
+
+    if request.method == 'POST':
+        persona_form = PersonaForm(request.POST, instance=persona)
+        if persona_form.is_valid():
+            persona_form.save()
+            return redirect('editar_director', personal_id=personal_id)
+    else:
+        persona_form = PersonaForm(instance=persona)
+
+    return render(request, 'editar_director.html', {
+        'persona_form': persona_form,
+        'personal': personal
+    })
+
+
+@login_required
 def asignar_cargo_titular(request, personal_id, tipo_cargo_id):
     personal = get_object_or_404(Personal, id=personal_id)
     tipo_cargo = get_object_or_404(TipoCargo, id=tipo_cargo_id)
@@ -770,6 +808,14 @@ def eliminar_titular_view(request, personal_id):
     personal.estado = 0
     personal.save()
     return redirect('personal_oic', personal.id_oic_id)
+
+
+@login_required
+def eliminar_director_view(request, personal_id):
+    personal = get_object_or_404(Personal, id=personal_id)
+    personal.estado = 0
+    personal.save()
+    return redirect('personal_direccion')
 
 
 @login_required
@@ -847,7 +893,8 @@ def crear_titular_view(request, oic_id):
 
             # Buscar y desactivar el titular actual
             tipo_cargo_titular = get_object_or_404(TipoCargo, id=6)
-            personal_actual = Personal.objects.filter(id_oic=oic_id, cargopersonal__id_tipo_cargo=tipo_cargo_titular, estado=1).first()
+            personal_actual = Personal.objects.filter(id_oic=oic_id, cargopersonal__id_tipo_cargo=tipo_cargo_titular,
+                                                      estado=1).first()
             if personal_actual:
                 personal_actual.estado = 0
                 personal_actual.save()
@@ -880,6 +927,46 @@ def crear_titular_view(request, oic_id):
         'titular_form': titular_form
     }
     return render(request, 'crear_titular.html', context)
+
+
+@login_required
+def crear_director_view(request):
+    if request.method == 'POST':
+        director_form = PersonaForm(request.POST)
+        if director_form.is_valid():
+            director = director_form.save()
+
+            # Buscar y desactivar el director actual
+            tipo_cargo_director = get_object_or_404(TipoCargo, id=1)
+            personal_actual = Personal.objects.filter(id_oic=None, cargopersonal__id_tipo_cargo=tipo_cargo_director,
+                                                      estado=1).first()
+            if personal_actual:
+                personal_actual.estado = 0
+                personal_actual.save()
+
+            # Crear el nuevo personal con el nuevo titular
+            nuevo_personal = Personal.objects.create(
+                estado=1,
+                id_oic_id=None,
+                id_persona=director
+            )
+
+            # Asignar el cargo de director al nuevo personal
+            CargoPersonal.objects.create(
+                nombre='Director de Coordinación de Órganos Internos de Control Sectorial “C”',
+                id_tipo_cargo=tipo_cargo_director,
+                id_personal=nuevo_personal
+            )
+
+            return redirect('personal_direccion')
+
+    else:
+        director_form = PersonaForm()
+
+    context = {
+        'titular_form': director_form
+    }
+    return render(request, 'crear_director.html', context)
 
 
 @login_required

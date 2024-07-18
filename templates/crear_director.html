@@ -1,0 +1,31 @@
+{% extends 'navbar.html' %}
+{% block title %}Crear Director{% endblock %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Crear Director de Coordinación de Órganos Internos de Control Sectorial “C”</h2>
+            <div class="d-flex">
+                <a href="{% url 'personal_direccion' %}" class="btn btn-outline-dark">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ titular_form.honorifico.label_tag }}
+                {{ titular_form.honorifico }}
+            </div>
+            <div class="form-group">
+                {{ titular_form.nombre.label_tag }}
+                {{ titular_form.nombre }}
+            </div>
+            <div class="form-group">
+                {{ titular_form.apellido.label_tag }}
+                {{ titular_form.apellido }}
+            </div>
+            <button type="submit" class="btn btn-outline-dark btn-block">Guardar</button>
+        </form>
+
+    </div>
+{% endblock %}

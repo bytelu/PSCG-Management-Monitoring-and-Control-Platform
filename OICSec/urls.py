@@ -63,5 +63,13 @@ urlpatterns = [
     path("personal/oics/crear_titular/<int:oic_id>",
          crear_titular_view, name='crear_titular'),
     path("personal/oics/crear_personal/<int:oic_id>",
-         crear_personal_view, name='crear_personal')
+         crear_personal_view, name='crear_personal'),
+    path("personal/direccion",
+         personal_direccion_view, name="personal_direccion"),
+    path('personal/oics/editar-director/<int:personal_id>/',
+         editar_director_view, name='editar_director'),
+    path('personal/oics/eliminar-director/<int:personal_id>/',
+         eliminar_director_view, name='eliminar_director'),
+    path("personal/oics/crear_director/",
+         crear_director_view, name='crear_director'),
 ]
