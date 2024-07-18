@@ -10,7 +10,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm
+from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
 from OICSec.funcs.PAA import extract_paa
@@ -709,24 +709,39 @@ def editar_titular_view(request, personal_id):
     personal = get_object_or_404(Personal, id=personal_id)
     persona = personal.id_persona
 
+    # Obtener el cargo personal con id_tipo_cargo igual a 6
+    tipo_cargo_titular = get_object_or_404(TipoCargo, id=6)
+    cargo_personal_titular = get_object_or_404(CargoPersonal, id_personal=personal, id_tipo_cargo=tipo_cargo_titular)
+
     if request.method == 'POST':
-        form = PersonaForm(request.POST, instance=persona)
-        if form.is_valid():
-            form.save()
-            return redirect('editar_titular_view', personal_id=personal_id)
+        if 'persona_form' in request.POST:
+            persona_form = PersonaForm(request.POST, instance=persona)
+            if persona_form.is_valid():
+                persona_form.save()
+                return redirect('editar_titular_view', personal_id=personal_id)
+        elif 'cargo_form' in request.POST:
+            cargo_form = CargoPersonalForm(request.POST, instance=cargo_personal_titular)
+            if cargo_form.is_valid():
+                cargo_form.save()
+
+                # Actualizar el nombre en el resto de cargos del personal
+                CargoPersonal.objects.filter(id_personal=personal).update(nombre=cargo_form.cleaned_data['nombre'])
+
+                return redirect('editar_titular_view', personal_id=personal_id)
     else:
-        form = PersonaForm(instance=persona)
+        persona_form = PersonaForm(instance=persona)
+        cargo_form = CargoPersonalForm(instance=cargo_personal_titular)
 
     tipo_cargos = TipoCargo.objects.filter(id__in=[3, 4, 5])
     cargos_asignados = CargoPersonal.objects.filter(id_personal=personal).values_list('id_tipo_cargo', flat=True)
 
     return render(request, 'editar_titular.html', {
-        'form': form,
+        'persona_form': persona_form,
+        'cargo_form': cargo_form,
         'personal': personal,
         'tipo_cargos': tipo_cargos,
         'cargos_asignados': list(cargos_asignados),
     })
-
 
 @login_required
 def asignar_cargo_titular(request, personal_id, tipo_cargo_id):

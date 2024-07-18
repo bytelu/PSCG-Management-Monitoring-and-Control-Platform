@@ -151,3 +151,12 @@ class PersonaForm(forms.ModelForm):
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'apellido': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class CargoPersonalForm(forms.ModelForm):
+    class Meta:
+        model = CargoPersonal
+        fields = ['nombre']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+        }
