@@ -818,6 +818,11 @@ def asignar_cargo_personal(request, personal_id, tipo_cargo_id):
 
     if not created:
         cargo_personal.delete()
+    else:
+        existing_cargo = CargoPersonal.objects.filter(id_personal=personal).first()
+        if existing_cargo:
+            cargo_personal.nombre = existing_cargo.nombre
+            cargo_personal.save()
 
     return redirect('editar_personal_view', personal_id=personal_id)
 
