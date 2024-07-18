@@ -835,6 +835,32 @@ def crear_titular_view(request, oic_id):
 
 
 @login_required
+def crear_personal_view(request, oic_id):
+    if request.method == 'POST':
+        personal_form = PersonaForm(request.POST)
+        if personal_form.is_valid():
+            personal = personal_form.save()
+
+            # Crear el nuevo personal con el nuevo titular
+            nuevo_personal = Personal.objects.create(
+                estado=1,
+                id_oic_id=oic_id,
+                id_persona=personal
+            )
+
+            return redirect('personal_oic', oic_id)
+
+    else:
+        personal_form = PersonaForm()
+
+    context = {
+        'oic_id': oic_id,
+        'titular_form': personal_form
+    }
+    return render(request, 'crear_personal.html', context)
+
+
+@login_required
 def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')
