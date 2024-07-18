@@ -1,23 +1,35 @@
 {% extends 'navbar.html' %}
 {% block title %}Crear Titular{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <h2>Crear Titular</h2>
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-group">
-            {{ titular_form.honorifico.label_tag }}
-            {{ titular_form.honorifico }}
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Crear Titular</h2>
+            <div class="d-flex">
+                <a href="{% url 'personal_oic' oic_id %}" class="btn btn-outline-dark">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
         </div>
-        <div class="form-group">
-            {{ titular_form.nombre.label_tag }}
-            {{ titular_form.nombre }}
-        </div>
-        <div class="form-group">
-            {{ titular_form.apellido.label_tag }}
-            {{ titular_form.apellido }}
-        </div>
-        <button type="submit" class="btn btn-outline-dark btn-block">Guardar</button>
-    </form>
-</div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ titular_form.honorifico.label_tag }}
+                {{ titular_form.honorifico }}
+            </div>
+            <div class="form-group">
+                {{ titular_form.nombre.label_tag }}
+                {{ titular_form.nombre }}
+            </div>
+            <div class="form-group">
+                {{ titular_form.apellido.label_tag }}
+                {{ titular_form.apellido }}
+            </div>
+            <div class="form-group">
+                {{ titular_form.cargo_nombre.label_tag }}
+                {{ titular_form.cargo_nombre }}
+            </div>
+            <button type="submit" class="btn btn-outline-dark btn-block">Guardar</button>
+        </form>
+
+    </div>
 {% endblock %}
