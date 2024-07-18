@@ -743,15 +743,23 @@ def editar_titular_view(request, personal_id):
         'cargos_asignados': list(cargos_asignados),
     })
 
+
 @login_required
 def asignar_cargo_titular(request, personal_id, tipo_cargo_id):
     personal = get_object_or_404(Personal, id=personal_id)
     tipo_cargo = get_object_or_404(TipoCargo, id=tipo_cargo_id)
 
-    cargo_personal, created = CargoPersonal.objects.get_or_create(id_personal=personal, id_tipo_cargo=tipo_cargo)
+    tipo_cargo_titular = get_object_or_404(TipoCargo, id=6)
+    cargo_personal_titular = get_object_or_404(CargoPersonal, id_personal=personal, id_tipo_cargo=tipo_cargo_titular)
+
+    cargo_personal, created = CargoPersonal.objects.get_or_create(id_personal=personal, id_tipo_cargo=tipo_cargo,
+                                                                  defaults={'nombre': cargo_personal_titular.nombre})
 
     if not created:
         cargo_personal.delete()
+    else:
+        cargo_personal.nombre = cargo_personal_titular.nombre
+        cargo_personal.save()
 
     return redirect('editar_titular_view', personal_id=personal_id)
 
