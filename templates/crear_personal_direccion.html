@@ -1,0 +1,34 @@
+{% extends 'navbar.html' %}
+{% block title %}Crear Personal Direccion{% endblock %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Crear Personal</h2>
+            <div class="d-flex">
+                <a href="{% url 'personal_direccion' %}" class="btn btn-outline-dark">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ personal_form.honorifico.label_tag }}
+                {{ personal_form.honorifico }}
+            </div>
+            <div class="form-group">
+                {{ personal_form.nombre.label_tag }}
+                {{ personal_form.nombre }}
+            </div>
+            <div class="form-group">
+                {{ personal_form.apellido.label_tag }}
+                {{ personal_form.apellido }}
+            </div>
+            <div class="form-group">
+                {{ personal_form.cargo_nombre.label_tag }}
+                {{ personal_form.cargo_nombre }}
+            </div>
+            <button type="submit" class="btn btn-outline-dark btn-block">Guardar</button>
+        </form>
+    </div>
+{% endblock %}
