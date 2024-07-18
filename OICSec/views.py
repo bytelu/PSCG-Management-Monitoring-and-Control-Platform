@@ -777,22 +777,35 @@ def editar_personal_view(request, personal_id):
     personal = get_object_or_404(Personal, id=personal_id)
     persona = personal.id_persona
 
+    # Obtener todos los cargos asignados al personal
+    cargos_asignados = CargoPersonal.objects.filter(id_personal=personal)
+
     if request.method == 'POST':
-        form = PersonaForm(request.POST, instance=persona)
-        if form.is_valid():
-            form.save()
-            return redirect('editar_personal_view', personal_id=personal_id)
+        if 'persona_form' in request.POST:
+            persona_form = PersonaForm(request.POST, instance=persona)
+            if persona_form.is_valid():
+                persona_form.save()
+                return redirect('editar_personal_view', personal_id=personal_id)
+        elif 'cargo_form' in request.POST:
+            cargo_form = CargoPersonalForm(request.POST)
+            if cargo_form.is_valid():
+                cargo_nombre = cargo_form.cleaned_data['nombre']
+                cargos_asignados.update(nombre=cargo_nombre)
+                return redirect('editar_personal_view', personal_id=personal_id)
     else:
-        form = PersonaForm(instance=persona)
+        persona_form = PersonaForm(instance=persona)
+        initial = {'nombre': cargos_asignados.first().nombre} if cargos_asignados.exists() else {}
+        cargo_form = CargoPersonalForm(initial=initial)
 
     tipo_cargos = TipoCargo.objects.filter(id__in=[3, 4, 5, 7])
-    cargos_asignados = CargoPersonal.objects.filter(id_personal=personal).values_list('id_tipo_cargo', flat=True)
+    cargos_asignados_ids = cargos_asignados.values_list('id_tipo_cargo', flat=True)
 
     return render(request, 'editar_personal.html', {
-        'form': form,
+        'persona_form': persona_form,
+        'cargo_form': cargo_form,
         'personal': personal,
         'tipo_cargos': tipo_cargos,
-        'cargos_asignados': list(cargos_asignados),
+        'cargos_asignados': list(cargos_asignados_ids),
     })
 
 

@@ -14,15 +14,33 @@
                         <h2 class="text-center">Editar Personal</h2>
                         <form method="post" class="text-center">
                             {% csrf_token %}
-                            {{ form.as_p }}
-                            <button type="submit" class="btn btn-outline-dark btn-sm btn-block">Guardar</button>
+                            {{ persona_form.as_p }}
+                            <button type="submit" name="persona_form" class="btn btn-outline-dark btn-sm btn-block">Guardar</button>
                         </form>
                     </div>
                 </div>
             </div>
 
+            <!-- Columna para editar nombre del cargo -->
+            {% if cargos_asignados %}
+                <div class="col-md-6 d-flex justify-content-center">
+                    <div class="card w-100">
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <h2 class="text-center">Editar Nombre del Cargo</h2>
+                            <form method="post" class="text-center">
+                                {% csrf_token %}
+                                {{ cargo_form.as_p }}
+                                <button type="submit" name="cargo_form" class="btn btn-outline-dark btn-sm btn-block">Guardar Nombre del Cargo</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="row mt-4">
             <!-- Columna para asignar cargos -->
-            <div class="col-md-6 d-flex justify-content-center">
+            <div class="col-md-12 d-flex justify-content-center">
                 <div class="card w-100">
                     <div class="card-body d-flex flex-column justify-content-center">
                         <h3 class="text-center">Asignar Cargos</h3>
