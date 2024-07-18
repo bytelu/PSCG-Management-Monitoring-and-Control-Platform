@@ -1,4 +1,5 @@
 from django import forms
+
 from .models import *
 
 
@@ -146,6 +147,24 @@ class PersonaForm(forms.ModelForm):
     class Meta:
         model = Persona
         fields = ['honorifico', 'nombre', 'apellido']
+        widgets = {
+            'honorifico': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class CrearTitularForm(forms.ModelForm):
+    cargo_nombre = forms.CharField(
+        label="Nombre del Cargo",
+        max_length=255,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+
+    class Meta:
+        model = Persona
+        fields = ['honorifico', 'nombre', 'apellido']
+
         widgets = {
             'honorifico': forms.TextInput(attrs={'class': 'form-control'}),
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),

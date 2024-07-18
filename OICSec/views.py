@@ -10,7 +10,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm
+from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm, CrearTitularForm
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
 from OICSec.funcs.PAA import extract_paa
@@ -819,8 +819,11 @@ def eliminar_personal_view(request, personal_id):
 
 @login_required
 def crear_titular_view(request, oic_id):
+    oic = get_object_or_404(Oic, id=oic_id)
+    default_cargo_nombre = f'Titular del Órgano Interno de Control en {oic.nombre}'
+
     if request.method == 'POST':
-        titular_form = PersonaForm(request.POST)
+        titular_form = CrearTitularForm(request.POST)
         if titular_form.is_valid():
             titular = titular_form.save()
 
@@ -838,9 +841,12 @@ def crear_titular_view(request, oic_id):
                 id_persona=titular
             )
 
+            # Obtener el nombre del cargo del formulario
+            cargo_nombre = titular_form.cleaned_data['cargo_nombre']
+
             # Asignar el cargo de titular al nuevo personal
             CargoPersonal.objects.create(
-                nombre=f'Titular del Órgano Interno de Control en {Oic.objects.get(id=oic_id).nombre}',
+                nombre=cargo_nombre,
                 id_tipo_cargo=tipo_cargo_titular,
                 id_personal=nuevo_personal
             )
@@ -848,7 +854,8 @@ def crear_titular_view(request, oic_id):
             return redirect('personal_oic', oic_id)
 
     else:
-        titular_form = PersonaForm()
+        # Establecer el valor predeterminado para el campo de nombre del cargo
+        titular_form = CrearTitularForm(initial={'cargo_nombre': default_cargo_nombre})
 
     context = {
         'oic_id': oic_id,
