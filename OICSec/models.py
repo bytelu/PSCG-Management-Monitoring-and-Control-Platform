@@ -255,6 +255,7 @@ class Minuta(models.Model):
     id = models.AutoField(primary_key=True)
     inicio = models.DateField(blank=True, null=True)
     fin = models.DateField(blank=True, null=True)
+    mes = models.IntegerField(blank=True, null=True)
     id_tipo_minuta = models.ForeignKey('TipoMinuta', on_delete=models.CASCADE, blank=True, null=True)
     id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True,
                                                    null=True)
