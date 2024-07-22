@@ -1,9 +1,41 @@
 {% extends 'navbar.html' %}
 {% block title %}Minuta{% endblock %}
 {% block content %}
-    
+
     <h1 class="display-2">Minuta</h1>
     <h5 class="display-5">Actividad de fiscalización:</h5>
     <h6 class="card-subtitle mb-4 text-body-secondary text-muted">{{ fiscalizacion }}</h6>
-    
+    <div class="d-flex justify-content-around">
+        <div class="card text-center mb-2" style="border-radius: 25px; width: 30vw; height: 30vw;">
+            <a href="#" class="text-decoration-none text-dark custom-card-link"
+               style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center"
+                     style="height: 100%;">
+                    <i class="fas fa-file-alt fa-5x"></i>
+                    <h5 class="card-title mt-3" style="font-size: 1rem;">Mes 1</h5>
+                </div>
+            </a>
+        </div>
+        <div class="card text-center mb-2" style="border-radius: 25px; width: 30vw; height: 30vw;">
+            <a href="#" class="text-decoration-none text-dark custom-card-link"
+               style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center"
+                     style="height: 100%;">
+                    <i class="fas fa-file-contract fa-5x"></i>
+                    <h5 class="card-title mt-3" style="font-size: 1rem;">Mes 2</h5>
+                </div>
+            </a>
+        </div>
+        <div class="card text-center mb-2" style="border-radius: 25px; width: 30vw; height: 30vw;">
+            <a href="#" class="text-decoration-none text-dark custom-card-link"
+               style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center"
+                     style="height: 100%;">
+                    <i class="fas fa-tasks fa-5x"></i>
+                    <h5 class="card-title mt-3" style="font-size: 1rem;">Mes 3</h5>
+                </div>
+            </a>
+        </div>
+    </div>
+
 {% endblock %}
