@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm, CrearTitularForm
+from OICSec.funcs.Actividad import get_actividades
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
 from OICSec.funcs.PAA import extract_paa
@@ -622,6 +623,36 @@ def minuta_view(request, fiscalizacion_id):
         'fiscalizacion': fiscalizacion
     }
     return render(request, 'minuta.html', context)
+
+
+@login_required
+def minuta_mes_view(request, fiscalizacion_id, mes):
+    fiscalizacion = get_object_or_404(ActividadFiscalizacion, pk=fiscalizacion_id)
+    auditoria = Auditoria.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
+    intervencion = Intervencion.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
+    control_interno = ControlInterno.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
+    actividades = get_actividades(auditoria, intervencion, control_interno)
+    trimestre_opts = {
+        1: 'primer',
+        2: 'segundo',
+        3: 'tercer',
+        4: 'cuarto'
+    }
+
+    trimestre_word = trimestre_opts.get(fiscalizacion.trimestre)
+    anyo = fiscalizacion.anyo
+
+    context = {
+        'mes': mes,
+        'actividades': actividades,
+        'oic': fiscalizacion.id_oic.nombre,
+        'trimestre_word': trimestre_word,
+        'anyo': anyo
+    }
+    if request.method == 'POST':
+        return render(request, 'minuta_mes.html', context)
+    if request.method == 'GET':
+        return render(request, 'minuta_mes.html', context)
 
 
 @login_required

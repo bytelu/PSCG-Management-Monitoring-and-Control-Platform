@@ -70,7 +70,7 @@ class DataDocs:
             kind (str): Tipo de revisión ("A" para Auditoría, "I" para Intervención, "C" para Control Interno).
 
         Returns:
-            Optional[Dict[str, Dict[str, Dict[str, str]]]]: Diccionario de revisión creado o None si el tipo es inválido.
+            Optional[Dict[str, Dict[str, Dict[str, str]]]]: Diccionario revisión creado o None si el tipo es inválido.
         """
         if kind in ["A", "I", "C"] and revision_list:
             return {
@@ -120,7 +120,7 @@ def replace_text_in_table(table, regex, data):
 
 def replace_data(doc, data):
     """
-    Reemplaza datos en un documento completo (párrafos y tablas) utilizando un diccionario de datos y expresiones regulares.
+    Reemplaza datos en documento completo (párrafos, tablas) utilizando diccionario de datos y expresiones regulares.
 
     Args:
         doc (docx.Document): Documento en el que se van a realizar los reemplazos.
@@ -142,7 +142,7 @@ def replace_revision(doc: Document, revision: RevisionDocs):
 
     Args:
         doc (docx.Document): Documento en el que se van a realizar los reemplazos.
-        revision (RevisionDocs): Datos de revisión que contienen los parámetros de auditoría, intervención y control interno.
+        revision (RevisionDocs): Datos de revisión, contienen los parámetros de actividad de fiscalización.
 
     Returns:
         None
@@ -258,7 +258,7 @@ def minuta(data: List[str],
 
     if not kind and revision is None:
         return None
-
+    output = f"Minuta - {oic} - M{mes}T{trimestre} - {anyo}.docx"
     temp_path = generate_temp(origen, destino)
     if temp_path:
         doc = Document(temp_path)
@@ -267,7 +267,7 @@ def minuta(data: List[str],
         data = DataDocs.from_list(data).data
         replace_data(doc, data)
         delete_temp(temp_path)
-        output_path = os.path.join(destino, f"Minuta - {oic} - M{mes}T{trimestre} - {anyo}.docx")
+        output_path = os.path.join(destino, output)
         doc.save(output_path)
         return output_path
     return None
@@ -280,9 +280,9 @@ def create_revision(auditoria_values: List[Tuple[str, str]] = None,
     Crea una instancia de RevisionDocs con datos de auditoría, intervención y control interno.
 
     Args:
-        auditoria_values (List[Tuple[str, str]], optional): Lista de pares (estatus, comentario) para auditoría.
-        intervencion_values (List[Tuple[str, str]], optional): Lista de pares (estatus, comentario) para intervención.
-        control_interno_values (List[Tuple[str, str]], optional): Lista de pares (estatus, comentario) para control interno.
+        auditoria_values (List[Tuple[str, str]], optional): Lista de pares (estatus, comentario) auditoría.
+        intervencion_values (List[Tuple[str, str]], optional): Lista de pares (estatus, comentario) intervención.
+        control_interno_values (List[Tuple[str, str]], optional): Lista de pares (estatus, comentario) control interno.
 
     Returns:
         RevisionDocs: Instancia de RevisionDocs con los datos de revisión creados.
@@ -333,8 +333,8 @@ def main():
     revision = create_revision(auditoria_values=revision_list, intervencion_values=revision_list,
                                control_interno_values=revision_list)
 
-    # Papeles de trabajo            ->      kind == True
-    # Proyectos de observacion      ->      kind == False
+    # Mes 1 y 2 ->  kind == True
+    # Mes 3     ->  kind == False
     output = minuta(data=dats, kind=False, revision=revision)
     print(output)
 
