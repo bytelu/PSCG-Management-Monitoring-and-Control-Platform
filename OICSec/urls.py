@@ -42,6 +42,8 @@ urlpatterns = [
          intervencion_detalle_view, name="intervencion_detalle"),
     path("minuta/<int:fiscalizacion_id>/",
          minuta_view, name="minuta"),
+    path("minuta/<int:fiscalizacion_id>/mes/<int:mes>/",
+         minuta_mes_view, name="minuta_mes"),
     path("personal/",
          personal_view, name="personal"),
     path("personal/oics",

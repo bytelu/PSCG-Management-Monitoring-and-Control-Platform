@@ -7,7 +7,7 @@
     <h6 class="card-subtitle mb-4 text-body-secondary text-muted">{{ fiscalizacion }}</h6>
     <div class="d-flex justify-content-around">
         <div class="card text-center mb-2" style="border-radius: 25px; width: 30vw; height: 30vw;">
-            <a href="#" class="text-decoration-none text-dark custom-card-link"
+            <a href="{% url 'minuta_mes' fiscalizacion.id 1 %}" class="text-decoration-none text-dark custom-card-link"
                style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
                 <div class="card-body d-flex flex-column justify-content-center align-items-center"
                      style="height: 100%;">
@@ -17,7 +17,7 @@
             </a>
         </div>
         <div class="card text-center mb-2" style="border-radius: 25px; width: 30vw; height: 30vw;">
-            <a href="#" class="text-decoration-none text-dark custom-card-link"
+            <a href="{% url 'minuta_mes' fiscalizacion.id 2 %}" class="text-decoration-none text-dark custom-card-link"
                style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
                 <div class="card-body d-flex flex-column justify-content-center align-items-center"
                      style="height: 100%;">
@@ -27,7 +27,7 @@
             </a>
         </div>
         <div class="card text-center mb-2" style="border-radius: 25px; width: 30vw; height: 30vw;">
-            <a href="#" class="text-decoration-none text-dark custom-card-link"
+            <a href="{% url 'minuta_mes' fiscalizacion.id 3 %}" class="text-decoration-none text-dark custom-card-link"
                style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
                 <div class="card-body d-flex flex-column justify-content-center align-items-center"
                      style="height: 100%;">
