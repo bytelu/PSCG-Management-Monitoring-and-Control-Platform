@@ -133,10 +133,16 @@ class ConceptoCedula(models.Model):
 
 
 class ConceptoMinuta(models.Model):
+    TIPO_CHOICES = [
+        (1, 'Auditoria'),
+        (2, 'Intervención'),
+        (3, 'Control Interno')
+    ]
     id = models.AutoField(primary_key=True)
     clave = models.CharField(max_length=3)
     estatus = models.IntegerField(blank=True, null=True)
     comentario = models.CharField(max_length=500, blank=True, null=True)
+    tipo_concepto = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
     id_minuta = models.ForeignKey('Minuta', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
