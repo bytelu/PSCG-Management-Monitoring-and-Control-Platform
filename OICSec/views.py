@@ -631,6 +631,18 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
     auditoria = Auditoria.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
     intervencion = Intervencion.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
     control_interno = ControlInterno.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
+    oic = fiscalizacion.id_oic
+
+    minuta = Minuta.objects.filter(id_actividad_fiscalizacion=fiscalizacion, mes=mes).first()
+    if not minuta:
+        minuta = Minuta.objects.create(
+            inicio=None,
+            fin=None,
+            id_actividad_fiscalizacion=fiscalizacion,
+            id_archivo=None,
+            mes=mes
+        )
+
     actividades = get_actividades(auditoria, intervencion, control_interno)
     trimestre_opts = {
         1: 'primer',
@@ -638,20 +650,97 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
         3: 'tercer',
         4: 'cuarto'
     }
-
     trimestre_word = trimestre_opts.get(fiscalizacion.trimestre)
     anyo = fiscalizacion.anyo
 
-    context = {
-        'mes': mes,
-        'actividades': actividades,
-        'oic': fiscalizacion.id_oic.nombre,
-        'trimestre_word': trimestre_word,
-        'anyo': anyo
-    }
     if request.method == 'POST':
-        return render(request, 'minuta_mes.html', context)
-    if request.method == 'GET':
+        # Actualizar la minuta con los datos del formulario
+        pass
+    else:
+        minuta_inicio = minuta.inicio if minuta.inicio else datetime.datetime.now()
+        minuta_fin = minuta.fin if minuta.fin else datetime.datetime.now()
+        minuta_director = MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=1).first()
+        if not minuta_director:
+            cargo_director = TipoCargo.objects.filter(id=1).first()
+            director_actual = get_object_or_404(
+                Personal,
+                id_oic=None,
+                estado=1,
+                cargopersonal__id_tipo_cargo=cargo_director
+            )
+            minuta_director = MinutaPersonal.objects.create(
+                tipo_personal=1,
+                id_minuta=minuta,
+                id_personal=director_actual
+            )
+        minuta_JUDC = MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=2).first()
+        if not minuta_JUDC:
+            cargo_JUDC = TipoCargo.objects.filter(id=2).first()
+            JUDC_actual = get_object_or_404(
+                Personal,
+                id_oic=None,
+                estado=1,
+                cargopersonal__id_tipo_cargo=cargo_JUDC
+            )
+            minuta_JUDC = MinutaPersonal.objects.create(
+                tipo_personal=2,
+                id_minuta=minuta,
+                id_personal=JUDC_actual
+            )
+        minuta_titular = MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=3).first()
+        if not minuta_titular:
+            cargo_titular = TipoCargo.objects.filter(id=6).first()
+            titular_actual = get_object_or_404(
+                Personal,
+                id_oic=oic,
+                estado=1,
+                cargopersonal__id_tipo_cargo=cargo_titular
+            )
+            minuta_titular = MinutaPersonal.objects.create(
+                tipo_personal=3,
+                id_minuta=minuta,
+                id_personal=titular_actual
+            )
+        minuta_personaloic = MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=4).first()
+        if not minuta_personaloic:
+            cargo_personaloic = TipoCargo.objects.filter(id=7).first()
+            personaloic_actual = get_object_or_404(
+                Personal,
+                id_oic=oic,
+                estado=1,
+                cargopersonal__id_tipo_cargo=cargo_personaloic
+            )
+            minuta_personaloic = MinutaPersonal.objects.create(
+                tipo_personal=4,
+                id_minuta=minuta,
+                id_personal=personaloic_actual
+            )
+
+        # Obtener las listas de JUDC y personal para los selectores
+        JUDC = Personal.objects.filter(id_oic=None, estado=1, cargopersonal__id_tipo_cargo=2)
+        personal = Personal.objects.filter(id_oic=oic, estado=1, cargopersonal__id_tipo_cargo=7)
+        if minuta_JUDC.id_personal.estado == 0:
+            JUDC = (JUDC | Personal.objects.filter(id=minuta_JUDC.id_personal.id)).distinct()
+        if minuta_personaloic.id_personal.estado == 0:
+            personal = (personal | Personal.objects.filter(id=minuta_personaloic.id_personal.id)).distinct()
+
+        context = {
+            'mes': mes,
+            'actividades': actividades,
+            'oic': fiscalizacion.id_oic.nombre,
+            'trimestre_word': trimestre_word,
+            'anyo': anyo,
+            'hours_range': range(1, 25),
+            'director': minuta_director.id_personal.id_persona,
+            'titular': minuta_titular.id_personal.id_persona,
+            'JUDC_actual': minuta_JUDC.id_personal.id_persona,
+            'personal_actual': minuta_personaloic.id_personal.id_persona,
+            'JUDC': JUDC,
+            'personal': personal,
+            'minuta_inicio': minuta_inicio,
+            'minuta_fin': minuta_fin
+        }
+
         return render(request, 'minuta_mes.html', context)
 
 

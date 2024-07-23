@@ -2,26 +2,106 @@
 {% block title %}Minuta{% endblock %}
 {% block content %}
     <div class="container mt-5">
-        <h2 class="display-4 text-center">Minuta de supervisión del mes "{{ mes }}" del {{ trimestre_word }} trimestre de {{ anyo }}</h2>
-        <h4 class="text-center">Actividades de fiscalización registradas de {{ oic }}:</h4>
-        <div class="row justify-content-center">
-            {% for actividad in actividades %}
-                <div class="col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
-                    <div class="card text-center" style="border-radius: 15px; width: 100%;">
-                        <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                            {% if actividad.tipo == 'auditoría' %}
-                                <i class="fas fa-file-alt fa-3x mb-3"></i>
-                            {% elif actividad.tipo == 'intervención' %}
-                                <i class="fas fa-file-contract fa-3x mb-3"></i>
-                            {% elif actividad.tipo == 'control interno' %}
-                                <i class="fas fa-tasks fa-3x mb-3"></i>
-                            {% endif %}
-                            <h5 class="card-title">{{ actividad.numero }}</h5>
-                            <p class="card-text">{{ actividad.denominacion }}</p>
+        <form method="post">
+            {% csrf_token %}
+            <h2 class="display-4 text-center">Minuta de supervisión del mes "{{ mes }}" del {{ trimestre_word }} trimestre
+                de {{ anyo }}</h2>
+            <h4 class="text-center">Actividades de fiscalización registradas de {{ oic }}:</h4>
+            <div class="row justify-content-center">
+                {% for actividad in actividades %}
+                    <div class="col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
+                        <div class="card text-center" style="border-radius: 15px; width: 100%;">
+                            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                                {% if actividad.tipo == 'auditoría' %}
+                                    <i class="fas fa-file-alt fa-3x mb-3"></i>
+                                {% elif actividad.tipo == 'intervención' %}
+                                    <i class="fas fa-file-contract fa-3x mb-3"></i>
+                                {% elif actividad.tipo == 'control interno' %}
+                                    <i class="fas fa-tasks fa-3x mb-3"></i>
+                                {% endif %}
+                                <h5 class="card-title">{{ actividad.numero }}</h5>
+                                <p class="card-text">{{ actividad.denominacion }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Titulo de minuta dependiendo del mes -->
+            <div>
+                <h3>
+                    {% if mes == 1 %}
+                        Presentación de documentación
+                    {% elif mes == 2 %}
+                        Presentación de papeles de trabajo
+                    {% elif mes == 3 %}
+                        Presentación de proyectos de observaciones
+                    {% endif %}
+                </h3>
+            </div>
+
+            <!-- Fecha y Hora en la misma fila, dentro de una card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row justify-content-center">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="inicio">Fecha y hora de inicio</label>
+                                <input type="datetime-local" class="form-control" id="inicio" name="inicio" value="{{ minuta_inicio|date:'Y-m-d\\TH:i' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="fin">Fecha y hora de finalización</label>
+                                <input type="datetime-local" class="form-control" id="fin" name="fin" value="{{ minuta_fin|date:'Y-m-d\\TH:i' }}">
+                            </div>
                         </div>
                     </div>
                 </div>
-            {% endfor %}
-        </div>
+            </div>
+
+            <!-- Información del personal, dentro de otra card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="director">Director de coordinación</label>
+                        <input type="text" class="form-control" id="director" name="director" value="{{ director.honorifico }} {{ director.nombre }} {{ director.apellido }}" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="JUDC">JUD de coordinación</label>
+                        <select class="form-control" id="JUDC" name="JUDC">
+                            {% for jud in JUDC %}
+                                <option value="{{ jud.id }}" {% if jud.id == JUDC_actual.id %}selected{% endif %}>{{ jud.id_persona.honorifico }} {{ jud.id_persona.nombre }} {{ jud.id_persona.apellido }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="titular">Titular OIC</label>
+                        <input type="text" class="form-control" id="titular" name="titular" value="{{ titular.honorifico }} {{ titular.nombre }} {{ titular.apellido }}" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="personal">Personal de estructura de fiscalización</label>
+                        <select class="form-control" id="personal" name="personal">
+                            {% for persona in personal %}
+                                <option value="{{ persona.id }}" {% if persona.id == personal_actual.id %}selected{% endif %}>{{ persona.id_persona.honorifico }} {{ persona.id_persona.nombre }} {{ persona.id_persona.apellido }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aquí irán los formularios -->
+            <div>
+                <!-- Formularios aún no especificados -->
+            </div>
+
+            <!-- Botón para enviar el formulario -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Enviar</button>
+            </div>
+        </form>
     </div>
 {% endblock %}
