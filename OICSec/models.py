@@ -132,23 +132,6 @@ class ConceptoCedula(models.Model):
         db_table = 'concepto_cedula'
 
 
-class ConceptoMinuta(models.Model):
-    TIPO_CHOICES = [
-        (1, 'Auditoria'),
-        (2, 'Intervención'),
-        (3, 'Control Interno')
-    ]
-    id = models.AutoField(primary_key=True)
-    clave = models.CharField(max_length=3)
-    estatus = models.IntegerField(blank=True, null=True)
-    comentario = models.CharField(max_length=500, blank=True, null=True)
-    tipo_concepto = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
-    id_minuta = models.ForeignKey('Minuta', on_delete=models.CASCADE, blank=True, null=True)
-
-    class Meta:
-        db_table = 'concepto_minuta'
-
-
 class ControlInterno(models.Model):
     id = models.AutoField(primary_key=True)
     area = models.CharField(max_length=500, blank=True, null=True)
@@ -253,8 +236,8 @@ class Materia(models.Model):
 
 class Minuta(models.Model):
     id = models.AutoField(primary_key=True)
-    inicio = models.DateField(blank=True, null=True)
-    fin = models.DateField(blank=True, null=True)
+    inicio = models.DateTimeField(blank=True, null=True)
+    fin = models.DateTimeField(blank=True, null=True)
     mes = models.IntegerField(blank=True, null=True)
     id_tipo_minuta = models.ForeignKey('TipoMinuta', on_delete=models.CASCADE, blank=True, null=True)
     id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True,
@@ -263,6 +246,39 @@ class Minuta(models.Model):
 
     class Meta:
         db_table = 'minuta'
+
+
+class ConceptoMinuta(models.Model):
+    TIPO_CHOICES = [
+        (1, 'Auditoria'),
+        (2, 'Intervención'),
+        (3, 'Control Interno')
+    ]
+    id = models.AutoField(primary_key=True)
+    clave = models.CharField(max_length=3)
+    estatus = models.IntegerField(blank=True, null=True)
+    comentario = models.CharField(max_length=500, blank=True, null=True)
+    tipo_concepto = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
+    id_minuta = models.ForeignKey('Minuta', on_delete=models.CASCADE, blank=True, null=True)
+
+    class Meta:
+        db_table = 'concepto_minuta'
+
+
+class MinutaPersonal(models.Model):
+    TIPO_CHOICES = [
+        (1, 'Director Coordinación'),
+        (2, 'JUD Coordinación'),
+        (3, 'Titular OIC'),
+        (4, 'Personal OIC')
+    ]
+    id = models.AutoField(primary_key=True)
+    tipo_personal = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
+    id_minuta = models.ForeignKey('Minuta', on_delete=models.CASCADE, blank=True, null=True)
+    id_personal = models.ForeignKey('Personal', on_delete=models.CASCADE, blank=True, null=True)
+
+    class Meta:
+        db_table = 'minuta_personal'
 
 
 class Observacion(models.Model):
