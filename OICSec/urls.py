@@ -61,7 +61,7 @@ urlpatterns = [
     path('personal/oics/asignar-cargo-personal/<int:personal_id>/<int:tipo_cargo_id>/',
          asignar_cargo_personal, name='asignar_cargo_personal'),
     path('personal/oics/eliminar-personal/<int:personal_id>/',
-         eliminar_personal_view, name='eliminar_personal'),
+         eliminar_personal_oic_view, name='eliminar_personal'),
     path("personal/oics/crear_titular/<int:oic_id>",
          crear_titular_view, name='crear_titular'),
     path("personal/oics/crear_personal/<int:oic_id>",
