@@ -252,7 +252,7 @@ class ConceptoMinuta(models.Model):
     TIPO_CHOICES = [
         (1, 'Auditoria'),
         (2, 'Intervención'),
-        (3, 'Control Interno')
+        (3, 'Control')
     ]
     id = models.AutoField(primary_key=True)
     clave = models.CharField(max_length=3)
