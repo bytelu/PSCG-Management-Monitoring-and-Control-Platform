@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 
 from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm, CrearTitularForm
@@ -631,7 +631,7 @@ def get_or_create_minuta_personal(minuta, tipo_personal, cargo_id, oic=None):
         cargo = TipoCargo.objects.filter(id=cargo_id).first()
         personal_actual = Personal.objects.filter(id_oic=oic, estado=1, cargopersonal__id_tipo_cargo=cargo).first()
         if not personal_actual:
-            return get_object_or_404(Personal, id=-1)
+            raise Http404("Personal not found")
         minuta_personal = MinutaPersonal.objects.create(
             tipo_personal=tipo_personal,
             id_minuta=minuta,
@@ -691,7 +691,6 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
             'oic': fiscalizacion.id_oic.nombre,
             'trimestre_word': trimestre_word,
             'anyo': anyo,
-            'hours_range': range(1, 25),
             'director': minuta_director.id_personal.id_persona,
             'titular': minuta_titular.id_personal.id_persona,
             'JUDC_actual': minuta_judc.id_personal.id_persona,
@@ -699,10 +698,74 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
             'JUDC': judc,
             'personal': personal,
             'minuta_inicio': minuta_inicio,
-            'minuta_fin': minuta_fin
+            'minuta_fin': minuta_fin,
+            'auditoria_band': auditoria.first() is not None,
+            'intervencion_band': intervencion.first() is not None,
+            'control_band': control_interno.first() is not None
         }
 
+        if mes == 3:
+            conceptos_dic = get_minuta_conceptos(minuta)
+            # Crea conceptos si no los hay y los agrega al dict de ser necesario
+            band = False
+            # Si no hay conceptos de la actividad de fiscalizacion se necesitan crearlos
+            if auditoria.first():
+                if conceptos_dic.get('Auditoria') == {}:
+                    band = True
+                    for i in range(1, 21):
+                        ConceptoMinuta.objects.create(
+                            clave=str(i),
+                            estatus=None,
+                            comentario=None,
+                            tipo_concepto=1,
+                            id_minuta=minuta
+                        )
+            if intervencion.first():
+                if conceptos_dic.get('Intervención') == {}:
+                    band = True
+                    for i in range(1, 26):
+                        ConceptoMinuta.objects.create(
+                            clave=str(i),
+                            estatus=None,
+                            comentario=None,
+                            tipo_concepto=2,
+                            id_minuta=minuta
+                        )
+            if control_interno.first():
+                if conceptos_dic.get('Control') == {}:
+                    band = True
+                    for i in range(1, 24):
+                        ConceptoMinuta.objects.create(
+                            clave=str(i),
+                            estatus=None,
+                            comentario=None,
+                            tipo_concepto=3,
+                            id_minuta=minuta
+                        )
+            # Se reescriben en caso de que se hayan generado nuevos conceptos
+            if band:
+                conceptos_dic = get_minuta_conceptos(minuta)
+            context.update({'conceptos': conceptos_dic})
+
         return render(request, 'minuta_mes.html', context)
+
+
+def get_minuta_conceptos(minuta):
+    conceptos = ConceptoMinuta.objects.filter(id_minuta=minuta.id)
+    conceptos_dict = {
+        'Auditoria': {},
+        'Intervención': {},
+        'Control': {}
+    }
+    for concepto in conceptos:
+        tipo = dict(ConceptoMinuta.TIPO_CHOICES).get(concepto.tipo_concepto)
+        if tipo:
+            conceptos_dict[tipo][concepto.clave] = {
+                'estado': concepto.estatus,
+                'comentario': concepto.comentario if concepto.comentario is not None else ''
+            }
+
+    return conceptos_dict
 
 
 @login_required
