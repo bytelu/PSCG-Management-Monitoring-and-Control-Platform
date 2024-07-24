@@ -629,12 +629,9 @@ def get_or_create_minuta_personal(minuta, tipo_personal, cargo_id, oic=None):
     minuta_personal = MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=tipo_personal).first()
     if not minuta_personal:
         cargo = TipoCargo.objects.filter(id=cargo_id).first()
-        personal_actual = get_object_or_404(
-            Personal,
-            id_oic=oic,
-            estado=1,
-            cargopersonal__id_tipo_cargo=cargo
-        )
+        personal_actual = Personal.objects.filter(id_oic=oic, estado=1, cargopersonal__id_tipo_cargo=cargo).first()
+        if not personal_actual:
+            return get_object_or_404(Personal, id=-1)
         minuta_personal = MinutaPersonal.objects.create(
             tipo_personal=tipo_personal,
             id_minuta=minuta,
