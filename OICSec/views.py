@@ -14,6 +14,7 @@ from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaFo
 from OICSec.funcs.Actividad import get_actividades
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
+from OICSec.funcs.Minuta import create_revision
 from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
 from OICSec.funcs.PINT import extract_pint
@@ -647,6 +648,72 @@ def get_personal_list(oic, cargo_id, minuta_personal):
     return personal_list
 
 
+def update_conceptos_minuta(request, conceptos, auditoria_band, control_band, intervencion_band):
+    conceptos_auditoria = conceptos.filter(tipo_concepto=1)
+    conceptos_intervencion = conceptos.filter(tipo_concepto=2)
+    conceptos_control = conceptos.filter(tipo_concepto=3)
+    auditoria_list = []
+    intervencion_list = []
+    control_list = []
+    estados = {
+        '0': 'Cumple',
+        '1': 'No cumple',
+        '2': 'No aplica',
+        '3': 'Pendiente'
+    }
+
+    if auditoria_band:
+        for i in range(1, 21):
+            estado = request.POST.get(f'estado-A{i}') if request.POST.get(
+                f'estado-A{i}') != 'Selecciona una opción' else None
+            comentario = request.POST.get(f'comentario-A{i}') if request.POST.get(f'comentario-A{i}') else ''
+            # Se actualizan los valores en la base de datos
+            try:
+                concepto = conceptos_auditoria.get(clave=str(i))
+                concepto.estatus = estado
+                concepto.comentario = comentario
+                concepto.save()
+            except ConceptoMinuta.DoesNotExist:
+                pass
+            # Se preparan para la generación del archivo
+            auditoria_list.append((estados.get(estado) if estado else '', comentario))
+    if intervencion_band:
+        for i in range(1, 26):
+            estado = request.POST.get(f'estado-I{i}') if request.POST.get(
+                f'estado-I{i}') != 'Selecciona una opción' else None
+            comentario = request.POST.get(f'comentario-I{i}') if request.POST.get(f'comentario-I{i}') else ''
+            # Se actualizan los valores en la base de datos
+            try:
+                concepto = conceptos_intervencion.get(clave=str(i))
+                concepto.estatus = estado
+                concepto.comentario = comentario
+                concepto.save()
+            except ConceptoMinuta.DoesNotExist:
+                pass
+            # Se preparan para la generación del archivo
+            intervencion_list.append((estados.get(estado) if estado else '', comentario))
+    if control_band:
+        for i in range(1, 24):
+            estado = request.POST.get(f'estado-C{i}') if request.POST.get(
+                f'estado-C{i}') != 'Selecciona una opción' else None
+            comentario = request.POST.get(f'comentario-C{i}') if request.POST.get(f'comentario-C{i}') else ''
+            # Se actualizan los valores en la base de datos
+            try:
+                concepto = conceptos_control.get(clave=str(i))
+                concepto.estatus = estado
+                concepto.comentario = comentario
+                concepto.save()
+            except ConceptoMinuta.DoesNotExist:
+                pass
+            # Se preparan para la generación del archivo
+            control_list.append((estados.get(estado) if estado else '', comentario))
+    auditoria_list = None if not auditoria_list else auditoria_list
+    control_list = None if not control_list else control_list
+    intervencion_list = None if not intervencion_list else intervencion_list
+    revision = create_revision(auditoria_values=auditoria_list, intervencion_values=intervencion_list, control_interno_values=control_list)
+    return revision
+
+
 @login_required
 def minuta_mes_view(request, fiscalizacion_id, mes):
     fiscalizacion = get_object_or_404(ActividadFiscalizacion, pk=fiscalizacion_id)
@@ -654,6 +721,9 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
     intervencion = Intervencion.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
     control_interno = ControlInterno.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
     oic = fiscalizacion.id_oic
+    auditoria_band = auditoria.first() is not None
+    intervencion_band = intervencion.first() is not None
+    control_band = control_interno.first() is not None
 
     minuta = Minuta.objects.filter(id_actividad_fiscalizacion=fiscalizacion, mes=mes).first()
     if not minuta:
@@ -672,7 +742,9 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
 
     if request.method == 'POST':
         # Actualizar la minuta con los datos del formulario
-        pass
+        conceptos, _ = get_minuta_conceptos(minuta)
+        revision = update_conceptos_minuta(request, conceptos, auditoria_band, control_band, intervencion_band)
+
     else:
         minuta_inicio = minuta.inicio if minuta.inicio else datetime.datetime.now()
         minuta_fin = minuta.fin if minuta.fin else datetime.datetime.now()
@@ -699,17 +771,17 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
             'personal': personal,
             'minuta_inicio': minuta_inicio,
             'minuta_fin': minuta_fin,
-            'auditoria_band': auditoria.first() is not None,
-            'intervencion_band': intervencion.first() is not None,
-            'control_band': control_interno.first() is not None
+            'auditoria_band': auditoria_band,
+            'intervencion_band': intervencion_band,
+            'control_band': control_band
         }
 
         if mes == 3:
-            conceptos_dic = get_minuta_conceptos(minuta)
+            _, conceptos_dic = get_minuta_conceptos(minuta)
             # Crea conceptos si no los hay y los agrega al dict de ser necesario
             band = False
             # Si no hay conceptos de la actividad de fiscalizacion se necesitan crearlos
-            if auditoria.first():
+            if auditoria_band:
                 if conceptos_dic.get('Auditoria') == {}:
                     band = True
                     for i in range(1, 21):
@@ -720,7 +792,7 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
                             tipo_concepto=1,
                             id_minuta=minuta
                         )
-            if intervencion.first():
+            if intervencion_band:
                 if conceptos_dic.get('Intervención') == {}:
                     band = True
                     for i in range(1, 26):
@@ -731,7 +803,7 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
                             tipo_concepto=2,
                             id_minuta=minuta
                         )
-            if control_interno.first():
+            if control_band:
                 if conceptos_dic.get('Control') == {}:
                     band = True
                     for i in range(1, 24):
@@ -744,7 +816,7 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
                         )
             # Se reescriben en caso de que se hayan generado nuevos conceptos
             if band:
-                conceptos_dic = get_minuta_conceptos(minuta)
+                _, conceptos_dic = get_minuta_conceptos(minuta)
             context.update({'conceptos': conceptos_dic})
 
         return render(request, 'minuta_mes.html', context)
@@ -765,7 +837,7 @@ def get_minuta_conceptos(minuta):
                 'comentario': concepto.comentario if concepto.comentario is not None else ''
             }
 
-    return conceptos_dict
+    return conceptos, conceptos_dict
 
 
 @login_required
