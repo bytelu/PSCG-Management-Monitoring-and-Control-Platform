@@ -649,12 +649,6 @@ def get_personal_list(oic, cargo_id, minuta_personal):
 
 
 def update_conceptos_minuta(request, conceptos, auditoria_band, control_band, intervencion_band):
-    conceptos_auditoria = conceptos.filter(tipo_concepto=1)
-    conceptos_intervencion = conceptos.filter(tipo_concepto=2)
-    conceptos_control = conceptos.filter(tipo_concepto=3)
-    auditoria_list = []
-    intervencion_list = []
-    control_list = []
     estados = {
         '0': 'Cumple',
         '1': 'No cumple',
@@ -662,55 +656,35 @@ def update_conceptos_minuta(request, conceptos, auditoria_band, control_band, in
         '3': 'Pendiente'
     }
 
-    if auditoria_band:
-        for i in range(1, 21):
-            estado = request.POST.get(f'estado-A{i}') if request.POST.get(
-                f'estado-A{i}') != 'Selecciona una opción' else None
-            comentario = request.POST.get(f'comentario-A{i}') if request.POST.get(f'comentario-A{i}') else ''
+    def process_conceptos(conceptos_instance, prefix, count):
+        conceptos_list = []
+        for i in range(1, count + 1):
+            estado = request.POST.get(f'estado-{prefix}{i}') if request.POST.get(
+                f'estado-{prefix}{i}') != 'Selecciona una opción' else None
+            comentario = request.POST.get(f'comentario-{prefix}{i}') if request.POST.get(
+                f'comentario-{prefix}{i}') else ''
             # Se actualizan los valores en la base de datos
             try:
-                concepto = conceptos_auditoria.get(clave=str(i))
+                concepto = conceptos_instance.get(clave=str(i))
                 concepto.estatus = estado
                 concepto.comentario = comentario
                 concepto.save()
             except ConceptoMinuta.DoesNotExist:
                 pass
             # Se preparan para la generación del archivo
-            auditoria_list.append((estados.get(estado) if estado else '', comentario))
-    if intervencion_band:
-        for i in range(1, 26):
-            estado = request.POST.get(f'estado-I{i}') if request.POST.get(
-                f'estado-I{i}') != 'Selecciona una opción' else None
-            comentario = request.POST.get(f'comentario-I{i}') if request.POST.get(f'comentario-I{i}') else ''
-            # Se actualizan los valores en la base de datos
-            try:
-                concepto = conceptos_intervencion.get(clave=str(i))
-                concepto.estatus = estado
-                concepto.comentario = comentario
-                concepto.save()
-            except ConceptoMinuta.DoesNotExist:
-                pass
-            # Se preparan para la generación del archivo
-            intervencion_list.append((estados.get(estado) if estado else '', comentario))
-    if control_band:
-        for i in range(1, 24):
-            estado = request.POST.get(f'estado-C{i}') if request.POST.get(
-                f'estado-C{i}') != 'Selecciona una opción' else None
-            comentario = request.POST.get(f'comentario-C{i}') if request.POST.get(f'comentario-C{i}') else ''
-            # Se actualizan los valores en la base de datos
-            try:
-                concepto = conceptos_control.get(clave=str(i))
-                concepto.estatus = estado
-                concepto.comentario = comentario
-                concepto.save()
-            except ConceptoMinuta.DoesNotExist:
-                pass
-            # Se preparan para la generación del archivo
-            control_list.append((estados.get(estado) if estado else '', comentario))
-    auditoria_list = None if not auditoria_list else auditoria_list
-    control_list = None if not control_list else control_list
-    intervencion_list = None if not intervencion_list else intervencion_list
-    revision = create_revision(auditoria_values=auditoria_list, intervencion_values=intervencion_list, control_interno_values=control_list)
+            conceptos_list.append((estados.get(estado) if estado else '', comentario))
+        return None if not conceptos_list else conceptos_list
+
+    # Procesar conceptos por tipo
+    auditoria_list = process_conceptos(conceptos.filter(tipo_concepto=1), 'A', 20) if auditoria_band else None
+    intervencion_list = process_conceptos(conceptos.filter(tipo_concepto=2), 'I', 25) if intervencion_band else None
+    control_list = process_conceptos(conceptos.filter(tipo_concepto=3), 'C', 23) if control_band else None
+
+    revision = create_revision(
+        auditoria_values=auditoria_list,
+        intervencion_values=intervencion_list,
+        control_interno_values=control_list
+    )
     return revision
 
 
