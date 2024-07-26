@@ -3245,9 +3245,39 @@
                 </div>
             {% endif %}
 
-            <!-- Botón para enviar el formulario -->
-            <div class="text-center">
-                <button type="submit" class="btn btn-outline-dark btn-block">Guardar</button>
+
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-outline-dark btn-lg btn-block" data-toggle="modal"
+                    data-target="#myModal">
+                Guardar Cambios
+            </button>
+            <!-- Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Confirmar cambios</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <p>¿Estas seguro de que deseas guardar los cambios y descargar el archivo?</p>
+                            <p style="color: red">Esta accion es irreversible</p>
+                        </div>
+                        <div class="modal-footer">
+                            <p>
+                                <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar
+                                </button>
+                            </p>
+                            <p>
+                                <!-- Botón para enviar el formulario -->
+                                <button type="submit" class="btn btn-outline-danger btn-block">Aceptar</button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
     </div>

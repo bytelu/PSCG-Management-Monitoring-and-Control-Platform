@@ -256,8 +256,9 @@ def minuta(data: List[str],
     destino = os.path.normpath(os.path.join(script_dir, rel_path))
     origen = papeles_trabajo if kind else proyectos_observaciones
 
-    if not kind and revision is None:
-        return None
+    if not kind:
+        if revision is None:
+            return None
     output = f"Minuta - {oic} - M{mes}T{trimestre} - {anyo}.docx"
     temp_path = generate_temp(origen, destino)
     if temp_path:
