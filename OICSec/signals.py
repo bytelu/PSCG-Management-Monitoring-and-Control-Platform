@@ -1,6 +1,6 @@
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from .models import Auditoria, Intervencion, ControlInterno, Cedula, Archivo, ConceptoCedula
+from .models import Auditoria, Intervencion, ControlInterno, ConceptoCedula
 
 
 @receiver(post_delete, sender=Auditoria)
