@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 from difflib import SequenceMatcher
 
 from django.contrib import messages
@@ -9,12 +10,14 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
+from num2words import num2words
 
 from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm, CrearTitularForm
 from OICSec.funcs.Actividad import get_actividades
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
-from OICSec.funcs.Minuta import create_revision
+from OICSec.funcs.Minuta import create_revision, minuta as create_minuta_doc
 from OICSec.funcs.PAA import extract_paa
 from OICSec.funcs.PACI import extract_paci
 from OICSec.funcs.PINT import extract_pint
@@ -543,15 +546,42 @@ def get_supervision_data(kind, model_instance, fiscalizacion, request):
     return data
 
 
-def save_file_and_respond(file_path, cedula, data):
-    archivo = cedula.id_archivo
+def save_minuta_and_respond(file_path, model_instance):
+    archivo = model_instance.id_archivo
+    file_name = ''
+    if file_path:
+        file_name = os.path.basename(file_path)
+    if not archivo:
+        archivo = Archivo.objects.create(
+            archivo=file_path,
+            nombre=file_name
+        )
+        model_instance.id_archivo = archivo
+        model_instance.save()
+
+    if file_path:
+        # Cargar el archivo y enviarlo como respuesta para descargar
+        with open(file_path, 'rb') as file:
+            response = HttpResponse(
+                file.read(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            file_name = os.path.basename(file_path)
+            response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+            return response
+    else:
+        # Manejar el caso en el que no se haya generado el archivo
+        return HttpResponse("No se pudo generar la minuta.", status=500)
+
+def save_file_and_respond(file_path, model_instance, data):
+    archivo = model_instance.id_archivo
     if not archivo:
         archivo = Archivo.objects.create(
             archivo=file_path,
             nombre=f"Supervision - {data.Numero} - {data.OIC} - {data.Anyo_Trimestre}.xlsx"
         )
-        cedula.id_archivo = archivo
-        cedula.save()
+        model_instance.id_archivo = archivo
+        model_instance.save()
 
     if file_path:
         # Cargar el archivo y enviarlo como respuesta para descargar
@@ -688,6 +718,132 @@ def update_conceptos_minuta(request, conceptos, auditoria_band, control_band, in
     return revision
 
 
+def limpiar_cadena(cadena):
+    patron_parentesis = r'\([^)]*\)'
+    cadena_sin_parentesis = re.sub(patron_parentesis, '', cadena)
+    cadena_limpia = re.sub(r'\s+', ' ', cadena_sin_parentesis).strip()
+    return cadena_limpia
+
+def update_data_minuta(request, minuta, mes, actividades):
+    # Se borra el anterior personal y se coloca uno nuevo
+    MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=2).delete()
+    id_judc = request.POST.get('JUDC', None)
+    judc = get_object_or_404(Personal, id=id_judc)
+    MinutaPersonal.objects.create(
+        tipo_personal=2,
+        id_minuta=minuta,
+        id_personal=judc
+    )
+    MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=4).delete()
+    id_personal = request.POST.get('personal', None)
+    personal = get_object_or_404(Personal, id=id_personal)
+    MinutaPersonal.objects.create(
+        tipo_personal=4,
+        id_minuta=minuta,
+        id_personal=personal
+    )
+    inicio_str = request.POST.get("inicio")
+    fin_str = request.POST.get("fin")
+    time_inicio = timezone.make_aware(datetime.datetime.strptime(inicio_str, "%Y-%m-%dT%H:%M"))
+    time_fin = timezone.make_aware(datetime.datetime.strptime(fin_str, "%Y-%m-%dT%H:%M"))
+    if inicio_str:
+        minuta.inicio = time_inicio
+    if fin_str:
+        minuta.fin = time_fin
+    minuta.save()
+    # Una vez ya teniendo actualizados los datos de la minuta, preparamos los datos para la generacion del archivo
+    director = MinutaPersonal.objects.get(id_minuta=minuta, tipo_personal=1).id_personal
+    titular = MinutaPersonal.objects.get(id_minuta=minuta, tipo_personal=3).id_personal
+    fiscalizacion = minuta.id_actividad_fiscalizacion
+    # Se acomodan de acuerdo a la documentacion
+    meses_word = {
+        1: "enero", 2: "febrero", 3: "marzo", 4: "abril", 5: "mayo", 6: "junio", 7: "julio", 8: "agosto",
+        9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre"
+    }
+    posicion_word = {
+        1: 'primer',
+        2: 'segundo',
+        3: 'tercero',
+        4: 'cuarto'
+    }
+
+    lista_actividades, text_numero_actividades = get_actividades_lista(actividades)
+
+    data = [
+        num2words(time_inicio.hour, lang='es'),                                 # P01
+        num2words(time_inicio.day, lang='es'),                                  # P02
+        meses_word.get(time_inicio.month),                                      # P03
+        num2words(time_inicio.year, lang='es'),                                 # P04
+        "el/la",                                                                # P05
+        director.id_persona.honorifico,                                         # P06
+        f'{director.id_persona.nombre} {director.id_persona.apellido}',         # P07
+        CargoPersonal.objects.get(id_personal=director).nombre,                 # P08
+        "el/la",                                                                # P09
+        judc.id_persona.honorifico,                                             # P10
+        f'{judc.id_persona.nombre} {judc.id_persona.apellido}',                 # P11
+        CargoPersonal.objects.get(id_personal=judc).nombre,                     # P12
+        "el/la",                                                                # P13
+        titular.id_persona.honorifico,                                          # P14
+        f'{titular.id_persona.nombre} {titular.id_persona.apellido}',           # P15
+        CargoPersonal.objects.get(id_personal=titular).nombre,                  # P16
+        "el/la",                                                                # P17
+        personal.id_persona.honorifico,                                         # P18
+        f'{personal.id_persona.nombre} {personal.id_persona.apellido}',         # P19
+        CargoPersonal.objects.get(id_personal=personal).nombre,                 # P20
+        num2words(mes, lang='es'),                                              # P21
+        posicion_word.get(fiscalizacion.trimestre),                             # P22
+        num2words(fiscalizacion.anyo, lang='es'),                               # P23
+        limpiar_cadena(fiscalizacion.id_oic.nombre),                            # P24
+        text_numero_actividades,                                                # P25
+        lista_actividades,                                                      # P26
+        num2words(time_fin.hour, lang='es'),                                    # P27
+        num2words(time_fin.day, lang='es'),                                     # P28
+        meses_word.get(time_fin.month),                                         # P29
+        time_fin.year                                                           # P30
+    ]
+
+    # Caso de mes 1 y 2
+    if mes == 1:
+        data.append('DOCUMENTACIÓN')                                            # P31
+        data.append('la documentacion')                                         # P32
+    elif mes == 2:
+        data.append('PAPELES DE TRABAJO')                                       # P31
+        data.append('los papeles de trabajo')                                   # P32
+
+    return data
+
+
+def get_actividades_lista(actividades):
+    lista_actividades = ''
+    numero_actividades = len(actividades)
+    for n in range(numero_actividades):
+        tipo = actividades[n].tipo
+        denominacion = actividades[n].denominacion
+        numero = actividades[n].numero
+        articulo = "el" if tipo == "control interno" else "la"
+        articulo_final = "o" if tipo == "control interno" else "a"
+        lista_actividades += f"{articulo} {tipo} numero {numero} denominad{articulo_final} {denominacion}"
+        if n == numero_actividades - 2:
+            lista_actividades += " y "
+        elif n < numero_actividades - 2:
+            lista_actividades += ", "
+    lista_actividades += " misma"
+    if numero_actividades > 1:
+        lista_actividades += "s que se ejecutan"
+    else:
+        lista_actividades += " que se ejecuta"
+    text_numero_actividades = 'está'
+    if numero_actividades > 1:
+        text_numero_actividades += 'n'
+        numero_text = num2words(numero_actividades, lang='es')
+    else:
+        numero_text = 'una'
+    text_numero_actividades += f' ejecutando {numero_text} actividad'
+    if numero_actividades > 1:
+        text_numero_actividades += 'es'
+    return lista_actividades, text_numero_actividades
+
+
 @login_required
 def minuta_mes_view(request, fiscalizacion_id, mes):
     fiscalizacion = get_object_or_404(ActividadFiscalizacion, pk=fiscalizacion_id)
@@ -716,8 +872,24 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
 
     if request.method == 'POST':
         # Actualizar la minuta con los datos del formulario
-        conceptos, _ = get_minuta_conceptos(minuta)
-        revision = update_conceptos_minuta(request, conceptos, auditoria_band, control_band, intervencion_band)
+        data = update_data_minuta(request, minuta, mes, actividades)
+        revision = None
+        kind = True
+        if mes == 3:
+            kind = False
+            conceptos, _ = get_minuta_conceptos(minuta)
+            revision = update_conceptos_minuta(request, conceptos, auditoria_band, control_band, intervencion_band)
+        output_path = create_minuta_doc(
+            data=data,
+            kind=kind,
+            oic=fiscalizacion.id_oic.nombre,
+            mes=mes,
+            trimestre=str(fiscalizacion.trimestre),
+            anyo=str(anyo),
+            revision=revision
+        )
+        return save_minuta_and_respond(output_path, minuta)
+
 
     else:
         minuta_inicio = minuta.inicio if minuta.inicio else datetime.datetime.now()
