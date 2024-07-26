@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from num2words import num2words
@@ -573,6 +573,7 @@ def save_minuta_and_respond(file_path, model_instance):
         # Manejar el caso en el que no se haya generado el archivo
         return HttpResponse("No se pudo generar la minuta.", status=500)
 
+
 def save_file_and_respond(file_path, model_instance, data):
     archivo = model_instance.id_archivo
     if not archivo:
@@ -662,7 +663,7 @@ def get_or_create_minuta_personal(minuta, tipo_personal, cargo_id, oic=None):
         cargo = TipoCargo.objects.filter(id=cargo_id).first()
         personal_actual = Personal.objects.filter(id_oic=oic, estado=1, cargopersonal__id_tipo_cargo=cargo).first()
         if not personal_actual:
-            raise Http404("Personal not found")
+            return 'Error'
         minuta_personal = MinutaPersonal.objects.create(
             tipo_personal=tipo_personal,
             id_minuta=minuta,
@@ -724,6 +725,7 @@ def limpiar_cadena(cadena):
     cadena_limpia = re.sub(r'\s+', ' ', cadena_sin_parentesis).strip()
     return cadena_limpia
 
+
 def update_data_minuta(request, minuta, mes, actividades):
     # Se borra el anterior personal y se coloca uno nuevo
     MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=2).delete()
@@ -770,45 +772,45 @@ def update_data_minuta(request, minuta, mes, actividades):
     lista_actividades, text_numero_actividades = get_actividades_lista(actividades)
 
     data = [
-        num2words(time_inicio.hour, lang='es'),                                 # P01
-        num2words(time_inicio.day, lang='es'),                                  # P02
-        meses_word.get(time_inicio.month),                                      # P03
-        num2words(time_inicio.year, lang='es'),                                 # P04
-        "el/la",                                                                # P05
-        director.id_persona.honorifico,                                         # P06
-        f'{director.id_persona.nombre} {director.id_persona.apellido}',         # P07
-        CargoPersonal.objects.get(id_personal=director).nombre,                 # P08
-        "el/la",                                                                # P09
-        judc.id_persona.honorifico,                                             # P10
-        f'{judc.id_persona.nombre} {judc.id_persona.apellido}',                 # P11
-        CargoPersonal.objects.get(id_personal=judc).nombre,                     # P12
-        "el/la",                                                                # P13
-        titular.id_persona.honorifico,                                          # P14
-        f'{titular.id_persona.nombre} {titular.id_persona.apellido}',           # P15
-        CargoPersonal.objects.get(id_personal=titular).nombre,                  # P16
-        "el/la",                                                                # P17
-        personal.id_persona.honorifico,                                         # P18
-        f'{personal.id_persona.nombre} {personal.id_persona.apellido}',         # P19
-        CargoPersonal.objects.get(id_personal=personal).nombre,                 # P20
-        num2words(mes, lang='es'),                                              # P21
-        posicion_word.get(fiscalizacion.trimestre),                             # P22
-        num2words(fiscalizacion.anyo, lang='es'),                               # P23
-        limpiar_cadena(fiscalizacion.id_oic.nombre),                            # P24
-        text_numero_actividades,                                                # P25
-        lista_actividades,                                                      # P26
-        num2words(time_fin.hour, lang='es'),                                    # P27
-        num2words(time_fin.day, lang='es'),                                     # P28
-        meses_word.get(time_fin.month),                                         # P29
-        time_fin.year                                                           # P30
+        num2words(time_inicio.hour, lang='es'),  # P01
+        num2words(time_inicio.day, lang='es'),  # P02
+        meses_word.get(time_inicio.month),  # P03
+        num2words(time_inicio.year, lang='es'),  # P04
+        "el/la",  # P05
+        director.id_persona.honorifico,  # P06
+        f'{director.id_persona.nombre} {director.id_persona.apellido}',  # P07
+        CargoPersonal.objects.get(id_personal=director).nombre,  # P08
+        "el/la",  # P09
+        judc.id_persona.honorifico,  # P10
+        f'{judc.id_persona.nombre} {judc.id_persona.apellido}',  # P11
+        CargoPersonal.objects.get(id_personal=judc).nombre,  # P12
+        "el/la",  # P13
+        titular.id_persona.honorifico,  # P14
+        f'{titular.id_persona.nombre} {titular.id_persona.apellido}',  # P15
+        CargoPersonal.objects.get(id_personal=titular).nombre,  # P16
+        "el/la",  # P17
+        personal.id_persona.honorifico,  # P18
+        f'{personal.id_persona.nombre} {personal.id_persona.apellido}',  # P19
+        CargoPersonal.objects.get(id_personal=personal).nombre,  # P20
+        num2words(mes, lang='es'),  # P21
+        posicion_word.get(fiscalizacion.trimestre),  # P22
+        num2words(fiscalizacion.anyo, lang='es'),  # P23
+        limpiar_cadena(fiscalizacion.id_oic.nombre),  # P24
+        text_numero_actividades,  # P25
+        lista_actividades,  # P26
+        num2words(time_fin.hour, lang='es'),  # P27
+        num2words(time_fin.day, lang='es'),  # P28
+        meses_word.get(time_fin.month),  # P29
+        time_fin.year  # P30
     ]
 
     # Caso de mes 1 y 2
     if mes == 1:
-        data.append('DOCUMENTACIÓN')                                            # P31
-        data.append('la documentacion')                                         # P32
+        data.append('DOCUMENTACIÓN')  # P31
+        data.append('la documentacion')  # P32
     elif mes == 2:
-        data.append('PAPELES DE TRABAJO')                                       # P31
-        data.append('los papeles de trabajo')                                   # P32
+        data.append('PAPELES DE TRABAJO')  # P31
+        data.append('los papeles de trabajo')  # P32
 
     return data
 
@@ -890,7 +892,6 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
         )
         return save_minuta_and_respond(output_path, minuta)
 
-
     else:
         minuta_inicio = minuta.inicio if minuta.inicio else datetime.datetime.now()
         minuta_fin = minuta.fin if minuta.fin else datetime.datetime.now()
@@ -899,7 +900,15 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
         minuta_judc = get_or_create_minuta_personal(minuta, 2, 2)
         minuta_titular = get_or_create_minuta_personal(minuta, 3, 6, oic)
         minuta_personaloic = get_or_create_minuta_personal(minuta, 4, 7, oic)
-
+        if minuta_director == 'Error' or minuta_judc == 'Error':
+            messages.error(request,
+                           'Hubo un error con el personal de la dirección, verifica que estos esten registrados '
+                           'correctamente.')
+            return redirect('personal_direccion')
+        if minuta_titular == 'Error' or minuta_personaloic == 'Error':
+            messages.error(request,
+                           'Hubo un error con el personal del OIC, verifica que estos esten registrados correctamente.')
+            return redirect('personal_oic', oic.id)
         judc = get_personal_list(None, 2, minuta_judc)
         personal = get_personal_list(oic, 7, minuta_personaloic)
 

@@ -1,6 +1,18 @@
 {% extends 'navbar.html' %}
 {% block title %}Personal de OIC{% endblock %}
 {% block content %}
+    {% if messages %}
+        <div class="container mt-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="display-7">Personal de:</h1>
         <div class="d-flex">
@@ -16,7 +28,8 @@
         <div class="row">
             {% if titular %}
                 <div class="oic-card col-12 col-md-4 mb-4">
-                    <a href="{% url 'editar_titular_view' titular.id %}" class="text-decoration-none text-dark custom-card-link">
+                    <a href="{% url 'editar_titular_view' titular.id %}"
+                       class="text-decoration-none text-dark custom-card-link">
                         <div class="card h-100 text-center">
                             <div class="card-body d-flex flex-column justify-content-center">
                                 <h4 class="card-title">{{ titular.id_persona.honorifico }} {{ titular.id_persona.nombre }} {{ titular.id_persona.apellido }}</h4>
@@ -27,7 +40,8 @@
             {% endif %}
             <!-- Card extra para titular -->
             <div class="oic-card col-12 col-md-4 mb-4">
-                <a href="#" class="text-decoration-none text-dark custom-card-link" data-toggle="modal" data-target="#addTitularModal">
+                <a href="#" class="text-decoration-none text-dark custom-card-link" data-toggle="modal"
+                   data-target="#addTitularModal">
                     <div class="card h-100 text-center">
                         <div class="card-body d-flex flex-column justify-content-center">
                             <i class="fas fa-plus extra-card"></i>
@@ -43,7 +57,8 @@
         <div class="row">
             {% for person in personal %}
                 <div class="oic-card col-12 col-md-4 mb-4">
-                    <a href="{% url 'editar_personal_view' person.id %}" class="text-decoration-none text-dark custom-card-link">
+                    <a href="{% url 'editar_personal_view' person.id %}"
+                       class="text-decoration-none text-dark custom-card-link">
                         <div class="card h-100 text-center">
                             <div class="card-body d-flex flex-column justify-content-center">
                                 <h4 class="card-title">{{ person.id_persona.honorifico }} {{ person.id_persona.nombre }} {{ person.id_persona.apellido }}</h4>
@@ -66,7 +81,8 @@
     </div>
 
     <!-- Modal para agregar titular -->
-    <div class="modal fade" id="addTitularModal" tabindex="-1" role="dialog" aria-labelledby="addTitularModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addTitularModal" tabindex="-1" role="dialog" aria-labelledby="addTitularModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -77,14 +93,16 @@
                 </div>
                 <div class="modal-body text-center">
                     <p>¿Estás seguro de que deseas agregar un nuevo titular?</p>
-                    <p style="color: red">En caso de haber un titular con anterioridad, este sera reemplazado por el nuevo titular.</p>
+                    <p style="color: red">En caso de haber un titular con anterioridad, este sera reemplazado por el
+                        nuevo titular.</p>
                 </div>
                 <div class="modal-footer">
                     <div>
-                        <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar</button>    
+                        <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar
+                        </button>
                     </div>
                     <div>
-                        <a href="{% url 'crear_titular' oic.id %}" class="btn btn-outline-danger btn-block">Aceptar</a>    
+                        <a href="{% url 'crear_titular' oic.id %}" class="btn btn-outline-danger btn-block">Aceptar</a>
                     </div>
                 </div>
             </div>
