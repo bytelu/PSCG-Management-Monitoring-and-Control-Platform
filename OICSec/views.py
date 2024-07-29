@@ -3,11 +3,13 @@ import os
 import re
 from difflib import SequenceMatcher
 from urllib.parse import quote
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.http import HttpResponse, FileResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -172,89 +174,108 @@ def intervencion_detalle_view(request, intervencion_id):
     return handle_detail_view(request, Intervencion, IntervencionForm, intervencion_id, 'intervencion_detalle.html')
 
 
+@login_required
 def upload_paa_view(request):
     lista_oics = Oic.objects.all()
 
-    similar_oic = None
-
     if request.method == 'POST':
-        excel_file = request.FILES.get('excel_file')
-        try:
-            data = extract_paa(excel_file)
-            if data is None:
-                return render(request, 'upload_paa.html', {
-                    'excel_processing_error': 'Error al procesar el archivo Excel | Nombre de error: None-results | '
-                                              'Consulte manual de usuario para mas información.',
-                    'lista_oics': lista_oics, 'similar_oic': similar_oic})
-            else:
-                for excel_processing_result in data:
-                    max_similarity = 0
-                    for oic in lista_oics:
-                        similarity = SequenceMatcher(None, excel_processing_result[0], oic.nombre).ratio()
-                        if similarity > max_similarity:
-                            max_similarity = similarity
-                            similar_oic = oic
+        return handle_post_request(request, lista_oics)
+    elif request.method == 'GET':
+        return render(request, 'upload_paa.html', {'lista_oics': lista_oics})
 
-                    oic_selected = similar_oic if similar_oic else None
-                    for auditoria_data in excel_processing_result[1]:
-                        # Verificar si ya existe una auditoría con los mismos atributos
 
-                        # Se verifica que hay actividad de fiscalización
-                        actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
-                            anyo=auditoria_data['Año'],
-                            trimestre=auditoria_data['Trimestre'],
-                            id_oic=oic_selected
-                        ).first()
-                        # Si no existe, se crea una actividad de fiscalización
-                        if not actividad_fiscalizacion:
-                            actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
-                                anyo=auditoria_data['Año'],
-                                trimestre=auditoria_data['Trimestre'],
-                                id_oic=oic_selected
-                            )
+@login_required
+def handle_post_request(request, lista_oics):
+    excel_file = request.FILES.get('excel_file')
+    try:
+        data = extract_paa(excel_file)
+        if data is None:
+            return render_error(request, lista_oics, 'Error al procesar el archivo Excel | Nombre de error: '
+                                                     'None-results | Consulte manual de usuario para más información.')
 
-                        # Se crea una auditoria nueva con la actividad de fiscalización
-                        materia_obj = Materia.objects.get(id=auditoria_data["Materia"])
-                        programacion_obj = Programacion.objects.get(id=auditoria_data["Programacion"])
-                        enfoque_obj = Enfoque.objects.get(id=auditoria_data["Enfoque"])
-                        temporalidad_obj = Temporalidad.objects.get(id=auditoria_data["Temporalidad"])
-                        cedula_obj = Cedula.objects.create()
-                        Auditoria.objects.create(
-                            denominacion=auditoria_data["Denominacion"],
-                            numero=auditoria_data["Numero"],
-                            objetivo=auditoria_data["Objetivo"],
-                            alcance=auditoria_data["Alcance"],
-                            ejercicio=auditoria_data["Ejercicio"],
-                            unidad=auditoria_data["Unidad"],
-                            id_actividad_fiscalizacion=actividad_fiscalizacion,
-                            id_materia=materia_obj,
-                            id_programacion=programacion_obj,
-                            id_enfoque=enfoque_obj,
-                            id_temporalidad=temporalidad_obj,
-                            id_cedula=cedula_obj
-                        )
+        with transaction.atomic():
+            process_excel_data(data, lista_oics)
 
-                        for i in range(60):
-                            ConceptoCedula.objects.create(
-                                celda=str(i),
-                                estado=None,
-                                comentario=None,
-                                id_cedula=cedula_obj
-                            )
+        return render(request, 'upload_paa.html', {
+            'excel_processing_result': data,
+            'lista_oics': lista_oics,
+        })
 
-                return render(request, 'upload_paa.html',
-                              {'excel_processing_result': data,
-                               'lista_oics': lista_oics,
-                               'similar_oic': similar_oic})
-        except Exception as e:
-            excel_processing_error = (f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte '
-                                      f'manual de usuario para mas información')
-            return render(request, 'upload_paa.html',
-                          {'excel_processing_error': excel_processing_error, 'lista_oics': lista_oics,
-                           'similar_oic': similar_oic})
+    except Exception as e:
+        return render_error(request, lista_oics,
+                            f'Error al procesar el archivo Excel | Nombre de error: {str(e)} | Consulte manual de '
+                            f'usuario para más información.')
 
-    if request.method == 'GET':
-        return render(request, 'upload_paa.html')
+
+@login_required
+def render_error(request, lista_oics, error_message):
+    return render(request, 'upload_paa.html', {
+        'excel_processing_error': error_message,
+        'lista_oics': lista_oics,
+    })
+
+
+def process_excel_data(data, lista_oics):
+    for excel_processing_result in data:
+        similar_oic = find_most_similar_oic(excel_processing_result[0], lista_oics)
+
+        for auditoria_data in excel_processing_result[1]:
+            actividad_fiscalizacion = get_or_create_actividad_fiscalizacion(
+                auditoria_data['Año'], auditoria_data['Trimestre'], similar_oic)
+
+            auditoria = create_auditoria(auditoria_data, actividad_fiscalizacion)
+
+            create_conceptos_cedula(auditoria.id_cedula)
+
+
+def find_most_similar_oic(excel_oic_name, lista_oics):
+    max_similarity = 0
+    similar_oic = None
+    for oic in lista_oics:
+        similarity = SequenceMatcher(None, excel_oic_name, oic.nombre).ratio()
+        if similarity > max_similarity:
+            max_similarity = similarity
+            similar_oic = oic
+    return similar_oic
+
+
+def get_or_create_actividad_fiscalizacion(anyo, trimestre, oic):
+    actividad_fiscalizacion, created = ActividadFiscalizacion.objects.get_or_create(
+        anyo=anyo,
+        trimestre=trimestre,
+        id_oic=oic
+    )
+    return actividad_fiscalizacion
+
+
+def create_auditoria(auditoria_data, actividad_fiscalizacion):
+    materia_obj = Materia.objects.get(id=auditoria_data["Materia"])
+    programacion_obj = Programacion.objects.get(id=auditoria_data["Programacion"])
+    enfoque_obj = Enfoque.objects.get(id=auditoria_data["Enfoque"])
+    temporalidad_obj = Temporalidad.objects.get(id=auditoria_data["Temporalidad"])
+    cedula_obj = Cedula.objects.create()
+    auditoria = Auditoria.objects.create(
+        denominacion=auditoria_data["Denominacion"],
+        numero=auditoria_data["Numero"],
+        objetivo=auditoria_data["Objetivo"],
+        alcance=auditoria_data["Alcance"],
+        ejercicio=auditoria_data["Ejercicio"],
+        unidad=auditoria_data["Unidad"],
+        id_actividad_fiscalizacion=actividad_fiscalizacion,
+        id_materia=materia_obj,
+        id_programacion=programacion_obj,
+        id_enfoque=enfoque_obj,
+        id_temporalidad=temporalidad_obj,
+        id_cedula=cedula_obj
+    )
+    return auditoria
+
+
+def create_conceptos_cedula(cedula):
+    ConceptoCedula.objects.bulk_create([
+        ConceptoCedula(celda=str(i), id_cedula=cedula)
+        for i in range(60)
+    ])
 
 
 @login_required
