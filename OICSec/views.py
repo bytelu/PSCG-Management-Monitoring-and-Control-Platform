@@ -2,13 +2,13 @@ import datetime
 import os
 import re
 from difflib import SequenceMatcher
-
+from urllib.parse import quote
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from num2words import num2words
@@ -619,6 +619,7 @@ def cedula_view(request, model, id_model):
     if request.method == 'GET':
         _, _, conceptos_dict = get_cedula_conceptos(model_instance)
         context.update({'conceptos': conceptos_dict})
+        context.update({'archivo': model_instance.id_cedula.id_archivo})
         return render(request, 'cedula.html', context)
 
     if request.method == 'POST':
@@ -973,7 +974,7 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
             if band:
                 _, conceptos_dic = get_minuta_conceptos(minuta)
             context.update({'conceptos': conceptos_dic})
-
+        context.update({'archivo': minuta.id_archivo})
         return render(request, 'minuta_mes.html', context)
 
 
@@ -1437,6 +1438,23 @@ def crear_personal_direccion_view(request):
         'personal_form': personal_form
     }
     return render(request, 'crear_personal_direccion.html', context)
+
+
+@login_required
+def download_archivo(request, archivo_id):
+    archivo = get_object_or_404(Archivo, id=archivo_id)
+
+    if not archivo.archivo:
+        raise Http404("Archivo no encontrado")
+
+    file_handle = archivo.archivo.open('rb')
+    response = FileResponse(file_handle, as_attachment=True)
+
+    # Use quote to properly encode the filename for the Content-Disposition header
+    file_name = quote(archivo.nombre.encode('utf-8'))
+    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+
+    return response
 
 
 @login_required

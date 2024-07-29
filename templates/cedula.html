@@ -1,9 +1,21 @@
 {% extends 'navbar.html' %}
 {% block title %}Cedula{% endblock %}
 {% block content %}
+    {% if archivo %}
+        <a href="{% url 'download_archivo' archivo.id %}"
+           class="btn btn-outline-dark btn-sm d-flex align-items-center justify-content-center ml-auto">
+            <i class="fas fa-download"></i>
+            <span class="ml-2">Descargar archivo</span>
+        </a>
+    {% endif %}
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="display-2">Cedula</h1>
+            <p>{{ fiscalizacion }}</p>
+        </div>
 
-    <h1 class="display-2">Cedula</h1>
-    <p>{{ fiscalizacion }}</p>
+    </div>
+
     <label for="formSelector">Selecciona el mes correspondiente:</label>
     <div class="flex-container mb-3">
         <select onchange="showForm(this.value)" id="formSelector" class="select2 form-control">

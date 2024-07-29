@@ -12,6 +12,13 @@
         }
     </style>
     <div class="container mt-5">
+        {% if archivo %}
+            <a href="{% url 'download_archivo' archivo.id %}"
+               class="btn btn-outline-dark btn-sm d-flex align-items-center justify-content-center ml-auto">
+                <i class="fas fa-download"></i>
+                <span class="ml-2">Descargar archivo</span>
+            </a>
+        {% endif %}
         <form method="post">
             {% csrf_token %}
             <h2 class="display-4 text-center">Minuta de supervisión del mes "{{ mes }}" del {{ trimestre_word }}
