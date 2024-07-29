@@ -1458,6 +1458,13 @@ def download_archivo(request, archivo_id):
 
 
 @login_required
+def limpiar_personal_oic(request, oic_id):
+    personal = Personal.objects.filter(id_oic=oic_id)
+    personal.update(estado=0)
+    return redirect('personal_oic', oic_id)
+
+
+@login_required
 def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')
