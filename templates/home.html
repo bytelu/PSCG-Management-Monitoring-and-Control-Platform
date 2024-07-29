@@ -2,23 +2,29 @@
 {% block title %}Inicio{% endblock %}
 {% block content %}
     <div class="container my-5">
-        <div class="jumbotron mx-auto">
-            <h1 class="display-4">¡Bienvenido, {{ user.first_name }}!</h1>
-            <p class="lead">¡Te damos la bienvenida a nuestra plataforma!</p>
-            <hr class="my-4">
-            <p>Aquí encontrarás una herramienta diseñada para ayudarte a mantener tus datos actualizados y acceder a
-                ellos fácilmente en cualquier momento.</p>
-            <p>Con esta aplicación, podrás:</p>
-            <ul>
-                <li>Registrar y gestionar información de manera eficiente.</li>
-                <li>Acceder a diversas funcionalidades diseñadas para optimizar tus tareas diarias.</li>
-            </ul>
-            <p>Explora las funcionalidades completas que ofrecemos, obten soporte, resulve tus dudas y descubre cómo
-                esta aplicación puede facilitar tu trabajo a través de nuestro manual de usuario.</p>
-            <p class="lead">
-                <a class="btn btn-outline-dark btn-lg" href="#" role="button">Más información</a>
-            </p>
+        <div class="jumbotron jumbotron-fluid bg-light rounded shadow-sm">
+            <div class="container">
+                <h1 class="display-3 font-weight-bold">¡Hola, {{ user.first_name }}!</h1>
+                <p class="lead">Bienvenido a nuestra plataforma. Estamos encantados de tenerte aquí.</p>
+                <hr class="my-4">
+                <p class="mb-4">Nuestra aplicación está diseñada para ayudarte a mantener tus datos actualizados y accesibles en cualquier momento. Explora nuestras características para ver cómo podemos facilitarte el trabajo.</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 class="font-weight-bold">¿Qué puedes hacer?</h4>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check-circle"></i> Registrar y gestionar información de manera eficiente.</li>
+                            <li><i class="fas fa-check-circle"></i> Acceder a diversas funcionalidades para optimizar tus tareas diarias.</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4 class="font-weight-bold">Explora más</h4>
+                        <p>Conoce nuestras funcionalidades, obtén soporte, resuelve tus dudas y descubre cómo esta aplicación puede facilitar tu trabajo a través de nuestro manual de usuario.</p>
+                    </div>
+                </div>
+                <a class="btn btn-primary btn-lg mt-4" href="https://www.google.com" role="button">
+                    <i class="fas fa-info-circle"></i> Más información
+                </a>
+            </div>
         </div>
     </div>
 {% endblock %}
-
