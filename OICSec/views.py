@@ -1486,6 +1486,13 @@ def limpiar_personal_oic(request, oic_id):
 
 
 @login_required
+def limpiar_personal_direccion(request):
+    personal = Personal.objects.filter(id_oic=None)
+    personal.update(estado=0)
+    return redirect('personal_direccion')
+
+
+@login_required
 def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')
