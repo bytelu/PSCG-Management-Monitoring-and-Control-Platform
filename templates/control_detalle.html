@@ -4,9 +4,37 @@
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="display-4">Detalle de control interno</h1>
         <div>
-            <a href="{% url 'controlinterno-delete' object_id %}" class="btn btn-outline-dark">
+            <button type="button" class="btn btn-outline-dark" data-toggle="modal" data-target="#modal_delete">
                 Borrar
-            </a>
+            </button>
+            <div class="modal fade" id="modal_delete" tabindex="-1" role="dialog" aria-labelledby="label_delete"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="ModalLabel">Confirmar cambios</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <p>¿Estás seguro de que deseas borrar el control interno?</p>
+                            <p style="color: red">Esta acción es irreversible</p>
+                        </div>
+                        <div class="modal-footer">
+                            <p>
+                                <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">
+                                    Cerrar
+                                </button>
+                            </p>
+                            <p>
+                                <a href="{% url 'controlinterno-delete' object_id %}"
+                                   class="btn btn-outline-danger">Aceptar</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <a href="{% url 'controlInterno' %}" class="btn btn-outline-dark">
                 <i class="fas fa-arrow-left"></i>
             </a>

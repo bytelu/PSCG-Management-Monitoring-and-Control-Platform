@@ -94,14 +94,6 @@ class AuditoriaObservacion(models.Model):
         db_table = 'auditoria_observacion'
 
 
-class Cargo(models.Model):
-    id = models.AutoField(primary_key=True)
-    cargo = models.CharField(max_length=500, blank=True, null=True)
-
-    class Meta:
-        db_table = 'cargo'
-
-
 class Cedula(models.Model):
     id = models.AutoField(primary_key=True)
     id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
