@@ -36,6 +36,50 @@
             document.getElementById("overlay").style.display = "none";
             document.body.style.overflow = "auto"; // Reactiva el scroll
         }
+
+        // Función para manejar el arrastre para abrir el sidebar
+        function initDrag() {
+            const sidenav = document.getElementById("mySidenav");
+            const overlay = document.getElementById("overlay");
+            const maxWidth = 300; // Ancho máximo del sidebar
+            const threshold = 0.3 * maxWidth; // 30% del ancho máximo
+            let startX = 0;
+            let startWidth = 0;
+
+            document.addEventListener("mousedown", function (e) {
+                if (e.clientX < 10) { // Solo iniciar arrastre desde el borde izquierdo
+                    startX = e.clientX;
+                    startWidth = parseInt(getComputedStyle(sidenav).width, 10);
+                    document.addEventListener("mousemove", doDrag);
+                    document.addEventListener("mouseup", stopDrag);
+                }
+            });
+
+            function doDrag(e) {
+                const newWidth = Math.max(startWidth + (e.clientX - startX), 0); // Evita que el ancho sea negativo
+                sidenav.style.width = newWidth + "px";
+                overlay.style.display = newWidth > 0 ? "block" : "none";
+                document.body.style.overflow = newWidth > 0 ? "hidden" : "auto"; // Desactiva el scroll cuando el sidebar está abierto
+            }
+
+            function stopDrag() {
+                document.removeEventListener("mousemove", doDrag);
+                document.removeEventListener("mouseup", stopDrag);
+
+                const finalWidth = parseInt(sidenav.style.width, 10);
+                if (finalWidth >= threshold) {
+                    sidenav.style.width = maxWidth + "px"; // Abre completamente
+                    overlay.style.display = "block";
+                } else {
+                    sidenav.style.width = "0"; // Cierra
+                    overlay.style.display = "none";
+                    document.body.style.overflow = "auto"; // Reactiva el scroll si se cierra
+                }
+            }
+        }
+
+        // Inicializar la funcionalidad de arrastre
+        document.addEventListener("DOMContentLoaded", initDrag);
     </script>
     <style>
     .sidenav {
@@ -48,9 +92,9 @@
         background-color: #f8f9fa; /* Fondo claro */
         overflow-x: hidden;
         transition: 0.2s;
-        padding-top: 130px; 
-        border-top-right-radius: 25px; 
-        border-bottom-right-radius: 25px; 
+        padding-top: 130px;
+        border-top-right-radius: 25px;
+        border-bottom-right-radius: 25px;
     }
 
     .sidenav a {
@@ -63,7 +107,7 @@
         transition: 0.1s;
         position: relative;
     }
-    
+
     .sidenav a.active {
         background-color: #495057; /* Fondo oscuro para el enlace activo */
         color: #f8f9fa; /* Texto claro para el enlace activo */
