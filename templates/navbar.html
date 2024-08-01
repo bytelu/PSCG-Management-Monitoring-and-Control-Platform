@@ -24,6 +24,22 @@
             });
         });
 
+        function toggleDropdown(id) {
+            var dropdownMenu = document.getElementById(id);
+            var isVisible = dropdownMenu.style.display === 'block';
+
+            // Cierra todos los menús desplegables
+            document.querySelectorAll('.dropdown-menu').forEach(function (menu) {
+                menu.style.display = 'none';
+            });
+
+            // Abre el menú desplegable seleccionado si estaba cerrado
+            if (!isVisible) {
+                dropdownMenu.style.display = 'block';
+            }
+        }
+
+
         // JavaScript para abrir y cerrar el side panel
         function openNav() {
             document.getElementById("mySidenav").style.width = "300px"; // Ancho del side panel
@@ -82,74 +98,104 @@
         document.addEventListener("DOMContentLoaded", initDrag);
     </script>
     <style>
-    .sidenav {
-        height: 100%;
-        width: 0;
-        position: fixed;
-        z-index: 10000001; /* Asegúrate de que esté encima del overlay */
-        top: 0;
-        left: 0;
-        background-color: #f8f9fa; /* Fondo claro */
-        overflow-x: hidden;
-        transition: 0.2s;
-        padding-top: 130px;
-        border-top-right-radius: 25px;
-        border-bottom-right-radius: 25px;
-    }
 
-    .sidenav a {
-        display: flex;
-        align-items: center;
-        padding: 15px 20px;
-        text-decoration: none;
-        font-size: 16px;
-        color: #343a40; /* Texto oscuro */
-        transition: 0.1s;
-        position: relative;
-    }
+        .dropdown-menu {
+            display: none;
+            background-color: #f8f9fa; /* Fondo claro */
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+        }
 
-    .sidenav a.active {
-        background-color: #495057; /* Fondo oscuro para el enlace activo */
-        color: #f8f9fa; /* Texto claro para el enlace activo */
-    }
+        .dropdown-menu .dropdown-item {
+            padding: 10px 20px;
+            font-size: 14px;
+            color: #343a40; /* Texto oscuro */
+            text-decoration: none;
+        }
 
-    .sidenav i {
-        font-size: 15px;
-        margin-right: 20px;
-    }
+        .dropdown-menu .dropdown-item:hover {
+            background-color: #e9ecef; /* Fondo claro en hover */
+        }
 
-    .sidenav a span {
-        position: absolute;
-        left: 60px; /* Ajusta la posición del texto */
-    }
+        .dropdown-toggle {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
 
-    .sidenav a:hover {
-        background-color: #495057; /* Fondo oscuro en hover */
-        color: #f8f9fa; /* Texto claro en hover */
-    }
+        .dropdown-toggle:hover {
+            background-color: #e9ecef; /* Fondo claro en hover */
+        }
 
-    .sidenav .closebtn {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 30px;
-        color: #343a40; /* Color del ícono de cerrar */
-        cursor: pointer;
-        border-radius: 15px;
-    }
 
-    /* Estilo para el overlay */
-    .overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
-        z-index: 1000000; /* Un poco menos que el side panel */
-    }
-</style>
+        .sidenav {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 10000001; /* Asegúrate de que esté encima del overlay */
+            top: 0;
+            left: 0;
+            background-color: #f8f9fa; /* Fondo claro */
+            overflow-x: hidden;
+            transition: 0.2s;
+            padding-top: 130px;
+            border-top-right-radius: 25px;
+            border-bottom-right-radius: 25px;
+        }
+
+        .sidenav a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            color: #343a40; /* Texto oscuro */
+            transition: 0.1s;
+            position: relative;
+        }
+
+        .sidenav a.active {
+            background-color: #495057; /* Fondo oscuro para el enlace activo */
+            color: #f8f9fa; /* Texto claro para el enlace activo */
+        }
+
+        .sidenav i {
+            font-size: 15px;
+            margin-right: 20px;
+        }
+
+        .sidenav a span {
+            position: absolute;
+            left: 80px; /* Ajusta la posición del texto */
+        }
+
+        .sidenav a:hover {
+            background-color: #495057; /* Fondo oscuro en hover */
+            color: #f8f9fa; /* Texto claro en hover */
+        }
+
+        .sidenav .closebtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            color: #343a40; /* Color del ícono de cerrar */
+            cursor: pointer;
+            border-radius: 15px;
+        }
+
+        /* Estilo para el overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
+            z-index: 1000000; /* Un poco menos que el side panel */
+        }
+    </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
@@ -172,7 +218,8 @@
                 </span>
             </li>
             <li class="nav-item mr-4 {% if request.path == '/OICSecLP/perfil/' %}active{% endif %}">
-                <a class="nav-link {% if request.path == '/OICSec/perfil/'%}active{% endif %}" href="{% url 'perfil' %}">{{ user.username }}</a>
+                <a class="nav-link {% if request.path == '/OICSec/perfil/' %}active{% endif %}"
+                   href="{% url 'perfil' %}">{{ user.username }}</a>
             </li>
             <li class="nav-item mr-2">
                 <a class="nav-link" href="{% url 'logout' %}">Logout</a>
@@ -184,12 +231,80 @@
 <!-- Side panel -->
 <div id="mySidenav" class="sidenav">
     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-    <a href="{% url 'home' %}" class="{% if request.path == '/OICSec/home/' %}active{% endif %}"><i class="fas fa-home"></i> <span>Home</span></a>
-    <a href="{% url 'auditorias' %}" class="{% if request.path == '/OICSec/auditorias/' %}active{% endif %}"><i class="fas fa-clipboard-check"></i> <span>Auditorias</span></a>
-    <a href="{% url 'intervenciones' %}" class="{% if request.path == '/OICSec/intervenciones/' %}active{% endif %}"><i class="fas fa-briefcase"></i> <span>Intervenciones</span></a>
-    <a href="{% url 'controlInterno' %}" class="{% if request.path == '/OICSec/controlesinternos/' %}active{% endif %}"><i class="fas fa-tasks"></i> <span>Controles Internos</span></a>
-    <a href="{% url 'personal' %}" class="{% if request.path == '/OICSec/personal/' %}active{% endif %}"><i class="fas fa-users"></i> <span>Personal</span></a>
+    <a href="{% url 'home' %}" class="{% if request.path == '/OICSec/home/' %}active{% endif %}"><i
+            class="fas fa-home"></i> <span>Home</span></a>
+    <!-- Botón principal de Auditorías -->
+    <div class="dropdown">
+        <a href="javascript:void(0)"
+           class="dropdown-toggle {% if request.path == '/OICSec/auditorias/' or request.path == '/OICSec/auditorias/PAA/' or request.path == '/OICSec/auditorias/cedula/' or request.path == '/OICSec/auditorias/<int:auditoria_id>/' %}active{% endif %}"
+           onclick="toggleDropdown('auditoriasDropdown')">
+            <i class="fas fa-clipboard-check"></i> <span>Auditorías</span>
+        </a>
+        <div id="auditoriasDropdown" class="dropdown-menu">
+            <a href="{% url 'auditorias' %}"
+               class="dropdown-item {% if request.path == '/OICSec/auditorias/' %}active{% endif %}">Mostrar
+                Auditoría</a>
+            <a href="{% url 'uploadPaa' %}"
+               class="dropdown-item {% if request.path == '/OICSec/auditorias/PAA/' %}active{% endif %}">Subir
+                Auditoría</a>
+            <!-- Agrega más sub botones aquí si es necesario -->
+        </div>
+    </div>
+
+    <!-- Botón principal de Intervenciones -->
+    <div class="dropdown">
+        <a href="javascript:void(0)"
+           class="dropdown-toggle {% if request.path == '/OICSec/intervenciones/' or request.path == '/OICSec/intervenciones/PINT/' or request.path == '/OICSec/intervenciones/cedula/' or request.path == '/OICSec/intervenciones/<int:intervencion_id>/' %}active{% endif %}"
+           onclick="toggleDropdown('intervencionesDropdown')">
+            <i class="fas fa-briefcase"></i> <span>Intervenciones</span>
+        </a>
+        <div id="intervencionesDropdown" class="dropdown-menu">
+            <a href="{% url 'intervenciones' %}"
+               class="dropdown-item {% if request.path == '/OICSec/intervenciones/' %}active{% endif %}">Mostrar
+                Intervenciones</a>
+            <a href="{% url 'uploadPint' %}"
+               class="dropdown-item {% if request.path == '/OICSec/intervenciones/PINT/' %}active{% endif %}">Subir
+                Intervención</a>
+            <!-- Agrega más sub botones aquí si es necesario -->
+        </div>
+    </div>
+
+    <!-- Botón principal de Controles Internos -->
+    <div class="dropdown">
+        <a href="javascript:void(0)"
+           class="dropdown-toggle {% if request.path == '/OICSec/controlesinternos/' or request.path == '/OICSec/controlesInternos/PACI/' or request.path == '/OICSec/controlesInternos/cedula/' or request.path == '/OICSec/controlesInternos/<int:control_interno_id>/' %}active{% endif %}"
+           onclick="toggleDropdown('controlesInternosDropdown')">
+            <i class="fas fa-tasks"></i> <span>Controles Internos</span>
+        </a>
+        <div id="controlesInternosDropdown" class="dropdown-menu">
+            <a href="{% url 'controlInterno' %}"
+               class="dropdown-item {% if request.path == '/OICSec/controlesinternos/' %}active{% endif %}">Mostrar
+                Controles Internos</a>
+            <a href="{% url 'uploadPaci' %}"
+               class="dropdown-item {% if request.path == '/OICSec/controlesInternos/PACI/' %}active{% endif %}">Subir
+                Control Interno</a>
+            <!-- Agrega más sub botones aquí si es necesario -->
+        </div>
+    </div>
+
+    <!-- Botón principal de Personal -->
+    <div class="dropdown">
+        <a href="javascript:void(0)"
+           class="dropdown-toggle {% if request.path == '/OICSec/personal/' or request.path == '/OICSec/personal/direccion/' or request.path == '/OICSec/personal/oics/' %}active{% endif %}"
+           onclick="toggleDropdown('personalDropdown')">
+            <i class="fas fa-users"></i> <span>Personal</span>
+        </a>
+        <div id="personalDropdown" class="dropdown-menu">
+            <a href="{% url 'personal' %}"
+               class="dropdown-item {% if request.path == '/OICSec/personal/' %}active{% endif %}">Mostrar Personal</a>
+            <a href="{% url 'personal_direccion' %}"
+               class="dropdown-item {% if request.path == '/OICSec/personal/direccion/' %}active{% endif %}">Dirección</a>
+            <a href="{% url 'oics' %}"
+               class="dropdown-item {% if request.path == '/OICSec/personal/oics/' %}active{% endif %}">OIC's</a>
+        </div>
+    </div>
 </div>
+
 
 <!-- Overlay -->
 <div id="overlay" class="overlay" onclick="closeNav()"></div>
