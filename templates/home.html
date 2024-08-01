@@ -2,34 +2,38 @@
 {% block title %}Inicio{% endblock %}
 {% block content %}
     <div class="container my-5">
-        <!-- Jumbotron con imagen de fondo y overlay -->
-        <div class="jumbotron jumbotron-fluid bg-light rounded shadow-sm" style="position: relative;">
-    <div class="overlay">
-        <div class="container text-dark text-center">
-            <h1 class="display-3 font-weight-bold">¡Hola, {{ user.first_name }}!</h1>
-            <p class="lead">Bienvenido a nuestra plataforma. Estamos encantados de tenerte aquí.</p>
-            <hr class="my-4">
-            <p class="mb-4">Nuestra aplicación está diseñada para ayudarte a mantener tus datos actualizados y accesibles en cualquier momento. Explora nuestras características para ver cómo podemos facilitarte el trabajo.</p>
+        <!-- Fila del Jumbotron -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="jumbotron jumbotron-fluid bg-light rounded shadow-sm" style="position: relative;">
+                    <div class="overlay">
+                        <div class="container text-center">
+                            <h1 class="display-4 font-weight-bold text-outline">¡Hola, {{ user.first_name }}!</h1>
+                            <p class="lead text-outline">Bienvenido a nuestra plataforma. Estamos encantados de tenerte aquí.</p>
+                            <hr class="my-4 border-white">
+                            <p class="mb-0 text-outline text-large">Nuestra aplicación está diseñada para ayudarte a mantener tus datos actualizados y accesibles en cualquier momento. Explora nuestras características para ver cómo podemos facilitarte el trabajo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-        <!-- Sección de contenido con tarjetas -->
-        <div class="row my-5">
+        <!-- Fila de las Cards -->
+        <div class="row">
             <div class="col-md-6">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
+                <div class="card shadow-sm d-flex align-items-center justify-content-center" style="height: 100%;">
+                    <div class="card-body d-flex flex-column justify-content-center text-center">
                         <h4 class="card-title font-weight-bold">¿Qué puedes hacer?</h4>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check-circle"></i> Registrar y gestionar información de manera eficiente.</li>
-                            <li><i class="fas fa-check-circle"></i> Acceder a diversas funcionalidades para optimizar tus tareas diarias.</li>
-                        </ul>
+                        <div class="card-text">
+                            <p><i class="fas fa-check-circle"></i> Registrar y gestionar información de manera eficiente.</p>
+                            <p><i class="fas fa-check-circle"></i> Acceder a diversas funcionalidades para optimizar tus tareas diarias.</p>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
+                <div class="card shadow-sm d-flex align-items-center justify-content-center" style="height: 100%;">
+                    <div class="card-body d-flex flex-column justify-content-center text-center">
                         <h4 class="card-title font-weight-bold">Explora más</h4>
                         <p class="card-text">Conoce nuestras funcionalidades, obtén soporte, resuelve tus dudas y descubre cómo esta aplicación puede facilitar tu trabajo a través de nuestro manual de usuario.</p>
                         <div class="text-center mt-4">
@@ -45,24 +49,40 @@
 
     <style>
         .jumbotron {
+            z-index: auto;
             background-image: url('https://images.unsplash.com/photo-1697382608813-df6eb720164f?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
             background-size: cover;
             background-position: center;
             color: white;
+            margin-bottom: 1rem; /* Ajusta el espacio inferior del jumbotron */
+            padding: 2rem; /* Reduce el padding para hacer el jumbotron más pequeño */
         }
 
         .jumbotron .overlay {
-            position: absolute;
+            z-index: 10;
+            position: relative;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5); /* Aumentar opacidad para mejor contraste */
+            background: rgba(0, 0, 0, 0.6); /* Aumentar opacidad para mejor contraste */
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 2rem;
+            padding: 1rem; /* Ajusta el padding para reducir el tamaño del overlay */
+        }
+
+        .text-outline {
+            color: white;
+            text-shadow: -1px -1px 0 #000,
+            1px -1px 0 #000,
+            -1px 1px 0 #000,
+            1px 1px 0 #000;
+        }
+
+        .text-large {
+            font-size: 1rem; /* Ajusta el tamaño del texto grande */
         }
 
         body {
