@@ -25,8 +25,8 @@
         });
 
         function toggleDropdown(id) {
-            var dropdownMenu = document.getElementById(id);
-            var isVisible = dropdownMenu.style.display === 'block';
+            let dropdownMenu = document.getElementById(id);
+            let isVisible = dropdownMenu.style.display === 'block';
 
             // Cierra todos los menús desplegables
             document.querySelectorAll('.dropdown-menu').forEach(function (menu) {
@@ -114,7 +114,7 @@
         }
 
         .dropdown-menu .dropdown-item:hover {
-            background-color: #e9ecef; /* Fondo claro en hover */
+            background-color: #343a40; /* Fondo claro en hover */
         }
 
         .dropdown-toggle {
