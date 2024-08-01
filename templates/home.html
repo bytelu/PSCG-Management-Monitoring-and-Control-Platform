@@ -2,29 +2,71 @@
 {% block title %}Inicio{% endblock %}
 {% block content %}
     <div class="container my-5">
-        <div class="jumbotron jumbotron-fluid bg-light rounded shadow-sm">
-            <div class="container">
-                <h1 class="display-3 font-weight-bold">¡Hola, {{ user.first_name }}!</h1>
-                <p class="lead">Bienvenido a nuestra plataforma. Estamos encantados de tenerte aquí.</p>
-                <hr class="my-4">
-                <p class="mb-4">Nuestra aplicación está diseñada para ayudarte a mantener tus datos actualizados y accesibles en cualquier momento. Explora nuestras características para ver cómo podemos facilitarte el trabajo.</p>
-                <div class="row">
-                    <div class="col-md-6">
-                        <h4 class="font-weight-bold">¿Qué puedes hacer?</h4>
+        <!-- Jumbotron con imagen de fondo y overlay -->
+        <div class="jumbotron jumbotron-fluid bg-light rounded shadow-sm" style="position: relative;">
+    <div class="overlay">
+        <div class="container text-dark text-center">
+            <h1 class="display-3 font-weight-bold">¡Hola, {{ user.first_name }}!</h1>
+            <p class="lead">Bienvenido a nuestra plataforma. Estamos encantados de tenerte aquí.</p>
+            <hr class="my-4">
+            <p class="mb-4">Nuestra aplicación está diseñada para ayudarte a mantener tus datos actualizados y accesibles en cualquier momento. Explora nuestras características para ver cómo podemos facilitarte el trabajo.</p>
+        </div>
+    </div>
+</div>
+
+        <!-- Sección de contenido con tarjetas -->
+        <div class="row my-5">
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h4 class="card-title font-weight-bold">¿Qué puedes hacer?</h4>
                         <ul class="list-unstyled">
                             <li><i class="fas fa-check-circle"></i> Registrar y gestionar información de manera eficiente.</li>
                             <li><i class="fas fa-check-circle"></i> Acceder a diversas funcionalidades para optimizar tus tareas diarias.</li>
                         </ul>
                     </div>
-                    <div class="col-md-6">
-                        <h4 class="font-weight-bold">Explora más</h4>
-                        <p>Conoce nuestras funcionalidades, obtén soporte, resuelve tus dudas y descubre cómo esta aplicación puede facilitar tu trabajo a través de nuestro manual de usuario.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h4 class="card-title font-weight-bold">Explora más</h4>
+                        <p class="card-text">Conoce nuestras funcionalidades, obtén soporte, resuelve tus dudas y descubre cómo esta aplicación puede facilitar tu trabajo a través de nuestro manual de usuario.</p>
+                        <div class="text-center mt-4">
+                            <a class="btn btn-dark btn-lg" href="https://github.com/bytelu/PSCG" role="button">
+                                <i class="fas fa-info-circle"></i> Más información
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <a class="btn btn-primary btn-lg mt-4" href="https://www.google.com" role="button">
-                    <i class="fas fa-info-circle"></i> Más información
-                </a>
             </div>
         </div>
     </div>
+
+    <style>
+        .jumbotron {
+            background-image: url('https://images.unsplash.com/photo-1697382608813-df6eb720164f?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+            background-size: cover;
+            background-position: center;
+            color: white;
+        }
+
+        .jumbotron .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Aumentar opacidad para mejor contraste */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        body {
+            background-color: #f8f9fa; /* Fondo de página gris claro */
+        }
+    </style>
 {% endblock %}
