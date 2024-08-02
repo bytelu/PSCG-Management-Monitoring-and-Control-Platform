@@ -22,6 +22,13 @@
             $('.select2').select2({
                 theme: "bootstrap-5"
             });
+
+            // Cerrar dropdowns al hacer clic fuera de ellos
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.dropdown').length) {
+                    $('.dropdown-menu').hide();
+                }
+            });
         });
 
         function toggleDropdown(id) {
@@ -39,7 +46,6 @@
             }
         }
 
-
         // JavaScript para abrir y cerrar el side panel
         function openNav() {
             document.getElementById("mySidenav").style.width = "300px"; // Ancho del side panel
@@ -51,6 +57,11 @@
             document.getElementById("mySidenav").style.width = "0";
             document.getElementById("overlay").style.display = "none";
             document.body.style.overflow = "auto"; // Reactiva el scroll
+
+            // Cierra todos los menús desplegables al cerrar el side panel
+            document.querySelectorAll('.dropdown-menu').forEach(function (menu) {
+                menu.style.display = 'none';
+            });
         }
 
         // Función para manejar el arrastre para abrir el sidebar
@@ -98,7 +109,6 @@
         document.addEventListener("DOMContentLoaded", initDrag);
     </script>
     <style>
-
         .dropdown-menu {
             display: none;
             background-color: #f8f9fa; /* Fondo claro */
@@ -126,7 +136,6 @@
         .dropdown-toggle:hover {
             background-color: #e9ecef; /* Fondo claro en hover */
         }
-
 
         .sidenav {
             height: 100%;
@@ -200,22 +209,17 @@
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: rgba(169,169,169,0.1)">
-
     <span style="font-size:30px;cursor:pointer; margin-right: 20px" onclick="openNav()">&#9776;</span>
-
     <a class="navbar-brand" href="{% url 'home' %}">
         <div style="display: flex; flex-direction: column; align-items: center;">
             <img src="{% static 'scg-logo.png' %}" alt="Logo" width="200">
             <span style="font-size: 0.3rem;">DIRECCIÓN GENERAL DE COORDINACIÓN DE ÓRGANOS INTERNOS DE CONTROL SECTORIAL "C"</span>
         </div>
     </a>
-
     <div class="collapse navbar-collapse" id="navbarColor01">
         <ul class="navbar-nav ml-auto">
             <li class="navbar-item">
-                <span class="navbar-text">
-                    Bienvenido,
-                </span>
+                <span class="navbar-text">Bienvenido,</span>
             </li>
             <li class="nav-item mr-4 {% if request.path == '/OICSecLP/perfil/' %}active{% endif %}">
                 <a class="nav-link {% if request.path == '/OICSec/perfil/' %}active{% endif %}"
@@ -304,7 +308,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Overlay -->
 <div id="overlay" class="overlay" onclick="closeNav()"></div>
