@@ -136,6 +136,8 @@ Esperamos que esta herramienta sea de gran ayuda e invitamos a contribuir para s
 
 ## Uso
 
+> Tambien puedes probar a consultar el manual completo de uso: [manual](user_manual/introduction.md)
+
 Una vez que el proyecto esté instalado y corriendo, puedes usar las siguientes funcionalidades:
 
 Con las claves del superusuario se puede acceder a la página principal del sistema en la página de login, para ello
@@ -240,7 +242,7 @@ o acceder a la información de perfil del usuario, respectivamente.
 
 ## Licencia
 
-**PSCG** es un software con todos los derechos reservados. Para más información, consulta el archivo LICENSE.md incluido
+**PSCG** es un software con todos los derechos reservados. Para más información, consulta el archivo [LICENSE.md](LICENSE) incluido
 en este repositorio.
 
 ## Contacto
