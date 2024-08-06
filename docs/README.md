@@ -247,8 +247,5 @@ en este repositorio.
 
 Si tienes alguna pregunta, sugerencia o necesitas soporte, por favor contacta a nuestro equipo a través de:
 
-- Correo electrónico: [soporte@pscg.com](mailto:soporte@pscg.com)
-- Teléfono: +123-456-7890
-- Dirección: Calle Ejemplo 123, Ciudad, País
-
-También puedes visitar nuestro sitio web en [www.pscg.com](http://www.pscg.com) para obtener más información.
+- Correo electrónico: [luan78hihe@gmail.com](mailto:luan78hihe@gmail.com)
+- Teléfono: +52 5620830450
