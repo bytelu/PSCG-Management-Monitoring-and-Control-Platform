@@ -245,7 +245,10 @@ en este repositorio.
 
 ## Contacto
 
-Si tienes alguna pregunta, sugerencia o necesitas soporte, por favor contacta a nuestro equipo a través de:
+Si tienes alguna pregunta, comentario o necesitas asistencia, no dudes en ponerte en contacto:
 
-- Correo electrónico: [luan78hihe@gmail.com](mailto:luan78hihe@gmail.com)
-- Teléfono: +52 5620830450
+- **Correo Electrónico**: [luan78hihe@gmail.com](mailto:luan78hihe@gmail.com)
+- **GitHub**: [github.com/bytelu](https://github.com/bytelu)
+
+También puedes abrir un [issue](https://github.com/bytelu/PSCG/issues) en el repositorio para reportar problemas o hacer
+sugerencias.
