@@ -242,7 +242,7 @@ o acceder a la información de perfil del usuario, respectivamente.
 
 ## Licencia
 
-**PSCG** es un software con todos los derechos reservados. Para más información, consulta el archivo [LICENSE.md](LICENSE) incluido
+**PSCG** es un software con todos los derechos reservados. Para más información, consulta el archivo [LICENSE.md](../LICENSE) incluido
 en este repositorio.
 
 ## Contacto
