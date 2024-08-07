@@ -364,91 +364,103 @@ def upload_paci_view(request):
 @login_required
 def upload_pint_view(request):
     lista_oics = Oic.objects.all()
-
     similar_oic = None
+    context = {
+        'lista_oics': lista_oics,
+        'similar_oic': similar_oic
+    }
+    word_result = 'Se procesaron los siguientes archivos'
+    result_band = False
+    word_error = 'Hubo un error al procesar los archivos'
+    error_band = False
 
     if request.method == 'POST':
-        word_file = request.FILES.get('word_file')
-        if word_file is None:
-            return render(request, 'upload_pint.html', {
-                'word_processing_error': 'Error al procesar el archivo Word | Nombre de error: None-results | '
-                                         'Consulte manual de usuario para mas información.',
-                'lista_oics': lista_oics, 'similar_oic': similar_oic})
-        try:
-            word_processing_result = extract_pint(word_file)
-            if word_processing_result is None:
-                return render(request, 'upload_pint.html', {
-                    'word_processing_error': 'Error al procesar el archivo Word | Nombre de error: None-results | '
-                                             'Consulte manual de usuario para mas información.',
-                    'lista_oics': lista_oics, 'similar_oic': similar_oic})
-            else:
-                max_similarity = 0
-                for oic in lista_oics:
-                    similarity = SequenceMatcher(None, word_processing_result.get('Ente Público'), oic.nombre).ratio()
-                    if similarity > max_similarity:
-                        max_similarity = similarity
-                        similar_oic = oic
-                oic_selected = similar_oic if similar_oic else None
+        word_files = request.FILES.getlist('word_files')
+        if not word_files:
+            context.update(
+                {
+                    'word_processing_error': 'Error al procesar los archivos | Nombre de error: None-files | '
+                                             'Consulte manual de usuario para más información.'
+                }
+            )
+            return render(request, 'upload_pint.html', context=context)
 
-                # Se verifica que hay actividad de fiscalización
-                actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
-                    anyo=word_processing_result['Año'],
-                    trimestre=word_processing_result['Trimestre'],
-                    id_oic=oic_selected
-                ).first()
-                # Si no existe, se crea una actividad de fiscalización
-                if not actividad_fiscalizacion:
-                    actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+        try:
+            for word_file in word_files:
+                word_processing_result = extract_pint(word_file)
+                if word_processing_result is None:
+                    word_error += f'\n{word_file.name}'
+                    error_band = True
+                else:
+                    word_result += f'\n{word_file.name}'
+                    result_band = True
+                    max_similarity = 0
+                    for oic in lista_oics:
+                        similarity = SequenceMatcher(None, word_processing_result.get('Ente Público'),
+                                                     oic.nombre).ratio()
+                        if similarity > max_similarity:
+                            max_similarity = similarity
+                            similar_oic = oic
+                    oic_selected = similar_oic if similar_oic else None
+
+                    # Verifica que hay actividad de fiscalización
+                    actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
                         anyo=word_processing_result['Año'],
                         trimestre=word_processing_result['Trimestre'],
                         id_oic=oic_selected
-                    )
+                    ).first()
+                    # Si no existe, crea una actividad de fiscalización
+                    if not actividad_fiscalizacion:
+                        actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+                            anyo=word_processing_result['Año'],
+                            trimestre=word_processing_result['Trimestre'],
+                            id_oic=oic_selected
+                        )
 
-                # Se crea una intervencion nueva con la actividad de fiscalización
-                tipo_intervencion_obj = None
-                if word_processing_result["Clave"]:
-                    tipo_intervencion_obj = TipoIntervencion.objects.get(clave=word_processing_result["Clave"])
+                    # Crea una intervención nueva con la actividad de fiscalización
+                    tipo_intervencion_obj = None
+                    if word_processing_result["Clave"]:
+                        tipo_intervencion_obj = TipoIntervencion.objects.get(clave=word_processing_result["Clave"])
 
-                cedula_obj = Cedula.objects.create()
-                Intervencion.objects.create(
-                    unidad=word_processing_result.get('Área'),
-                    numero=word_processing_result.get('Numero'),
-                    denominacion=word_processing_result.get('Denominación'),
-                    ejercicio=word_processing_result.get('Ejercicio'),
-                    alcance=word_processing_result.get('Alcance y periodo'),
-                    antecedentes=word_processing_result.get('Antecedentes'),
-                    fuerza_auditores=word_processing_result.get('Auditores'),
-                    fuerza_responsables=word_processing_result.get('Responsable'),
-                    fuerza_supervision=word_processing_result.get('Supervisión'),
-                    inicio=convert_to_date(word_processing_result.get('Inicio')),
-                    termino=convert_to_date(word_processing_result.get('Termino')),
-                    objetivo=word_processing_result.get('Objetivo'),
-                    id_actividad_fiscalizacion=actividad_fiscalizacion,
-                    id_tipo_intervencion=tipo_intervencion_obj,
-                    id_cedula=cedula_obj
-                )
-
-                for i in range(54):
-                    ConceptoCedula.objects.create(
-                        celda=str(i),
-                        estado=None,
-                        comentario=None,
+                    cedula_obj = Cedula.objects.create()
+                    Intervencion.objects.create(
+                        unidad=word_processing_result.get('Área'),
+                        numero=word_processing_result.get('Numero'),
+                        denominacion=word_processing_result.get('Denominación'),
+                        ejercicio=word_processing_result.get('Ejercicio'),
+                        alcance=word_processing_result.get('Alcance y periodo'),
+                        antecedentes=word_processing_result.get('Antecedentes'),
+                        fuerza_auditores=word_processing_result.get('Auditores'),
+                        fuerza_responsables=word_processing_result.get('Responsable'),
+                        fuerza_supervision=word_processing_result.get('Supervisión'),
+                        inicio=convert_to_date(word_processing_result.get('Inicio')),
+                        termino=convert_to_date(word_processing_result.get('Termino')),
+                        objetivo=word_processing_result.get('Objetivo'),
+                        id_actividad_fiscalizacion=actividad_fiscalizacion,
+                        id_tipo_intervencion=tipo_intervencion_obj,
                         id_cedula=cedula_obj
                     )
 
-                return render(request, 'upload_pint.html',
-                              {'word_processing_result': word_processing_result,
-                               'lista_oics': lista_oics,
-                               'similar_oic': similar_oic})
+                    for i in range(54):
+                        ConceptoCedula.objects.create(
+                            celda=str(i),
+                            estado=None,
+                            comentario=None,
+                            id_cedula=cedula_obj
+                        )
+            if result_band:
+                context.update({'word_processing_result': word_result})
+            if error_band:
+                context.update({'word_processing_error': word_error})
+            return render(request, 'upload_pint.html', context=context)
         except Exception as e:
-            word_processing_error = (f'Error al procesar el archivo Word | Nombre de error: {str(e)} | Consulte '
-                                     f'manual de usuario para mas información')
-            return render(request, 'upload_pint.html',
-                          {'word_processing_error': word_processing_error, 'lista_oics': lista_oics,
-                           'similar_oic': similar_oic})
+            word_error = (f'Error al procesar los archivos Word\n Nombre de error: {str(e)} | Consulte '
+                          f'el manual de usuario para más información')
+            context.update({'word_processing_error': word_error})
+            return render(request, 'upload_pint.html', context=context)
 
     if request.method == 'GET':
-        return render(request, 'upload_pint.html')
+        return render(request, 'upload_pint.html', context=context)
 
 
 @login_required

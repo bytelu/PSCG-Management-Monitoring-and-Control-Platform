@@ -193,34 +193,38 @@ def extract_pint(path):
     Returns:
         dict: Diccionario con los datos extraídos.
     """
-    document = docx.Document(path)
-    text = document.paragraphs[0].text
-    title = 'Planeación considerada para la ejecución de la intervención'
-    ratio = SequenceMatcher(None, text, title).ratio()
+    try:
+        document = docx.Document(path)
+        text = document.paragraphs[0].text
+        title = 'Planeación considerada para la ejecución de la intervención'
+        ratio = SequenceMatcher(None, text, title).ratio()
 
-    if ratio < 0.75:
+        if ratio < 0.75:
+            return None
+
+        tables = document.tables
+        dfs = []
+
+        for table in tables:
+            data = []
+            for row in table.rows:
+                text = [cell.text for cell in row.cells]
+                data.append(text)
+            df = pd.DataFrame(data)
+            dfs.append(df)
+
+        if not dfs:
+            return None
+
+        data = extract_header(dfs[0])
+        data.update(extract_tables(dfs))
+        if len(dfs) > 6:
+            data.update(extract_fuerza(dfs[6]))
+
+        return data
+    except Exception as e:
+        print(e)
         return None
-
-    tables = document.tables
-    dfs = []
-
-    for table in tables:
-        data = []
-        for row in table.rows:
-            text = [cell.text for cell in row.cells]
-            data.append(text)
-        df = pd.DataFrame(data)
-        dfs.append(df)
-
-    if not dfs:
-        return None
-
-    data = extract_header(dfs[0])
-    data.update(extract_tables(dfs))
-    if len(dfs) > 6:
-        data.update(extract_fuerza(dfs[6]))
-
-    return data
 
 
 def extract_header(df):

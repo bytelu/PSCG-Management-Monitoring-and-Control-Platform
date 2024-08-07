@@ -5,67 +5,74 @@
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center">
-    <h1 class="display-4">Subir intervención</h1>
-    <a href="{% url 'intervenciones' %}" class="btn btn-outline-dark">
-        <i class="fas fa-arrow-left"></i>
-    </a>
-</div>
-<div class="container my-5 d-flex justify-content-center align-items-center">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title d-flex justify-content-center align-items-center">Subir Programa de Intervencion</h2>
-        </div>
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <!-- Nuevo botón personalizado para cargar archivos -->
-                    <label for="formFile" class="form-label text-center">Aquí deberás seleccionar únicamente un archivo word de tipo Programa de Intervención:</label>
-                    <label for="fileInput" class="btn btn-outline-dark btn-lg btn-block">Seleccionar Archivo</label>
-                    <!-- Nuevo input de archivo oculto -->
-                    <input type="file" id="fileInput" name="word_file"
-                           onchange="document.getElementById('fileNameLabel').innerText = 'Archivo seleccionado: ' + this.files[0].name">
-                    <!-- Etiqueta para mostrar el nombre del archivo seleccionado -->
-                    <p id="fileNameLabel"></p>
-                </div>
-                <button type="submit" class="btn btn-outline-dark btn-lg btn-block">Subir Archivo</button>
-            </form>
-            {% if word_processing_result %}
-                <div class="alert alert-success mt-3" role="alert">
-                    <strong>Éxito al procesar el archivo!! | Los datos han sido guardados con éxito!!</strong>
-                </div>
-            {% endif %}
-            {% if word_processing_error %}
-                <div class="alert alert-danger mt-3" role="alert">
-                    <strong>Error:</strong> {{ word_processing_error }}
-                </div>
-            {% endif %}
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="display-4">Subir intervención</h1>
+        <a href="{% url 'intervenciones' %}" class="btn btn-outline-dark">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="container my-5 d-flex justify-content-center align-items-center">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title d-flex justify-content-center align-items-center">Subir Programa de Intervención</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <!-- Nuevo botón personalizado para cargar archivos -->
+                        <label for="formFile" class="form-label text-center">Aquí deberás seleccionar archivos de tipo Programa de Intervención:</label>
+                        <label for="fileInput" class="btn btn-outline-dark btn-lg btn-block">Seleccionar Archivos</label>
+                        <!-- Nuevo input de archivo oculto -->
+                        <input type="file" id="fileInput" name="word_files" multiple onchange="updateFileNameLabel(this)">
+                        <!-- Etiqueta para mostrar los nombres de los archivos seleccionados -->
+                        <p id="fileNameLabel"></p>
+                    </div>
+                    <button type="submit" class="btn btn-outline-dark btn-lg btn-block">Subir Archivos</button>
+                </form>
+                {% if word_processing_result %}
+                    <div class="alert alert-success mt-3" role="alert">
+                        <strong>Éxito: </strong>{{ word_processing_result|linebreaksbr }}
+                    </div>
+                {% endif %}
+                {% if word_processing_error %}
+                    <div class="alert alert-danger mt-3" role="alert">
+                        <strong>Error: </strong>{{ word_processing_error|linebreaksbr }}
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block styles %}
-<style>
-    /* Estilos personalizados para el botón de carga de archivo */
-
-    #fileInput {
-        display: none; /* Oculta el input de archivo original */
-    }
-
-    #fileNameLabel {
-        text-align: center; /* Centra el texto */
-    }
-</style>
+    <style>
+        /* Estilos personalizados para el botón de carga de archivo */
+        #fileInput {
+            display: none; /* Oculta el input de archivo original */
+        }
+        #fileNameLabel {
+            text-align: center; /* Centra el texto */
+        }
+    </style>
 {% endblock %}
 
 {% block scripts %}
-<script>
-    $(document).ready(function () {
-        $('.select2').select2({
-            theme: "bootstrap-5"
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: "bootstrap-5"
+            });
         });
-    });
-</script>
+
+        function updateFileNameLabel(input) {
+            const fileNameLabel = document.getElementById('fileNameLabel');
+            if (input.files.length > 0) {
+                const fileNames = Array.from(input.files).map(file => file.name).join('\n');
+                fileNameLabel.innerText = 'Archivos seleccionados:\n' + fileNames;
+            } else {
+                fileNameLabel.innerText = '';
+            }
+        }
+    </script>
 {% endblock %}
