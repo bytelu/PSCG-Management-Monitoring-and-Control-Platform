@@ -6,8 +6,6 @@
 
 <h1 style="text-align: center;">PSCG</h1>
 
-<hr>
-
 **PSCG** es una aplicación integral desarrollada con Django, diseñada para optimizar la gestión y supervisión en el
 ámbito de actividades de fiscalización. Esta plataforma ofrece herramientas avanzadas para:
 
