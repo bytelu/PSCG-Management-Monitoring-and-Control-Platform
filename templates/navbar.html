@@ -234,6 +234,15 @@
 
         }
 
+        .sub-menu {
+            display: none;
+            flex-direction: column;
+        }
+
+        .sidenav a.active + .sub-menu {
+            display: flex;
+        }
+
 
     </style>
     {% block styles %}{% endblock %}
@@ -255,74 +264,59 @@
     <a href="{% url 'home' %}" class="{% if request.path == '/OICSec/home/' %}active{% endif %}"><i
             class="fas fa-home"></i> <span>Home</span></a>
     <!-- Botón principal de Auditorías -->
-    <div class="dropdown">
-        <a href="javascript:void(0)"
-           class="dropdown-toggle {% if request.path == '/OICSec/auditorias/' or request.path == '/OICSec/auditorias/PAA/' or request.path == '/OICSec/auditorias/cedula/' or request.path == '/OICSec/auditorias/<int:auditoria_id>/' %}active{% endif %}"
-           onclick="toggleDropdown('auditoriasDropdown')">
-            <i class="fas fa-clipboard-check"></i> <span>Auditorías</span>
-        </a>
-        <div id="auditoriasDropdown" class="dropdown-menu">
-            <a href="{% url 'auditorias' %}"
-               class="dropdown-item {% if request.path == '/OICSec/auditorias/' %}active{% endif %}">Mostrar
-                Auditoría</a>
-            <a href="{% url 'uploadPaa' %}"
-               class="dropdown-item {% if request.path == '/OICSec/auditorias/PAA/' %}active{% endif %}">Subir
-                Auditoría</a>
-            <!-- Agrega más sub botones aquí si es necesario -->
-        </div>
+    <a href="javascript:void(0)"
+       class="dropdown-toggle {% if request.path == '/OICSec/auditorias/' or request.path == '/OICSec/auditorias/PAA/' or request.path == '/OICSec/auditorias/cedula/' or request.path == '/OICSec/auditorias/<int:auditoria_id>/' %}active{% endif %}"
+       onclick="toggleSubMenu('auditoriasSubMenu')">
+        <i class="fas fa-clipboard-check"></i> <span>Auditorías</span>
+    </a>
+    <div id="auditoriasSubMenu" class="sub-menu">
+        <a href="{% url 'auditorias' %}" class="{% if request.path == '/OICSec/auditorias/' %}active{% endif %}">Mostrar
+            Auditoría</a>
+        <a href="{% url 'uploadPaa' %}" class="{% if request.path == '/OICSec/auditorias/PAA/' %}active{% endif %}">Subir
+            Auditoría</a>
+        <!-- Agrega más sub botones aquí si es necesario -->
     </div>
 
     <!-- Botón principal de Intervenciones -->
-    <div class="dropdown">
-        <a href="javascript:void(0)"
-           class="dropdown-toggle {% if request.path == '/OICSec/intervenciones/' or request.path == '/OICSec/intervenciones/PINT/' or request.path == '/OICSec/intervenciones/cedula/' or request.path == '/OICSec/intervenciones/<int:intervencion_id>/' %}active{% endif %}"
-           onclick="toggleDropdown('intervencionesDropdown')">
-            <i class="fas fa-briefcase"></i> <span>Intervenciones</span>
-        </a>
-        <div id="intervencionesDropdown" class="dropdown-menu">
-            <a href="{% url 'intervenciones' %}"
-               class="dropdown-item {% if request.path == '/OICSec/intervenciones/' %}active{% endif %}">Mostrar
-                Intervenciones</a>
-            <a href="{% url 'uploadPint' %}"
-               class="dropdown-item {% if request.path == '/OICSec/intervenciones/PINT/' %}active{% endif %}">Subir
-                Intervención</a>
-            <!-- Agrega más sub botones aquí si es necesario -->
-        </div>
+    <a href="javascript:void(0)"
+       class="dropdown-toggle {% if request.path == '/OICSec/intervenciones/' or request.path == '/OICSec/intervenciones/PINT/' or request.path == '/OICSec/intervenciones/cedula/' or request.path == '/OICSec/intervenciones/<int:intervencion_id>/' %}active{% endif %}"
+       onclick="toggleSubMenu('intervencionesSubMenu')">
+        <i class="fas fa-briefcase"></i> <span>Intervenciones</span>
+    </a>
+    <div id="intervencionesSubMenu" class="sub-menu">
+        <a href="{% url 'intervenciones' %}"
+           class="{% if request.path == '/OICSec/intervenciones/' %}active{% endif %}">Mostrar Intervenciones</a>
+        <a href="{% url 'uploadPint' %}"
+           class="{% if request.path == '/OICSec/intervenciones/PINT/' %}active{% endif %}">Subir Intervención</a>
+        <!-- Agrega más sub botones aquí si es necesario -->
     </div>
 
     <!-- Botón principal de Controles Internos -->
-    <div class="dropdown">
-        <a href="javascript:void(0)"
-           class="dropdown-toggle {% if request.path == '/OICSec/controlesinternos/' or request.path == '/OICSec/controlesInternos/PACI/' or request.path == '/OICSec/controlesInternos/cedula/' or request.path == '/OICSec/controlesInternos/<int:control_interno_id>/' %}active{% endif %}"
-           onclick="toggleDropdown('controlesInternosDropdown')">
-            <i class="fas fa-tasks"></i> <span>Controles Internos</span>
-        </a>
-        <div id="controlesInternosDropdown" class="dropdown-menu">
-            <a href="{% url 'controlInterno' %}"
-               class="dropdown-item {% if request.path == '/OICSec/controlesinternos/' %}active{% endif %}">Mostrar
-                Controles Internos</a>
-            <a href="{% url 'uploadPaci' %}"
-               class="dropdown-item {% if request.path == '/OICSec/controlesInternos/PACI/' %}active{% endif %}">Subir
-                Control Interno</a>
-            <!-- Agrega más sub botones aquí si es necesario -->
-        </div>
+    <a href="javascript:void(0)"
+       class="dropdown-toggle {% if request.path == '/OICSec/controlesinternos/' or request.path == '/OICSec/controlesInternos/PACI/' or request.path == '/OICSec/controlesInternos/cedula/' or request.path == '/OICSec/controlesInternos/<int:control_interno_id>/' %}active{% endif %}"
+       onclick="toggleSubMenu('controlesInternosSubMenu')">
+        <i class="fas fa-tasks"></i> <span>Controles Internos</span>
+    </a>
+    <div id="controlesInternosSubMenu" class="sub-menu">
+        <a href="{% url 'controlInterno' %}"
+           class="{% if request.path == '/OICSec/controlesinternos/' %}active{% endif %}">Mostrar Controles Internos</a>
+        <a href="{% url 'uploadPaci' %}"
+           class="{% if request.path == '/OICSec/controlesInternos/PACI/' %}active{% endif %}">Subir Control Interno</a>
+        <!-- Agrega más sub botones aquí si es necesario -->
     </div>
 
     <!-- Botón principal de Personal -->
-    <div class="dropdown">
-        <a href="javascript:void(0)"
-           class="dropdown-toggle {% if request.path == '/OICSec/personal/' or request.path == '/OICSec/personal/direccion/' or request.path == '/OICSec/personal/oics/' %}active{% endif %}"
-           onclick="toggleDropdown('personalDropdown')">
-            <i class="fas fa-users"></i> <span>Personal</span>
-        </a>
-        <div id="personalDropdown" class="dropdown-menu">
-            <a href="{% url 'personal' %}"
-               class="dropdown-item {% if request.path == '/OICSec/personal/' %}active{% endif %}">Mostrar Personal</a>
-            <a href="{% url 'personal_direccion' %}"
-               class="dropdown-item {% if request.path == '/OICSec/personal/direccion/' %}active{% endif %}">Dirección</a>
-            <a href="{% url 'oics' %}"
-               class="dropdown-item {% if request.path == '/OICSec/personal/oics/' %}active{% endif %}">OIC's</a>
-        </div>
+    <a href="javascript:void(0)"
+       class="dropdown-toggle {% if request.path == '/OICSec/personal/' or request.path == '/OICSec/personal/direccion/' or request.path == '/OICSec/personal/oics/' %}active{% endif %}"
+       onclick="toggleSubMenu('personalSubMenu')">
+        <i class="fas fa-users"></i> <span>Personal</span>
+    </a>
+    <div id="personalSubMenu" class="sub-menu">
+        <a href="{% url 'personal' %}" class="{% if request.path == '/OICSec/personal/' %}active{% endif %}">Mostrar
+            Personal</a>
+        <a href="{% url 'personal_direccion' %}"
+           class="{% if request.path == '/OICSec/personal/direccion/' %}active{% endif %}">Dirección</a>
+        <a href="{% url 'oics' %}" class="{% if request.path == '/OICSec/personal/oics/' %}active{% endif %}">OIC's</a>
     </div>
 
     <!-- Contenedor para la parte inferior del sidebar -->
@@ -351,7 +345,24 @@
     {% endblock %}
 </div>
 
-{% block scripts %}{% endblock %}
+{% block scripts %}
+    <script>
+        function toggleSubMenu(id) {
+            let subMenu = document.getElementById(id);
+            let isOpen = subMenu.style.display === 'flex';
+
+            // Cierra todos los submenús
+            document.querySelectorAll('.sub-menu').forEach(function (menu) {
+                menu.style.display = 'none';
+            });
+
+            // Abre el submenú seleccionado si estaba cerrado
+            if (!isOpen) {
+                subMenu.style.display = 'flex';
+            }
+        }
+    </script>
+{% endblock %}
 
 </body>
 </html>
