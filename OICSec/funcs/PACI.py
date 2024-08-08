@@ -157,7 +157,7 @@ def extract_paci(path):
 
             best_match, best_ratio = get_best_match(organo, list(Oic.objects.all().values_list('nombre', flat=True)))
 
-            if best_ratio <= 0.5:
+            if best_ratio <= 0.3:
                 return None
 
             dat = [best_match, []]

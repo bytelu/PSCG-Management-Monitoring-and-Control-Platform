@@ -361,6 +361,20 @@ def upload_paci_view(request):
         return render(request, 'upload_paci.html')
 
 
+def clean_oic_text(organo: str):
+    phrases_to_remove = [
+        'órgano interno de control en',
+        'de la ciudad de méxico'
+    ]
+
+    text = organo.lower()
+
+    for phrase in phrases_to_remove:
+        text = re.sub(re.escape(phrase), '', text)
+
+    return text.strip()
+
+
 @login_required
 def upload_pint_view(request):
     lista_oics = Oic.objects.all()
@@ -396,7 +410,7 @@ def upload_pint_view(request):
                     result_band = True
                     max_similarity = 0
                     for oic in lista_oics:
-                        similarity = SequenceMatcher(None, word_processing_result.get('Ente Público'),
+                        similarity = SequenceMatcher(None, clean_oic_text(word_processing_result.get('Ente Público')),
                                                      oic.nombre).ratio()
                         if similarity > max_similarity:
                             max_similarity = similarity

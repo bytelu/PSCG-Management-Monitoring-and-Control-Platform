@@ -25,6 +25,17 @@ def preprocess_dataframe(df, indices):
 
     organo_index = indices[0] - 1
     organo = clean_text(str(df.iloc[organo_index, 0]))
+    phrases_to_remove = [
+        'órgano interno de control en',
+        'de la ciudad de méxico'
+    ]
+
+    text = organo.lower()
+
+    for phrase in phrases_to_remove:
+        text = re.sub(re.escape(phrase), '', text)
+
+    organo = text.strip()
 
     df = df.apply(lambda x: x.map(clean_text) if x.notnull().all() else x)
 
@@ -188,7 +199,7 @@ def extract_paa(path):
 
             best_match, best_ratio = get_best_match(organo, list(Oic.objects.all().values_list('nombre', flat=True)))
 
-            if best_ratio <= 0.5:
+            if best_ratio <= 0.3:
                 return None
 
             dat = [best_match, []]
