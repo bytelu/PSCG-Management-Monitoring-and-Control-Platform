@@ -576,6 +576,12 @@ def get_supervision_data(kind, model_instance, fiscalizacion, request):
             Ejercicio=model_instance.ejercicio if model_instance.ejercicio else ''
         )
     elif kind == 3:
+        tipo_revision = \
+            f'{model_instance.id_tipo_revision.clave if model_instance.id_tipo_revision else ""}'
+        programa_revision = \
+            f'{model_instance.id_programa_revision.clave if model_instance.id_programa_revision else ""}'
+        clave = f'{tipo_revision}-{programa_revision}' if tipo_revision and programa_revision \
+            else (f'{tipo_revision}' if tipo_revision else (f'{programa_revision}' if programa_revision else ''))
         data = SupervisionData(
             OIC=str(
                 model_instance.id_actividad_fiscalizacion.id_oic.nombre)
@@ -584,7 +590,7 @@ def get_supervision_data(kind, model_instance, fiscalizacion, request):
             Nombre=str(model_instance.denominacion) if model_instance.denominacion else '',
             Fecha=datetime.datetime.strptime(request.POST.get('fecha'), '%Y-%m-%d').strftime(
                 '%d/%m/%Y') if request.POST.get('fecha') else '',
-            Clave=f'{model_instance.id_tipo_revision.clave}-{model_instance.id_programa_revision.clave}',
+            Clave=clave,
             Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}' if fiscalizacion.trimestre else '',
             Objetivo=model_instance.objetivo if model_instance.objetivo else '',
             Area=model_instance.area if model_instance.area else '',
