@@ -30,14 +30,42 @@ class BaseForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        if instance.id_actividad_fiscalizacion is None:
-            instance.id_actividad_fiscalizacion = ActividadFiscalizacion()
-        instance.id_actividad_fiscalizacion.anyo = self.cleaned_data.get('anyo')
-        instance.id_actividad_fiscalizacion.trimestre = self.cleaned_data.get('trimestre')
-        instance.id_actividad_fiscalizacion.id_oic = self.cleaned_data.get('id_oic')
+        actividad_actual = instance.id_actividad_fiscalizacion
+
+        # Verifica si ya hay una actividad con los mismos datos proporcionados
+        actividad_existente = ActividadFiscalizacion.objects.filter(
+            anyo=self.cleaned_data.get('anyo'),
+            trimestre=self.cleaned_data.get('trimestre'),
+            id_oic=self.cleaned_data.get('id_oic')
+        ).first()
+
+        # Si no existe tal actividad, crear una nueva
+        if not actividad_existente:
+            nueva_actividad = ActividadFiscalizacion.objects.create(
+                anyo=self.cleaned_data.get('anyo'),
+                trimestre=self.cleaned_data.get('trimestre'),
+                id_oic=self.cleaned_data.get('id_oic')
+            )
+            instance.id_actividad_fiscalizacion = nueva_actividad
+        else:
+            instance.id_actividad_fiscalizacion = actividad_existente
+
         if commit:
-            instance.id_actividad_fiscalizacion.save()
             instance.save()
+
+        # Verificar si la actividad actual esta asociada a otra entidad
+        is_used_elsewhere = (
+                Auditoria.objects.filter(id_actividad_fiscalizacion=actividad_actual)
+                .exclude(pk=instance.pk).exists() or
+                Intervencion.objects.filter(id_actividad_fiscalizacion=actividad_actual)
+                .exclude(pk=instance.pk).exists() or
+                ControlInterno.objects.filter(id_actividad_fiscalizacion=actividad_actual)
+                .exclude(pk=instance.pk).exists())
+
+        # Si no está asociada a ninguna otra entidad, eliminarla
+        if not is_used_elsewhere and actividad_actual:
+            actividad_actual.delete()
+
         return instance
 
 
