@@ -204,6 +204,37 @@
             background: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
             z-index: 1000000; /* Un poco menos que el side panel */
         }
+
+        /* Elimina el borde azul cuando se hace clic */
+        a.btn:focus,
+        a.btn:active {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .logout-btn {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent !important;
+
+        }
+
+        .logout-btn:hover {
+            background-color: #dc3545 !important; /* Color de fondo de btn-danger */
+            color: #fff !important; /* Texto blanco */
+        }
+
+        .sidenav .mt-auto .btn {
+            height: 50px; /* Ajusta esta altura según tus necesidades */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+        }
+
+
     </style>
     {% block styles %}{% endblock %}
 </head>
@@ -216,24 +247,10 @@
             <span style="font-size: 0.3rem;">DIRECCIÓN GENERAL DE COORDINACIÓN DE ÓRGANOS INTERNOS DE CONTROL SECTORIAL "C"</span>
         </div>
     </a>
-    <div class="collapse navbar-collapse" id="navbarColor01">
-        <ul class="navbar-nav ml-auto">
-            <li class="navbar-item">
-                <span class="navbar-text">Bienvenido,</span>
-            </li>
-            <li class="nav-item mr-4 {% if request.path == '/OICSecLP/perfil/' %}active{% endif %}">
-                <a class="nav-link {% if request.path == '/OICSec/perfil/' %}active{% endif %}"
-                   href="{% url 'perfil' %}">{{ user.username }}</a>
-            </li>
-            <li class="nav-item mr-2">
-                <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-            </li>
-        </ul>
-    </div>
 </nav>
 
 <!-- Side panel -->
-<div id="mySidenav" class="sidenav">
+<div id="mySidenav" class="sidenav d-flex flex-column">
     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
     <a href="{% url 'home' %}" class="{% if request.path == '/OICSec/home/' %}active{% endif %}"><i
             class="fas fa-home"></i> <span>Home</span></a>
@@ -305,6 +322,22 @@
                class="dropdown-item {% if request.path == '/OICSec/personal/direccion/' %}active{% endif %}">Dirección</a>
             <a href="{% url 'oics' %}"
                class="dropdown-item {% if request.path == '/OICSec/personal/oics/' %}active{% endif %}">OIC's</a>
+        </div>
+    </div>
+
+    <!-- Contenedor para la parte inferior del sidebar -->
+    <div class="mt-auto p-3 bg-dark text-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <!-- Botón de Perfil -->
+            <a class="btn btn-block text-light d-flex align-items-center ml-2 {% if request.path == '/OICSec/perfil/' %}active{% endif %}"
+               href="{% url 'perfil' %}">
+                Perfil
+            </a>
+
+            <!-- Botón de Logout con ícono -->
+            <a class="btn text-light d-flex align-items-center ml-2 logout-btn" href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
         </div>
     </div>
 </div>
