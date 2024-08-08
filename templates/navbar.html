@@ -126,152 +126,169 @@
 
     </script>
     <style>
-    .dropdown-menu {
-        display: none;
-        background-color: #f8f9fa; /* Fondo claro */
-        border: 1px solid #ddd;
-        border-radius: 0.25rem;
-    }
+        .dropdown-menu {
+            display: none;
+            background-color: #f8f9fa; /* Fondo claro */
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+        }
 
-    .dropdown-menu .dropdown-item {
-        padding: 10px 20px;
-        font-size: 14px;
-        color: #343a40; /* Texto oscuro */
-        text-decoration: none;
-    }
+        .dropdown-menu .dropdown-item {
+            padding: 10px 20px;
+            font-size: 14px;
+            color: #343a40; /* Texto oscuro */
+            text-decoration: none;
+        }
 
-    .dropdown-menu .dropdown-item:hover {
-        background-color: #343a40; /* Fondo claro en hover */
-    }
+        .dropdown-menu .dropdown-item:hover {
+            background-color: #343a40; /* Fondo claro en hover */
+        }
 
-    .dropdown-toggle {
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-    }
+        .dropdown-toggle {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
 
-    .dropdown-toggle:hover {
-        background-color: #e9ecef; /* Fondo claro en hover */
-    }
+        .dropdown-toggle:hover {
+            background-color: #e9ecef; /* Fondo claro en hover */
+        }
 
-    .sidenav {
-        height: 100%;
-        width: 0;
-        position: fixed;
-        z-index: 10000001; /* Asegúrate de que esté encima del overlay */
-        top: 0;
-        left: 0;
-        background-color: #f8f9fa; /* Fondo claro */
-        overflow-x: hidden;
-        transition: 0.2s;
-        padding-top: 130px;
-        border-top-right-radius: 25px;
-        border-bottom-right-radius: 25px;
-    }
+        .sidenav {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 10000001; /* Asegúrate de que esté encima del overlay */
+            top: 0;
+            left: 0;
+            background-color: #f8f9fa; /* Fondo claro */
+            overflow-x: hidden;
+            transition: 0.2s;
+            padding-top: 130px;
+            border-top-right-radius: 25px;
+            border-bottom-right-radius: 25px;
+        }
 
-    .sidenav a {
-        display: flex;
-        align-items: center;
-        padding: 15px 20px;
-        text-decoration: none;
-        font-size: 16px;
-        color: #343a40; /* Texto oscuro */
-        transition: 0.1s;
-        position: relative;
-        border-radius: 10px; /* Esquinas redondeadas */
-        margin: 2px 2px 2px 2px; /* Margen entre los botones */
-        height: 40px; /* Altura de los botones principales */
-        box-sizing: border-box; /* Incluye padding y border en el cálculo de la altura */
-    }
+        .sidenav a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            color: #343a40; /* Texto oscuro */
+            transition: 0.1s;
+            position: relative;
+            border-radius: 10px; /* Esquinas redondeadas */
+            margin: 15px 2px 2px 2px; /* Margen entre los botones */
+            height: 40px; /* Altura de los botones principales */
+            box-sizing: border-box; /* Incluye padding y border en el cálculo de la altura */
+        }
 
-    .sidenav a.active {
-        background-color: #495057; /* Fondo oscuro para el enlace activo */
-        color: #f8f9fa; /* Texto claro para el enlace activo */
-        border-radius: 10px; /* Esquinas redondeadas para el botón activo */
-    }
+        .sidenav a.active {
+            background-color: #495057; /* Fondo oscuro para el enlace activo */
+            color: #f8f9fa; /* Texto claro para el enlace activo */
+            border-radius: 10px; /* Esquinas redondeadas para el botón activo */
+        }
 
-    .sidenav i {
-        font-size: 15px;
-        margin-right: 20px;
-    }
+        .sidenav i {
+            font-size: 15px;
+            margin-right: 20px;
+        }
 
-    .sidenav a span {
-        position: absolute;
-        left: 80px; /* Ajusta la posición del texto */
-    }
+        .sidenav a span {
+            position: absolute;
+            left: 80px; /* Ajusta la posición del texto */
+        }
 
-    .sidenav a:hover {
-        background-color: #495057; /* Fondo oscuro en hover */
-        color: #f8f9fa; /* Texto claro en hover */
-    }
+        .sidenav a:hover {
+            background-color: #495057; /* Fondo oscuro en hover */
+            color: #f8f9fa; /* Texto claro en hover */
+        }
 
-    .sidenav .closebtn {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 30px;
-        color: #343a40; /* Color del ícono de cerrar */
-        cursor: pointer;
-        border-radius: 15px;
-    }
+        .sidenav .closebtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            color: #343a40; /* Color del ícono de cerrar */
+            cursor: pointer;
+            border-radius: 15px;
+        }
 
-    /* Estilo para el overlay */
-    .overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
-        z-index: 1000000; /* Un poco menos que el side panel */
-    }
+        /* Estilo para el overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
+            z-index: 1000000; /* Un poco menos que el side panel */
+        }
 
-    /* Elimina el borde azul cuando se hace clic */
-    a.btn:focus,
-    a.btn:active {
-        outline: none;
-        box-shadow: none;
-    }
+        /* Elimina el borde azul cuando se hace clic */
+        a.btn:focus,
+        a.btn:active {
+            outline: none;
+            box-shadow: none;
+        }
 
-    .logout-btn {
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: transparent !important;
-    }
+        .logout-btn {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent !important;
+        }
 
-    .logout-btn:hover {
-        background-color: #dc3545 !important; /* Color de fondo de btn-danger */
-        color: #fff !important; /* Texto blanco */
-    }
+        .logout-btn:hover {
+            background-color: #dc3545 !important; /* Color de fondo de btn-danger */
+            color: #fff !important; /* Texto blanco */
+        }
 
-    .sidenav .mt-auto .btn {
-        height: 10px; /* Ajusta esta altura según tus necesidades */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+        .sidenav .mt-auto .btn {
+            height: 50px; /* Ajusta esta altura según tus necesidades */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .sub-menu {
-        display: none;
-        flex-direction: column;
-        padding-left: 15px; /* Aumenta la sangría de los submenús */
-    }
+        .sub-menu {
+            display: none;
+            flex-direction: column;
+            padding-left: 15px; /* Aumenta la sangría de los submenús */
+        }
 
-    .sidenav a.active + .sub-menu {
-        display: flex;
-    }
+        .sidenav a.active + .sub-menu {
+            display: flex;
+        }
 
-    .sidenav .submenu a {
-        border-radius: 10px; /* Esquinas redondeadas para submenús */
-        margin: 5px 0; /* Margen entre los botones de submenú */
-        height: 10px; /* Altura igual a los botones principales */
-        padding: 5px 2px; /* Padding igual al de los botones principales */
-        box-sizing: border-box; /* Incluye padding y border en el cálculo de la altura */
-    }
-</style>
+        .sidenav .submenu a {
+            border-radius: 10px; /* Esquinas redondeadas para submenús */
+            margin: 5px 0; /* Margen entre los botones de submenú */
+            height: 50px; /* Altura igual a los botones principales */
+            padding: 15px 20px; /* Padding igual al de los botones principales */
+            box-sizing: border-box; /* Incluye padding y border en el cálculo de la altura */
+        }
+
+        /* Estilo para la parte inferior del sidebar */
+        .bottom-container {
+            border-radius: 25px; /* Bordes redondeados */
+            padding: 0;
+            background-color: #343a40; /* Fondo oscuro para el contenedor inferior */
+            color: #f8f9fa; /* Texto claro en el contenedor inferior */
+            margin: auto 5px 5px 5px;
+        }
+
+        .bottom-container a {
+            
+            border-radius: 25px; /* Esquinas redondeadas para los botones en el contenedor inferior */
+            margin: 5px 0; /* Margen entre los botones */
+            height: 10px; /* Altura de los botones */
+            box-sizing: border-box; /* Incluye padding y border en el cálculo de la altura */
+        }
+    </style>
 
 
     {% block styles %}{% endblock %}
@@ -349,7 +366,7 @@
     </div>
 
     <!-- Contenedor para la parte inferior del sidebar -->
-    <div class="mt-auto p-3 bg-dark text-light">
+    <div class="bottom-container p-3">
         <div class="d-flex justify-content-between align-items-center">
             <!-- Botón de Perfil -->
             <a class="btn btn-block text-light d-flex align-items-center ml-2 {% if request.path == '/OICSec/perfil/' %}active{% endif %}"
@@ -363,6 +380,7 @@
             </a>
         </div>
     </div>
+
 </div>
 
 <!-- Overlay -->
