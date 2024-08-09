@@ -111,19 +111,18 @@
 
         function toggleSubMenu(id) {
             let subMenu = document.getElementById(id);
-            let isOpen = subMenu.classList.contains('show');
+            let isOpen = subMenu.style.display === 'flex';
 
             // Cierra todos los submenús
             document.querySelectorAll('.sub-menu').forEach(function (menu) {
-                menu.classList.remove('show');
+                menu.style.display = 'none';
             });
 
             // Abre el submenú seleccionado si estaba cerrado
             if (!isOpen) {
-                subMenu.classList.add('show');
+                subMenu.style.display = 'flex';
             }
         }
-
 
     </script>
     <style>
@@ -256,20 +255,9 @@
         }
 
         .sub-menu {
-            display: flex; /* Usado para el control del despliegue */
+            display: none;
             flex-direction: column;
-            padding-left: 15px;
-            max-height: 0; /* Altura inicial para la animación */
-            overflow: hidden; /* Oculta el contenido que se desborda */
-            transition: max-height 0.5s ease-out; /* Transición para la animación */
-        }
-        
-        .sub-menu.show {
-            max-height: 500px; /* Altura máxima para cuando el submenú está desplegado */
-        }
-
-        .sidenav a.active + .sub-menu {
-            max-height: 500px; /* Ajusta según el contenido del submenú */
+            padding-left: 15px; /* Aumenta la sangría de los submenús */
         }
 
         .sidenav a.active + .sub-menu {
