@@ -50,11 +50,6 @@ def compare_strings(str1, str2, threshold=0.75):
     Returns:
         bool: True si la similitud es mayor que el umbral, False en caso contrario.
     """
-    # Verifica que ambas cadenas no estén vacías
-    if not str1 or not str2:
-        return False
-
-    # Compara las cadenas
     return SequenceMatcher(None, str1, str2).ratio() > threshold or str1 in str2 or str2 in str1
 
 
@@ -114,18 +109,8 @@ def extract_inicio_termino(date):
     pattern = r"(\d{2}/\d{2}/\d{4})"
     matches = re.findall(pattern, date)
 
-    inicio = None
-    termino = None
-
-    if "Término" in date:
-        if len(matches) == 1:
-            termino = matches[0]
-        elif len(matches) > 1:
-            inicio = matches[0]
-            termino = matches[1]
-    else:
-        inicio = matches[0] if len(matches) > 0 else None
-        termino = matches[1] if len(matches) > 1 else None
+    inicio = matches[0] if len(matches) > 0 else None
+    termino = matches[1] if len(matches) > 1 else None
 
     return {'Inicio': inicio, 'Termino': termino}
 
