@@ -375,20 +375,6 @@ def clean_oic_text(organo: str):
     return text.strip()
 
 
-def get_most_similar_tipo_intervencion(tipo_str):
-    tipo_intervenciones = TipoIntervencion.objects.all()
-    max_similarity = 0
-    tipo_intervencion_obj = None
-
-    for tipo in tipo_intervenciones:
-        similarity = SequenceMatcher(None, tipo_str, tipo.tipo).ratio()
-        if similarity > max_similarity:
-            max_similarity = similarity
-            tipo_intervencion_obj = tipo
-
-    return tipo_intervencion_obj
-
-
 @login_required
 def upload_pint_view(request):
     lista_oics = Oic.objects.all()
@@ -449,9 +435,6 @@ def upload_pint_view(request):
                     tipo_intervencion_obj = None
                     if word_processing_result["Clave"]:
                         tipo_intervencion_obj = TipoIntervencion.objects.get(clave=word_processing_result["Clave"])
-                    elif word_processing_result['Tipo de Intervención']:
-                        tipo_intervencion_obj = get_most_similar_tipo_intervencion(
-                            word_processing_result['Tipo de Intervención'])
 
                     cedula_obj = Cedula.objects.create()
                     Intervencion.objects.create(
