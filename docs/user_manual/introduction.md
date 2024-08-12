@@ -1,6 +1,6 @@
 # Introducción
 
-Bienvenido al manual de usuario de **SCGCSuite**, una aplicación diseñada para facilitar la gestión y supervisión de actividades de fiscalización. Este manual está destinado a guiarte a través de las funcionalidades principales de la aplicación, proporcionándote las herramientas necesarias para utilizar SCGCSuite de manera eficiente.
+Bienvenido al manual de usuario de **PSCG**, una aplicación diseñada para facilitar la gestión y supervisión de actividades de fiscalización. Este manual está destinado a guiarte a través de las funcionalidades principales de la aplicación, proporcionándote las herramientas necesarias para utilizar SCGCSuite de manera eficiente.
 
 ## Contenidos del Manual
 
