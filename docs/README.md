@@ -23,8 +23,12 @@ asegurando un control riguroso y detallado de las actividades.
 - [Introducción](#introducción)
 - [Instalación](#instalación)
 - [Uso](#uso)
+- [Documentación](#documentación)
+- [Conclusión](#conclusión)
+- [Contribuidores](#contribuidores)
 - [Licencia](#licencia)
 - [Contacto](#contacto)
+- [Disclaimer](#disclaimer)
 
 ## Introducción
 
@@ -88,10 +92,11 @@ Esperamos que esta herramienta sea de gran ayuda e invitamos a contribuir para s
     ```
 
 4. Configurar la base de datos:  
+   Para este paso se tiene que tener creada una base de datos con anterioridad para uso de la aplicación.  
    En el archivo `settings.py`, configura tu base de datos:
 
     ```python
-    DATABASES = {
+   DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',  # O el correspondiente a tu base de datos
             'NAME': 'nombre_de_tu_base_de_datos',
@@ -124,7 +129,67 @@ Esperamos que esta herramienta sea de gran ayuda e invitamos a contribuir para s
     python manage.py loaddata initial_data.json
     ```
 
-8. Ejecutar el servidor de desarrollo:
+8. Verificar las configuraciones:  
+   Se necesita verificar que la base de datos se encuentra corriendo y con los datos
+   iniciales cargados, para ello puede ir al shell y acceder a su base de datos, a continuación se muestra un
+   ejemplo de
+   ejecución en Windows.
+
+   ```shell
+   cd "C:\Program Files\MySQL\MySQL Server 8.0\bin"
+   ```
+
+   Para acceder a la ruta de instalación de MySQL.
+
+   ```shell
+   mysql -u username -p
+   ```
+
+   Donde se reemplaza username con su nombre de usuario configurado en la instalación y a continuación le pedirá
+   ingresar password, la cual en caso de haber sido configurada, debera de ingresar, en caso contrario se dejara el
+   espacio vació y se dara enter.
+
+   Si se ingreso correctamente y la base de datos se encuentra corriendo, se vera el promp en este caso de
+   MySQL (`mysql>`), lo que indica que la conexión se ha establecido correctamente.
+
+   Después de ello se deberán de mostrar las bases de datos, para confirmar que se encuentra la base de datos
+   configurada
+   en el archivo de configuración de Django.
+
+   ```mysql
+   SHOW DATABASES;
+   ```
+
+   Después de ello se accede a la base de datos, y se muestran las tablas para verificar su existencia.
+
+   ```mysql
+   show tables 
+   ```
+
+   Si se muestran todas las tablas de la base de datos, se procede a la verificación de los datos iniciales, por ello se
+   accede a las tablas de:
+
+    - clasificacion
+    - enfoque
+    - materia
+    - oic
+    - programa_revision
+    - programacion
+    - temporalidad
+    - tipo_cargo
+    - tipo_intervencion
+    - tipo_minuta
+    - tipo_revision
+   
+   ```mysql
+   use oicsec;
+   select * from clasificacion;
+   ```
+
+   si se muestran los datos correspondientes dentro de la base de datos, sera la ultima verificación a realizar y se
+   estará listo para proseguir.
+
+9. Ejecutar el servidor de desarrollo:
 
     ```shell
     python manage.py runserver
@@ -134,7 +199,7 @@ Esperamos que esta herramienta sea de gran ayuda e invitamos a contribuir para s
 
 ## Uso
 
-> Tambien puedes probar a consultar el manual completo de uso: [manual](user_manual/introduction.md)
+> También puedes probar a consultar el manual de usuario en: [manual de usuario](user_manual/introduction.md)
 
 Una vez que el proyecto esté instalado y corriendo, puedes usar las siguientes funcionalidades:
 
@@ -238,9 +303,38 @@ o acceder a la información de perfil del usuario, respectivamente.
 
 ![Panel de perfil](images/Panel%20profile.png)
 
+## Documentación
+
+Para acceder a información mas detallada, se puede acceder a los archivos
+de [documentación de desarrollador](developer_manual) o a los archivos
+de [documentación de despliegue](deployment_manual), también se pueden tener ejemplos de uso en [tests](tests), ademas
+de como ya se menciono, tener acceso a los [manuales de usuario](user_manual), donde se tiene una introducción al
+sistema, y una guia de errores que pueden surgir durante su uso y como tratarlos.
+
+## Conclusión
+
+Este proyecto ha sido desarrollado para proporcionar una herramienta integral que facilita la gestión y monitoreo de
+estos procesos críticos de supervisión. A través de la implementación de tecnologías clave como Django para el backend y
+un diseño optimizado en HTML para la presentación de datos, se ha logrado crear un sistema que no solo mejora la
+eficiencia operativa, sino que también asegura la integridad y transparencia en el manejo de la información.
+
+Los resultados alcanzados demuestran que la solución es capaz de centralizar y automatizar tareas que anteriormente se
+realizaban manualmente, reduciendo significativamente los errores y tiempos de respuesta. Además, se ha logrado una
+interfaz de usuario intuitiva, que permite una interacción sencilla y eficiente con el sistema.
+
+En conclusión, este proyecto no solo cumple con los objetivos planteados, sino que también establece una base sólida
+para futuras mejoras y expansiones.
+
+## Contribuidores
+
+- [bytelu](https://github.com/bytelu) - Creador
+
+PSCG aun se encuentra en desarrollo, cualquier feedback, sugerencias y contribuciones, son valiosas para mi.
+
 ## Licencia
 
-**PSCG** es un software con todos los derechos reservados. Para más información, consulta el archivo [LICENSE.md](../LICENSE) incluido
+**PSCG** es un software con todos los derechos reservados. Para más información, consulta el
+archivo [LICENSE.md](../LICENSE) incluido
 en este repositorio.
 
 ## Contacto
@@ -252,3 +346,10 @@ Si tienes alguna pregunta, comentario o necesitas asistencia, no dudes en ponert
 
 También puedes abrir un [issue](https://github.com/bytelu/PSCG/issues) en el repositorio para reportar problemas o hacer
 sugerencias.
+
+## Disclaimer
+
+PSCG es desarrollado para la entidad denominada "Dirección General de Coordinación de Órganos internos C", sin embargo
+su uso no quedando limitado a ello, puesto que no se ha firmado contrato alguno para la realización especifica del
+software, ni se ha recibido remuneración por ello, por eso el creador no asume ninguna responsabilidad del uso del
+mismo, su clonación o su integración para otros fines.
