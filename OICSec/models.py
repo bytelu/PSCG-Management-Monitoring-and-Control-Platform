@@ -198,8 +198,10 @@ class Intervencion(models.Model):
         db_table = 'intervencion'
 
     def __str__(self):
-        character = "R" if self.id_tipo_intervencion.clave == 13 else (
-            "V" if self.id_tipo_intervencion.clave == 14 else "O")
+        character = ''
+        if self.id_tipo_intervencion is not None:
+            character = "R" if self.id_tipo_intervencion.clave == 13 else (
+                "V" if self.id_tipo_intervencion.clave == 14 else "O")
         anyo = self.id_actividad_fiscalizacion.anyo
         oic = self.id_actividad_fiscalizacion.id_oic
         return f"{character}-{self.numero}/{anyo} | {oic}"
