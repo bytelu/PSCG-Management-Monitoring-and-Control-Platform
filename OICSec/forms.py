@@ -53,18 +53,15 @@ class BaseForm(forms.ModelForm):
         if commit:
             instance.save()
 
-        # Verificar si la actividad actual esta asociada a otra entidad
-        is_used_elsewhere = (
-                Auditoria.objects.filter(id_actividad_fiscalizacion=actividad_actual)
-                .exclude(pk=instance.pk).exists() or
-                Intervencion.objects.filter(id_actividad_fiscalizacion=actividad_actual)
-                .exclude(pk=instance.pk).exists() or
-                ControlInterno.objects.filter(id_actividad_fiscalizacion=actividad_actual)
-                .exclude(pk=instance.pk).exists())
+        if actividad_actual and actividad_actual != instance.id_actividad_fiscalizacion:
+            is_used_elsewhere = (
+                    Auditoria.objects.filter(id_actividad_fiscalizacion=actividad_actual).exists() or
+                    Intervencion.objects.filter(id_actividad_fiscalizacion=actividad_actual).exists() or
+                    ControlInterno.objects.filter(id_actividad_fiscalizacion=actividad_actual).exists())
 
-        # Si no está asociada a ninguna otra entidad, eliminarla
-        if not is_used_elsewhere and actividad_actual:
-            actividad_actual.delete()
+            # Si no está asociada a ninguna otra entidad, eliminarla
+            if not is_used_elsewhere:
+                actividad_actual.delete()
 
         return instance
 

@@ -79,10 +79,12 @@ class Auditoria(models.Model):
         db_table = 'auditoria'
 
     def __str__(self):
-        oic_nombre = self.id_actividad_fiscalizacion.id_oic.nombre \
-            if self.id_actividad_fiscalizacion and self.id_actividad_fiscalizacion.id_oic \
-            else 'Sin OIC'
-        return f'A-{self.numero}/{self.id_actividad_fiscalizacion.anyo} | {oic_nombre}'
+        oic_nombre = None
+        if self.id_actividad_fiscalizacion:
+            oic_nombre = self.id_actividad_fiscalizacion.id_oic.nombre \
+                if self.id_actividad_fiscalizacion and self.id_actividad_fiscalizacion.id_oic \
+                else 'Sin OIC'
+        return f'A-{self.numero if self.numero else None}/{self.id_actividad_fiscalizacion.anyo if self.id_actividad_fiscalizacion else None} | {oic_nombre}'
 
 
 class AuditoriaObservacion(models.Model):
@@ -141,7 +143,10 @@ class ControlInterno(models.Model):
         db_table = 'control_interno'
 
     def __str__(self):
-        return f'CI {self.numero}/{self.id_actividad_fiscalizacion.anyo} | {self.id_actividad_fiscalizacion.id_oic}'
+        if self.id_actividad_fiscalizacion:
+            return f'CI {self.numero}/{self.id_actividad_fiscalizacion.anyo} | {self.id_actividad_fiscalizacion.id_oic}'
+        else:
+            return f'CI {self.numero}/None | None'
 
 
 class ControlInternoObservacion(models.Model):
@@ -191,19 +196,22 @@ class Intervencion(models.Model):
     fuerza_responsables = models.IntegerField(blank=True, null=True)
     fuerza_auditores = models.IntegerField(blank=True, null=True)
     id_tipo_intervencion = models.ForeignKey('TipoIntervencion', on_delete=models.CASCADE, blank=True, null=True)
-    id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True)
+    id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True, null=True)
     id_cedula = models.ForeignKey('Cedula', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         db_table = 'intervencion'
 
     def __str__(self):
-        character = ''
+        character = None
         if self.id_tipo_intervencion is not None:
             character = "R" if self.id_tipo_intervencion.clave == 13 else (
                 "V" if self.id_tipo_intervencion.clave == 14 else "O")
-        anyo = self.id_actividad_fiscalizacion.anyo
-        oic = self.id_actividad_fiscalizacion.id_oic
+        anyo = None
+        oic = None
+        if self.id_actividad_fiscalizacion:
+            anyo = self.id_actividad_fiscalizacion.anyo
+            oic = self.id_actividad_fiscalizacion.id_oic
         return f"{character}-{self.numero}/{anyo} | {oic}"
 
 
