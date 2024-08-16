@@ -175,23 +175,23 @@ def intervencion_detalle_view(request, intervencion_id):
 
 
 @login_required
-def upload_view(request, extract_func, process_func, template_name):
+def upload_view(request, extract_func, template_name, create_func):
     """
     Vista genérica para manejar la subida y procesamiento de archivos Excel.
     :param request: objeto HttpRequest
     :param extract_func: función para extraer datos del archivo Excel (extract_paci o extract_paa)
-    :param process_func: función para procesar los datos extraídos del Excel
     :param template_name: nombre de la plantilla HTML para renderizar
+    :param create_func: Función específica para crear los objetos (auditoria o control interno).
     """
     lista_oics = Oic.objects.all()
 
     if request.method == 'POST':
-        return handle_post_request(request, lista_oics, extract_func, process_func, template_name)
+        return handle_post_request(request, lista_oics, extract_func, template_name, create_func)
     elif request.method == 'GET':
         return render(request, template_name, {'lista_oics': lista_oics})
 
 
-def handle_post_request(request, lista_oics, extract_func, process_func, template_name):
+def handle_post_request(request, lista_oics, extract_func, template_name, create_func):
     excel_file = request.FILES.get('excel_file')
 
     try:
@@ -201,7 +201,7 @@ def handle_post_request(request, lista_oics, extract_func, process_func, templat
             return render_error(request, lista_oics, template_name, 'Error al procesar el archivo Excel | Nombre de error: None-results')
 
         with transaction.atomic():
-            process_func(data, lista_oics)
+            process_data(data, lista_oics, create_func)
 
         return render(request, template_name, {
             'excel_processing_result': data,
@@ -219,40 +219,19 @@ def render_error(request, lista_oics, template_name, error_message):
     })
 
 
-def process_paci_data(data, lista_oics):
+def process_data(data, lista_oics, create_func):
+    """
+        Función genérica para procesar datos extraídos del Excel y crear los objetos correspondientes.
+        :param data: Datos extraídos del Excel.
+        :param lista_oics: Lista de OICs.
+        :param create_func: Función específica para crear los objetos (auditoria o control interno).
+        """
     for excel_processing_result in data:
         similar_oic = get_most_similar_oic(excel_processing_result[0], lista_oics)
 
-        for control_data in excel_processing_result[1]:
-            actividad_fiscalizacion = get_or_create_actividad_fiscalizacion(control_data, similar_oic)
-
-            tipo_revision_obj = get_related_object(TipoRevision, control_data.get("tipo_revision"))
-            programa_revision_obj = get_related_object(ProgramaRevision, control_data.get("programa_revision"))
-
-            cedula_obj = Cedula.objects.create()
-            ControlInterno.objects.create(
-                numero=control_data["Numero"],
-                area=control_data["Area"],
-                denominacion=control_data["Denominacion"],
-                objetivo=control_data["Objetivo"],
-                id_actividad_fiscalizacion=actividad_fiscalizacion,
-                id_tipo_revision=tipo_revision_obj,
-                id_programa_revision=programa_revision_obj,
-                id_cedula=cedula_obj
-            )
-
-            create_conceptos_cedula(cedula_obj, 55)
-
-
-def process_paa_data(data, lista_oics):
-    for excel_processing_result in data:
-        similar_oic = get_most_similar_oic(excel_processing_result[0], lista_oics)
-
-        for auditoria_data in excel_processing_result[1]:
-            actividad_fiscalizacion = get_or_create_actividad_fiscalizacion(auditoria_data, similar_oic)
-
-            auditoria = create_auditoria(auditoria_data, actividad_fiscalizacion)
-            create_conceptos_cedula(auditoria.id_cedula, 60)
+        for item_data in excel_processing_result[1]:
+            actividad_fiscalizacion = get_or_create_actividad_fiscalizacion(item_data, similar_oic)
+            create_func(item_data, actividad_fiscalizacion)
 
 
 def get_most_similar_oic(excel_oic_name, lista_oics):
@@ -282,7 +261,7 @@ def create_auditoria(auditoria_data, actividad_fiscalizacion):
     temporalidad_obj = get_related_object(Temporalidad, auditoria_data["Temporalidad"])
 
     cedula_obj = Cedula.objects.create()
-    auditoria = Auditoria.objects.create(
+    Auditoria.objects.create(
         denominacion=auditoria_data["Denominacion"],
         numero=auditoria_data["Numero"],
         objetivo=auditoria_data["Objetivo"],
@@ -296,7 +275,25 @@ def create_auditoria(auditoria_data, actividad_fiscalizacion):
         id_temporalidad=temporalidad_obj,
         id_cedula=cedula_obj
     )
-    return auditoria
+    create_conceptos_cedula(cedula_obj, 60)
+
+
+def create_control_interno(control_data, actividad_fiscalizacion):
+    tipo_revision_obj = get_related_object(TipoRevision, control_data.get("tipo_revision"))
+    programa_revision_obj = get_related_object(ProgramaRevision, control_data.get("programa_revision"))
+
+    cedula_obj = Cedula.objects.create()
+    ControlInterno.objects.create(
+        numero=control_data["Numero"],
+        area=control_data["Area"],
+        denominacion=control_data["Denominacion"],
+        objetivo=control_data["Objetivo"],
+        id_actividad_fiscalizacion=actividad_fiscalizacion,
+        id_tipo_revision=tipo_revision_obj,
+        id_programa_revision=programa_revision_obj,
+        id_cedula=cedula_obj
+    )
+    create_conceptos_cedula(cedula_obj, 55)
 
 
 def get_related_object(model, obj_id):
@@ -312,12 +309,12 @@ def create_conceptos_cedula(cedula, num_celdas):
 
 @login_required
 def upload_paci_view(request):
-    return upload_view(request, extract_paci, process_paci_data, 'upload_paci.html')
+    return upload_view(request, extract_func=extract_paci, template_name='upload_paci.html', create_func=create_control_interno)
 
 
 @login_required
 def upload_paa_view(request):
-    return upload_view(request, extract_paa, process_paa_data, 'upload_paa.html')
+    return upload_view(request, extract_func=extract_paa, template_name='upload_paa.html', create_func=create_auditoria)
 
 
 def clean_oic_text(organo: str):
