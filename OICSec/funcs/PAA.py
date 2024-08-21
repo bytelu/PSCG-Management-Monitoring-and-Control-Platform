@@ -1,4 +1,3 @@
-import logging
 import re
 from difflib import SequenceMatcher
 
@@ -180,7 +179,7 @@ def extract_paa(path):
         path (str): Ruta del archivo Excel del cual se extraerán los datos.
 
     Returns:
-        list or None: Lista con el nombre del Organo Interno de Control y un diccionario de datos de auditorías
+        list or None: Lista con el nombre del Órgano Interno de Control y un diccionario de datos de auditorías
                       estructurados, o None si no se encontraron auditorías válidas.
     """
     result = []
@@ -224,6 +223,5 @@ def extract_paa(path):
             result.append(dat)
 
         return result if result else None
-    except Exception as e:
-        logging.error(f"Error al extraer información de auditorías del archivo: {e}")
+    except Exception:
         return None

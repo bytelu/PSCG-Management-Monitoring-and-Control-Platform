@@ -1,6 +1,8 @@
 import datetime
+import os
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client
 from django.urls import reverse
 
@@ -271,3 +273,76 @@ class IntervencionDetalleViewTest(LoggedIn):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'intervencion_detalle.html')
 
+
+class UploadPaaViewTest(LoggedIn):
+    def setUp(self):
+        super().setUp()
+        self.oic = Oic.objects.create(nombre="OIC Test")
+
+        fixtures_dir = os.path.join(os.path.dirname(__file__), 'fixtures', 'test_documents')
+        excel_file_path = os.path.join(fixtures_dir, 'test_paa.xlsx')
+        with open(excel_file_path, 'rb') as excel_file:
+            self.valid_excel_data = excel_file.read()
+
+        excel_file_path = os.path.join(fixtures_dir, 'test_paa_invalid.xlsx')
+        with open(excel_file_path, 'rb') as excel_file:
+            self.invalid_excel_data = excel_file.read()
+
+    def test_get_upload_paa_view(self):
+        response = self.client.get(reverse('uploadPaa'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'upload_paa.html')
+        self.assertIn('lista_oics', response.context)
+
+    def test_post_valid_upload_paa_view(self):
+        response = self.client.post(reverse('uploadPaa'), {
+            'excel_file': SimpleUploadedFile('test_paa.xlsx', self.valid_excel_data)
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Auditoria.objects.exists())
+        self.assertIn('excel_processing_result', response.context)
+
+    def test_post_invalid_upload_paa_view(self):
+        response = self.client.post(reverse('uploadPaa'), {
+            'excel_file': SimpleUploadedFile('test_paa_invalid.xlsx', self.invalid_excel_data)
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('excel_processing_error', response.context)
+        self.assertIn('Error al procesar el archivo Excel', response.context['excel_processing_error'])
+
+
+class UploadPaciViewTest(LoggedIn):
+    def setUp(self):
+        super().setUp()
+        self.oic = Oic.objects.create(nombre="OIC Test")
+
+        fixtures_dir = os.path.join(os.path.dirname(__file__), 'fixtures', 'test_documents')
+        excel_file_path = os.path.join(fixtures_dir, 'test_paci.xlsx')
+        with open(excel_file_path, 'rb') as excel_file:
+            self.valid_excel_data = excel_file.read()
+
+        excel_file_path = os.path.join(fixtures_dir, 'test_paci_invalid.xlsx')
+        with open(excel_file_path, 'rb') as excel_file:
+            self.invalid_excel_data = excel_file.read()
+
+    def test_get_upload_paci_view(self):
+        response = self.client.get(reverse('uploadPaci'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'upload_paci.html')
+        self.assertIn('lista_oics', response.context)
+
+    def test_post_valid_upload_paci_view(self):
+        response = self.client.post(reverse('uploadPaci'), {
+            'excel_file': SimpleUploadedFile('test_paci.xlsx', self.valid_excel_data)
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(ControlInterno.objects.exists())
+        self.assertIn('excel_processing_result', response.context)
+
+    def test_post_invalid_upload_paci_view(self):
+        response = self.client.post(reverse('uploadPaci'), {
+            'excel_file': SimpleUploadedFile('test_paci_invalid.xlsx', self.invalid_excel_data)
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('excel_processing_error', response.context)
+        self.assertIn('Error al procesar el archivo Excel', response.context['excel_processing_error'])

@@ -174,6 +174,5 @@ def extract_paci(path):
             result.append(dat)
 
         return result if result else None
-    except Exception as e:
-        logging.error(f"Error al extraer información del archivo PACI: {e}")
+    except Exception:
         return None
