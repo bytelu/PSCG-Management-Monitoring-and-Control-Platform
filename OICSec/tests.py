@@ -9,11 +9,14 @@ from .models import ActividadFiscalizacion, Oic, Auditoria, ControlInterno, Inte
 from .views import convert_to_date
 
 
-class LoginViewTest(TestCase):
-
+class LoggedIn(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username='testuser', password='12345')
+        self.client.login(username='testuser', password='12345')
+
+
+class LoginViewTest(LoggedIn):
 
     def test_login_success(self):
         response = self.client.post(reverse('login'), {'username': 'testuser', 'password': '12345'})
@@ -24,19 +27,15 @@ class LoginViewTest(TestCase):
         self.assertContains(response, 'Usuario o contraseña invalidos')
 
 
-class HomeViewTest(TestCase):
-
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='12345')
+class HomeViewTest(LoggedIn):
 
     def test_home_authenticated(self):
-        self.client.login(username='testuser', password='12345')
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'home.html')
 
     def test_home_unauthenticated(self):
+        self.client.logout()
         response = self.client.get(reverse('home'))
         self.assertRedirects(response, reverse('login') + '?next=/OICSec/home/')
 
@@ -48,19 +47,21 @@ class ConvertToDateTest(TestCase):
         date_obj = convert_to_date(date_str)
         self.assertEqual(date_obj, datetime.date(2024, 8, 14))
 
-    def test_convert_invalid_date(self):
+    def test_convert_void_date(self):
         date_str = ''
         date_obj = convert_to_date(date_str)
         self.assertIsNone(date_obj)
 
+    def test_convert_invalid_date(self):
+        date_str = 'invalid'
+        date_obj = convert_to_date(date_str)
+        self.assertIsNone(date_obj)
 
-class GetFilteredObjectsTest(TestCase):
+
+class GetFilteredObjectsTest(LoggedIn):
 
     def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
-
+        super().setUp()
         self.oic = Oic.objects.create(nombre="OIC1")
         self.actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
             id_oic=self.oic, anyo=2024)
@@ -99,13 +100,22 @@ class GetFilteredObjectsTest(TestCase):
         self.assertContains(response, self.control_interno)
         self.assertNotContains(response, "No matching records found.")
 
+    def test_incomplete_filter(self):
+        # No OIC
+        response = self.client.get(reverse('auditorias'), {'anyo': 2024})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.auditoria)
+        # No year
+        response = self.client.get(reverse('controlInterno'), {'oic_id': self.oic.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.control_interno)
+        # Void
+        response = self.client.get(reverse('intervenciones'), {})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.intervencion)
 
-class AuditoriasViewTest(TestCase):
 
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
+class AuditoriasViewTest(LoggedIn):
 
     def test_auditorias_view(self):
         response = self.client.get(reverse('auditorias'))
@@ -113,12 +123,7 @@ class AuditoriasViewTest(TestCase):
         self.assertTemplateUsed(response, 'auditorias.html')
 
 
-class ControlInternoViewTest(TestCase):
-
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
+class ControlInternoViewTest(LoggedIn):
 
     def test_control_interno_view(self):
         response = self.client.get(reverse('controlInterno'))
@@ -126,12 +131,7 @@ class ControlInternoViewTest(TestCase):
         self.assertTemplateUsed(response, 'control_interno.html')
 
 
-class IntervencionesViewTest(TestCase):
-
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
+class IntervencionesViewTest(LoggedIn):
 
     def test_intervenciones_view(self):
         response = self.client.get(reverse('intervenciones'))
@@ -139,14 +139,10 @@ class IntervencionesViewTest(TestCase):
         self.assertTemplateUsed(response, 'intervenciones.html')
 
 
-class HandleDetailViewTest(TestCase):
+class HandleDetailViewTest(LoggedIn):
 
     def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
-
-        # Setup data
+        super().setUp()
         self.oic = Oic.objects.create(nombre="OIC1")
         self.actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
             id_oic=self.oic, anyo=2024)
@@ -206,13 +202,44 @@ class HandleDetailViewTest(TestCase):
         self.intervencion.refresh_from_db()
         self.assertEqual(self.intervencion.id_actividad_fiscalizacion, self.actividad_fiscalizacion_2)
 
+    def test_post_auditoria_detail_invalid(self):
+        response = self.client.post(reverse('auditoria_detalle', args=[self.auditoria.id]), {
+            'anyo': 'invalid',
+            'id_oic': 'invalid'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'auditoria_detalle.html')
+        self.assertIn('form', response.context)
+        self.assertTrue(response.context['form'].errors)
+        self.assertIn('error', response.context)
 
-class AuditoriaDetalleViewTest(TestCase):
+    def test_post_control_interno_detail_invalid(self):
+        response = self.client.post(reverse('control_detalle', args=[self.control_interno.id]), {
+            'anyo': 'invalid',
+            'id_oic': 'invalid'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'control_detalle.html')
+        self.assertIn('form', response.context)
+        self.assertTrue(response.context['form'].errors)
+        self.assertIn('error', response.context)
+
+    def test_post_intervencion_detail_invalid(self):
+        response = self.client.post(reverse('intervencion_detalle', args=[self.intervencion.id]), {
+            'anyo': 'invalid',
+            'id_oic': 'invalid'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'intervencion_detalle.html')
+        self.assertIn('form', response.context)
+        self.assertTrue(response.context['form'].errors)
+        self.assertIn('error', response.context)
+
+
+class AuditoriaDetalleViewTest(LoggedIn):
 
     def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
+        super().setUp()
         Auditoria.objects.create()
 
     def test_auditoria_detalle_view(self):
@@ -221,12 +248,10 @@ class AuditoriaDetalleViewTest(TestCase):
         self.assertTemplateUsed(response, 'auditoria_detalle.html')
 
 
-class ControlInternoDetalleViewTest(TestCase):
+class ControlInternoDetalleViewTest(LoggedIn):
 
     def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
+        super().setUp()
         ControlInterno.objects.create()
 
     def test_control_interno_detalle_view(self):
@@ -235,12 +260,10 @@ class ControlInternoDetalleViewTest(TestCase):
         self.assertTemplateUsed(response, 'control_detalle.html')
 
 
-class IntervencionDetalleViewTest(TestCase):
+class IntervencionDetalleViewTest(LoggedIn):
 
     def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
+        super().setUp()
         Intervencion.objects.create(id=1)
 
     def test_intervencion_detalle_view(self):
