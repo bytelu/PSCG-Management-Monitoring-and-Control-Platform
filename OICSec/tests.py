@@ -1,14 +1,17 @@
 import datetime
 import os
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client
 from django.urls import reverse
 
 from .forms import AuditoriaForm, ControlForm, IntervencionForm
-from .models import ActividadFiscalizacion, Oic, Auditoria, ControlInterno, Intervencion
-from .views import convert_to_date
+from .models import ActividadFiscalizacion, Oic, Auditoria, ControlInterno, Intervencion, TipoIntervencion, Cedula, \
+    ConceptoCedula, Minuta, ConceptoMinuta, Archivo
+from .signals import is_last_record_in_activity
+from .views import convert_to_date, clean_oic_text, get_most_similar_tipo_intervencion
 
 
 class LoggedIn(TestCase):
@@ -346,3 +349,190 @@ class UploadPaciViewTest(LoggedIn):
         self.assertEqual(response.status_code, 200)
         self.assertIn('excel_processing_error', response.context)
         self.assertIn('Error al procesar el archivo Excel', response.context['excel_processing_error'])
+
+
+class CleanOicTextTestCase(TestCase):
+
+    def test_clean_oic_text(self):
+        self.assertEqual(clean_oic_text('Órgano Interno de Control en la Secretaría de Salud'),
+                         'la secretaría de salud')
+        self.assertEqual(
+            clean_oic_text('Órgano Interno de Control en la Secretaría de la Defensa Nacional de la Ciudad de México'),
+            'la secretaría de la defensa nacional')
+
+        self.assertEqual(clean_oic_text('Secretaría de Hacienda y Crédito Público'),
+                         'secretaría de hacienda y crédito público')
+
+        self.assertEqual(clean_oic_text('Órgano Interno de Control'), 'órgano interno de control')
+
+
+class GetMostSimilarTipoIntervencionTestCase(TestCase):
+
+    def setUp(self):
+        self.tipo1 = TipoIntervencion.objects.create(tipo='Financiera')
+        self.tipo2 = TipoIntervencion.objects.create(tipo='Gestión')
+        self.tipo3 = TipoIntervencion.objects.create(tipo='Cumplimiento')
+
+    def test_get_most_similar_tipo_intervencion(self):
+        # Entrada exacta
+        result = get_most_similar_tipo_intervencion('Financiera')
+        self.assertEqual(result, self.tipo1)
+
+        # Entrada similar
+        result = get_most_similar_tipo_intervencion('Financiera')
+        self.assertEqual(result, self.tipo1)
+
+        # Entrada parcialmente similar
+        result = get_most_similar_tipo_intervencion('Auditoría de Cumplimiento')
+        self.assertEqual(result, self.tipo3)
+
+
+class UploadPintViewTestCase(LoggedIn):
+
+    def setUp(self):
+        super().setUp()
+        self.oic = Oic.objects.create(nombre='OIC Test')
+        self.tipo_intervencion = TipoIntervencion.objects.create(clave='14', tipo='Verificación')
+
+    def test_upload_pint_view(self):
+        fixtures_dir = os.path.join(os.path.dirname(__file__), 'fixtures', 'test_documents')
+        excel_file_path = os.path.join(fixtures_dir, 'test_pint.docx')
+        with open(excel_file_path, 'rb') as word_file:
+            file_content = word_file.read()
+        word_file = SimpleUploadedFile("test_pint.docx", file_content,
+                                       content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        response = self.client.post(reverse('uploadPint'), {'word_files': [word_file]})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Intervencion.objects.exists())
+        self.assertTrue(Cedula.objects.exists())
+        self.assertTrue(ConceptoCedula.objects.exists())
+
+    def test_upload_pint_view_no_files(self):
+        response = self.client.post(reverse('uploadPint'), {})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Error al procesar los archivos')
+
+
+def create_and_register_file(related_instance, filename):
+    file_path = ''
+    if isinstance(related_instance, Cedula):
+        file_path = os.path.join(settings.BASE_DIR, 'media', 'cedulas', filename)
+    elif isinstance(related_instance, Minuta):
+        file_path = os.path.join(settings.BASE_DIR, 'media', 'minutas', filename)
+
+    with open(file_path, 'w') as f:
+        f.write(filename)
+
+    archivo = Archivo.objects.create(
+        archivo=file_path,
+        nombre=filename,
+    )
+
+    related_instance.id_archivo = archivo
+    related_instance.save()
+
+    return file_path
+
+
+class DeleteViewTests(LoggedIn):
+    def setUp(self):
+        super().setUp()
+        self.actividadA = ActividadFiscalizacion.objects.create()
+        self.actividadB = ActividadFiscalizacion.objects.create()
+
+        self.cedulaAuditoria = Cedula.objects.create()
+        ConceptoCedula.objects.create(id_cedula=self.cedulaAuditoria)
+
+        self.cedulaIntervencion = Cedula.objects.create()
+        ConceptoCedula.objects.create(id_cedula=self.cedulaIntervencion)
+
+        self.cedulaControl = Cedula.objects.create()
+        ConceptoCedula.objects.create(id_cedula=self.cedulaControl)
+
+        self.minutaA = Minuta.objects.create(id_actividad_fiscalizacion=self.actividadA)
+        ConceptoMinuta.objects.create(id_minuta=self.minutaA)
+        self.minutaB = Minuta.objects.create(id_actividad_fiscalizacion=self.actividadB)
+        ConceptoMinuta.objects.create(id_minuta=self.minutaB)
+
+        self.auditoria = Auditoria.objects.create(id_actividad_fiscalizacion=self.actividadA, id_cedula=self.cedulaAuditoria)
+        self.intervencion = Intervencion.objects.create(id_actividad_fiscalizacion=self.actividadA, id_cedula=self.cedulaIntervencion)
+        self.controlinterno = ControlInterno.objects.create(id_actividad_fiscalizacion=self.actividadB, id_cedula=self.cedulaControl)
+
+        self.file_auditoria_path = create_and_register_file(self.cedulaAuditoria, 'cedula_auditoria.xlsx')
+        self.file_intervencion_path = create_and_register_file(self.cedulaIntervencion, 'cedula_intervencion.xlsx')
+        self.file_control_path = create_and_register_file(self.cedulaControl, 'cedula_control.xlsx')
+        self.file_minutaA_path = create_and_register_file(self.minutaA, 'minuta_a.docx')
+        self.file_minutaB_path = create_and_register_file(self.minutaB, 'minuta_b.docx')
+
+    def tearDown(self):
+        files_to_delete = [
+            self.file_auditoria_path,
+            self.file_intervencion_path,
+            self.file_control_path,
+            self.file_minutaA_path,
+            self.file_minutaB_path,
+        ]
+
+        for file_path in files_to_delete:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+    def assert_common_deletion_checks(self, instance, cedula, file_path, minuta, minuta_file_path, still_exists=True):
+        self.assertFalse(type(instance).objects.filter(pk=instance.pk).exists())
+        self.assertFalse(Cedula.objects.filter(pk=cedula.pk).exists())
+        self.assertFalse(ConceptoCedula.objects.filter(id_cedula=cedula).exists())
+        self.assertFalse(Archivo.objects.filter(pk=cedula.id_archivo.id).exists())
+        self.assertFalse(os.path.exists(file_path))
+
+        if still_exists:
+            self.assertTrue(Minuta.objects.filter(pk=minuta.pk).exists())
+            self.assertTrue(ConceptoMinuta.objects.filter(id_minuta=minuta).exists())
+            self.assertTrue(os.path.exists(minuta_file_path))
+        else:
+            self.assertFalse(Minuta.objects.filter(pk=minuta.pk).exists())
+            self.assertFalse(ConceptoMinuta.objects.filter(id_minuta=minuta).exists())
+            self.assertFalse(os.path.exists(minuta_file_path))
+
+    def test_delete_auditoria_view(self):
+        response = self.client.post(reverse('auditoria-delete', kwargs={'pk': self.auditoria.pk}))
+        self.assertEqual(response.status_code, 302)
+        self.assert_common_deletion_checks(
+            self.auditoria,
+            self.cedulaAuditoria,
+            self.file_auditoria_path,
+            self.minutaA,
+            self.file_minutaA_path,
+            still_exists=True
+        )
+
+    def test_delete_intervencion_view(self):
+        response = self.client.post(reverse('intervencion-delete', kwargs={'pk': self.intervencion.pk}))
+        self.assertEqual(response.status_code, 302)
+        self.assert_common_deletion_checks(
+            self.intervencion,
+            self.cedulaIntervencion,
+            self.file_intervencion_path,
+            self.minutaA,
+            self.file_minutaA_path,
+            still_exists=True
+        )
+
+    def test_delete_controlinterno_view(self):
+        response = self.client.post(reverse('controlinterno-delete', kwargs={'pk': self.controlinterno.pk}))
+        self.assertEqual(response.status_code, 302)
+        self.assert_common_deletion_checks(
+            self.controlinterno,
+            self.cedulaControl,
+            self.file_control_path,
+            self.minutaB,
+            self.file_minutaB_path,
+            still_exists=False
+        )
+
+    def test_is_last_record_in_activity(self):
+        self.assertFalse(is_last_record_in_activity(self.auditoria))
+        self.intervencion.delete()
+        self.assertTrue(is_last_record_in_activity(self.auditoria))
+        self.assertTrue(is_last_record_in_activity(self.controlinterno))
+
