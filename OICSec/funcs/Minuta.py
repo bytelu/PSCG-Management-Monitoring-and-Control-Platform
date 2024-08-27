@@ -196,6 +196,7 @@ def generate_temp(origen: str, destino: str) -> Optional[str]:
     """
     temp_destino = os.path.join(destino, "temp.docx")
     try:
+        os.makedirs(os.path.dirname(temp_destino), exist_ok=True)
         shutil.copy(origen, temp_destino)
         return temp_destino
     except (FileNotFoundError, PermissionError) as e:
