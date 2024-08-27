@@ -163,3 +163,7 @@ cython_debug/
 
 # Plugins
 .idea
+
+# Private Directories
+/media/cedulas/
+/media/minutas/
