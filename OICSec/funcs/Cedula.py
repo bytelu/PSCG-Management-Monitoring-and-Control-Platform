@@ -242,6 +242,7 @@ def cedula(kind: int, data: SupervisionData, conceptos: ConceptosLista) -> Optio
     file_name = file_name.replace('/', '_')
     output_dir = os.path.normpath(os.path.join(script_dir, '../../media/cedulas'))
     abs_output_path = os.path.join(output_dir, file_name)
+    os.makedirs(os.path.dirname(abs_output_path), exist_ok=True)
     workbook.save(abs_output_path)
 
     return abs_output_path
