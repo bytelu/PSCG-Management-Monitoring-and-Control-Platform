@@ -68,13 +68,13 @@ def get_filtered_objects(request, model, template_name):
         Intervencion: "intervenciones",
         ActividadFiscalizacion: "actividad_fiscalizacion"
     }
-    mode = mapping.get(model) == 'actividad_fiscalizacion'
-    if mode:
+    is_actividad_fiscalizacion = (mapping.get(model) == 'actividad_fiscalizacion')
+    if is_actividad_fiscalizacion:
         oics_name_query = 'id_oic__nombre'
-        order_query = 'trimestre'
+        order_query = ['anyo', 'trimestre']
     else:
         oics_name_query = 'id_actividad_fiscalizacion__id_oic__nombre'
-        order_query = 'id_actividad_fiscalizacion__anyo'
+        order_query = ['id_actividad_fiscalizacion__id_oic', 'id_actividad_fiscalizacion__anyo', 'id_actividad_fiscalizacion__trimestre', 'numero']
 
     nombres_oics = model.objects.values_list(oics_name_query, flat=True).distinct()
     lista_oics = Oic.objects.filter(nombre__in=nombres_oics).distinct()
@@ -82,31 +82,36 @@ def get_filtered_objects(request, model, template_name):
 
     oic_id = request.GET.get('oic_id')
     anyo = request.GET.get('anyo')
+    filter_oic_band = oic_id == 'None'
+    filter_anyo_band = anyo == 'None'
 
-    if mode:
-        if oic_id and anyo:
-            objects = model.objects.filter(id_oic=oic_id,
-                                           anyo=anyo)
-        elif oic_id:
-            objects = model.objects.filter(id_oic=oic_id)
-        elif anyo:
-            objects = model.objects.filter(anyo=anyo)
+    filter_kwargs = {}
+    if oic_id:
+        if oic_id == 'None':
+            oic_id = None
+        if is_actividad_fiscalizacion:
+            filter_kwargs['id_oic'] = oic_id
         else:
-            objects = model.objects.all()
-    else:
-        if oic_id and anyo:
-            objects = model.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id,
-                                           id_actividad_fiscalizacion__anyo=anyo)
-        elif oic_id:
-            objects = model.objects.filter(id_actividad_fiscalizacion__id_oic=oic_id)
-        elif anyo:
-            objects = model.objects.filter(id_actividad_fiscalizacion__anyo=anyo)
-        else:
-            objects = model.objects.all()
+            filter_kwargs['id_actividad_fiscalizacion__id_oic'] = oic_id
 
-    paginator = Paginator(objects.order_by(order_query), 10)
+    if anyo:
+        if anyo == 'None':
+            anyo = None
+        if is_actividad_fiscalizacion:
+            filter_kwargs['anyo'] = anyo
+        else:
+            filter_kwargs['id_actividad_fiscalizacion__anyo'] = anyo
+
+    objects = model.objects.filter(**filter_kwargs).order_by(*order_query)
+
+    paginator = Paginator(objects, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    if filter_oic_band:
+        oic_id = str(oic_id)
+    if filter_anyo_band:
+        anyo = str(anyo)
 
     context = {
         'page_obj': page_obj,
@@ -114,9 +119,8 @@ def get_filtered_objects(request, model, template_name):
         'lista_anyos': lista_anyos,
         'oic_id': oic_id,
         'anyo': anyo,
+        mapping.get(model): objects
     }
-
-    context.update({mapping.get(model): objects})
 
     return render(request, template_name, context)
 

@@ -5,24 +5,36 @@
 {% block content %}
     <style>
         .list-group-item {
+            margin-top: 10px;
             margin-bottom: 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 30px !important;
+            transition: background-color 1ms ease;
+        }
+
+        .list-group-item:hover {
+            background-color: #f0f0f0;
         }
 
         .list-group-item a {
             font-weight: bold;
-            color: #a9a9a9;
+            color: inherit;
             text-decoration: none;
         }
 
-        .list-group-item a:hover {
-            color: #000000; /* Cambia el color al azul al pasar el ratón */
+        .auditoria-number {
+            font-size: 1.4em;
+            color: #203342;
+            font-weight: bold;
+            transition: color 0.3s ease;
         }
 
-        .auditoria-number {
-            font-size: 1.2em;
-            color: #28a745; /* Verde para el número de auditoría */
+        .text-muted small {
+            font-size: 0.85em;
+            color: #999999;
+        }
+
+        .btn-modal {
+            z-index: 1;
         }
 
         .pagination .page-link {
@@ -45,6 +57,16 @@
         .pagination .page-item.disabled .page-link {
             background-color: #ffffff;
             border-color: #6c757d;
+        }
+
+        .pagination .page-link:focus,
+        .pagination .page-link:active {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .text-decoration-none:hover {
+            text-decoration: none;
         }
 
     </style>
@@ -102,19 +124,32 @@
         <!-- Auditorías -->
         <ul class="list-group">
             {% for auditoria in page_obj %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
+                <li class="list-group-item d-flex justify-content-between align-items-center"
+                    onclick="location.href='{% url 'auditoria_detalle' auditoria.id %}'" style="cursor: pointer;">
                     <div>
-                        <a href="{% url 'auditoria_detalle' auditoria.id %}" class="text_decoration_none">
+                        <div class="d-flex justify-content-between align-items-center">
                             <span class="auditoria-number">A-{{ auditoria.numero }}/{{ auditoria.id_actividad_fiscalizacion.anyo }}</span>
-                            | {{ auditoria.id_actividad_fiscalizacion.id_oic }}
-                        </a>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">{{ auditoria.id_actividad_fiscalizacion.id_oic }}</span>
+                        </div>
+                        <div class="text-muted">
+                            <small>Actividad de fiscalización:</small>
+                            <strong>{{ auditoria.id_actividad_fiscalizacion.trimestre }}/{{ auditoria.id_actividad_fiscalizacion.anyo }}</strong>
+                        </div>
                     </div>
+
                     <!-- Button trigger modal -->
                     <div>
-                        <button type="button" class="btn btn-outline-dark fas fa-plus" data-toggle="modal"
-                                data-target="#modal-{{ auditoria.id }}"></button>
+                        <button type="button" class="btn btn-outline-dark p-0 btn-modal"
+                                style="width: 40px; height: 40px; line-height: 40px;"
+                                onclick="$('#modal-{{ auditoria.id }}').modal('show');">
+                            <i class="fas fa-plus"></i>
+                        </button>
+
                     </div>
                 </li>
+
                 <!-- Modal -->
                 <div class="modal fade" id="modal-{{ auditoria.id }}" tabindex="-1" role="dialog"
                      aria-labelledby="modalLabel-{{ auditoria.id }}"
@@ -122,15 +157,15 @@
                     <div class="modal-dialog modal-dialog-centered" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="modalLabel-{{ auditoria.id }}">Selecciona una
-                                    opción:</h5>
+                                <h5 class="modal-title" id="modalLabel-{{ auditoria.id }}">Selecciona una opción:</h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
                             <div class="modal-body text-center">
                                 <p>{{ auditoria }}</p>
-                                <a href="{% url 'minuta' auditoria.id_actividad_fiscalizacion.id %}" class="btn btn-block btn-outline-dark mb-2">Minuta</a>
+                                <a href="{% url 'minuta' auditoria.id_actividad_fiscalizacion.id %}"
+                                   class="btn btn-block btn-outline-dark mb-2">Minuta</a>
                                 <a href="{% url 'auditoria_cedula' auditoria.id %}"
                                    class="btn btn-block btn-outline-dark mb-2">Cedula</a>
                             </div>
@@ -144,7 +179,9 @@
                         </div>
                     </div>
                 </div>
+
             {% endfor %}
+
         </ul>
     </div>
     <div class="container mt-3">
@@ -210,11 +247,18 @@
 
     <script>
         $(document).ready(function () {
-            $('.select2').select2({
-                theme: "bootstrap-5"
-            }).on('change', function () {
+            $('.select2').select2().on('change', function () {
                 $(this).closest('form').submit();
             });
         });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('.btn-modal').forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                });
+            });
+        });
+
     </script>
 {% endblock %}
