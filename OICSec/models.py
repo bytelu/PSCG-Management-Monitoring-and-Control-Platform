@@ -158,6 +158,14 @@ class ControlInternoObservacion(models.Model):
         db_table = 'control_interno_observacion'
 
 
+class Direccion(models.Model):
+    id = models.AutoField(primary_key=True)
+    direccion = models.CharField(max_length=1, choices=[('A', 'A'), ('B', 'B'), ('C', 'C')])
+
+    class Meta:
+        db_table = 'direccion'
+
+
 class Enfoque(models.Model):
     id = models.AutoField(primary_key=True)
     clave = models.IntegerField(blank=True, null=True)
@@ -303,6 +311,7 @@ class Observacion(models.Model):
 class Oic(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=150, blank=True, null=True)
+    id_direccion = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         db_table = 'oic'

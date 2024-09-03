@@ -1080,8 +1080,14 @@ def personal_view(request):
 
 @login_required
 def oics_view(request):
-    oics = Oic.objects.all()
+    oics = Oic.objects.exclude(nombre__in=['A', 'B', 'C'])
     return render(request, 'oics.html', {'oics': oics})
+
+
+@login_required
+def direcciones_view(request):
+    direcciones = Oic.objects.filter(nombre__in=['A', 'B', 'C'])
+    return render(request, 'direcciones.html', {'direcciones': direcciones})
 
 
 @login_required
@@ -1106,19 +1112,21 @@ def personal_oic_view(request, oic_id):
     return render(request, 'personal_oic.html', context)
 
 
-@login_required
-def personal_direccion_view(request):
-    personal = Personal.objects.filter(id_oic=None, estado=1)
-    try:
-        director = CargoPersonal.objects.get(id_personal__in=personal, id_tipo_cargo=1).id_personal
-    except CargoPersonal.DoesNotExist:
-        director = None
+def personal_direccion_view(request, direccion_nombre):
+    oic = get_object_or_404(Oic, nombre=direccion_nombre)
+    personal = Personal.objects.filter(id_oic=oic.id, estado=1)
 
-    if director:
-        personal = personal.exclude(id=director.id)
+    try:
+        titular = CargoPersonal.objects.get(id_personal__in=personal, id_tipo_cargo=1).id_personal
+    except CargoPersonal.DoesNotExist:
+        titular = None
+
+    if titular:
+        personal = personal.exclude(id=titular.id)
 
     context = {
-        'director': director,
+        'oic': oic,
+        'director': titular,
         'personal': personal
     }
 
@@ -1174,7 +1182,7 @@ def editar_director_view(request, personal_id):
         persona_form = PersonaForm(request.POST, instance=persona)
         if persona_form.is_valid():
             persona_form.save()
-            return redirect('editar_director', personal_id=personal_id)
+            return redirect('personal_direccion', direccion_nombre=personal.id_oic.id_direccion.direccion)
     else:
         persona_form = PersonaForm(instance=persona)
 
@@ -1220,7 +1228,8 @@ def eliminar_titular_view(request, personal_id):
 
 @login_required
 def eliminar_director_view(request, personal_id):
-    return eliminar_personal_view(request, personal_id, 'personal_direccion')
+    direccion = Personal.objects.get(id=personal_id).id_oic.id_direccion.direccion
+    return eliminar_personal_view(request, personal_id, 'personal_direccion', direccion)
 
 
 @login_required
@@ -1370,15 +1379,15 @@ def crear_titular_view(request, oic_id):
 
 
 @login_required
-def crear_director_view(request):
+def crear_director_view(request, direccion_nombre):
     if request.method == 'POST':
         director_form = PersonaForm(request.POST)
         if director_form.is_valid():
             director = director_form.save()
-
+            oic_personal = Oic.objects.get(nombre=direccion_nombre)
             # Buscar y desactivar el director actual
             tipo_cargo_director = get_object_or_404(TipoCargo, id=1)
-            personal_actual = Personal.objects.filter(id_oic=None, cargopersonal__id_tipo_cargo=tipo_cargo_director,
+            personal_actual = Personal.objects.filter(id_oic=oic_personal, cargopersonal__id_tipo_cargo=tipo_cargo_director,
                                                       estado=1).first()
             if personal_actual:
                 personal_actual.estado = 0
@@ -1387,7 +1396,7 @@ def crear_director_view(request):
             # Crear el nuevo personal con el nuevo titular
             nuevo_personal = Personal.objects.create(
                 estado=1,
-                id_oic_id=None,
+                id_oic=oic_personal,
                 id_persona=director
             )
 
@@ -1398,13 +1407,14 @@ def crear_director_view(request):
                 id_personal=nuevo_personal
             )
 
-            return redirect('personal_direccion')
+            return redirect('personal_direccion', direccion_nombre)
 
     else:
         director_form = PersonaForm()
 
     context = {
-        'titular_form': director_form
+        'titular_form': director_form,
+        'direccion_nombre': direccion_nombre
     }
     return render(request, 'crear_director.html', context)
 

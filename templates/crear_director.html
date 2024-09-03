@@ -3,9 +3,9 @@
 {% block content %}
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Crear Director de Coordinación de Órganos Internos de Control Sectorial “C”</h2>
+            <h2>Crear Director de Coordinación de Órganos Internos de Control Sectorial “{{ direccion_nombre }}”</h2>
             <div class="d-flex">
-                <a href="{% url 'personal_direccion' %}" class="btn btn-outline-dark">
+                <a href="{% url 'personal_direccion' direccion_nombre  %}" class="btn btn-outline-dark">
                     <i class="fas fa-arrow-left"></i>
                 </a>
             </div>

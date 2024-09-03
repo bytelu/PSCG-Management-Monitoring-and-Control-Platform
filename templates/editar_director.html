@@ -1,5 +1,5 @@
 {% extends 'navbar.html' %}
-{% block title %}Editar titular{% endblock %}
+{% block title %}Editar director{% endblock %}
 {% block content %}
     <div class="container mt-5 mb-3">
         <!-- Mensaje de advertencia -->
@@ -11,7 +11,7 @@
             <div class="d-flex justify-content-center">
                 <div class="card w-100">
                     <div class="card-body d-flex flex-column justify-content-center">
-                        <h2 class="text-center">Editar Director de Coordinación de Órganos Internos de Control Sectorial “C”</h2>
+                        <h2 class="text-center">Editar Director de Coordinación de Órganos Internos de Control Sectorial “{{ personal.id_oic.id_direccion.direccion }}”</h2>
                         <form method="post" class="text-center">
                             {% csrf_token %}
                             {{ persona_form.as_p }}
@@ -24,7 +24,7 @@
     </div>
 
     <div class="d-flex justify-content-center mb-3">
-        <a href="{% url 'personal_direccion' %}" class="btn btn-outline-dark btn-lg">
+        <a href="{% url 'personal_direccion' personal.id_oic.id_direccion.direccion %}" class="btn btn-outline-dark btn-lg">
             <i class="fas fa-arrow-left"></i>
         </a>
         <a href="{% url 'eliminar_director' personal.id %}" class="btn btn-danger btn-lg ml-3">Eliminar</a>

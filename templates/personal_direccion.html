@@ -43,19 +43,19 @@
                 </div>
             </div>
             <!-- Button to go back -->
-            <a href="{% url 'personal' %}" class="btn btn-outline-dark ml-2">
+            <a href="{% url 'direcciones' %}" class="btn btn-outline-dark ml-2">
                 <i class="fas fa-arrow-left"></i>
             </a>
         </div>
     </div>
-    <div><h5 class="display-8">Dirección de Coordinación de Órganos Internos de Control Sectorial "C"</h5></div>
+    <div><h5 class="display-8">Dirección de Coordinación de Órganos Internos de Control Sectorial "{{ oic.nombre }}"</h5></div>
 
     <div class="mt-5">
         <h2 class="mb-4">Director</h2>
         <div class="row">
             {% if director %}
                 <div class="oic-card col-12 col-md-4 mb-4">
-                    <a href="{% url 'editar_director' director.id %}"
+                    <a href="{% url 'editar_director_view' director.id %}"
                        class="text-decoration-none text-dark custom-card-link">
                         <div class="card h-100 text-center">
                             <div class="card-body d-flex flex-column justify-content-center">
@@ -129,7 +129,7 @@
                         </button>
                     </div>
                     <div>
-                        <a href="{% url 'crear_director' %}" class="btn btn-outline-danger btn-block">Aceptar</a>
+                        <a href="{% url 'crear_director' oic.nombre %}" class="btn btn-outline-danger btn-block">Aceptar</a>
                     </div>
                 </div>
             </div>

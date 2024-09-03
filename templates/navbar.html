@@ -353,15 +353,15 @@
 
     <!-- Botón principal de Personal -->
     <a href="javascript:void(0)"
-       class="dropdown-toggle {% if request.path == '/OICSec/personal/' or request.path == '/OICSec/personal/direccion/' or request.path == '/OICSec/personal/oics/' %}active{% endif %}"
+       class="dropdown-toggle {% if request.path == '/OICSec/personal/' or request.path == '/OICSec/personal/direcciones/' or request.path == '/OICSec/personal/oics/' %}active{% endif %}"
        onclick="toggleSubMenu('personalSubMenu')">
         <i class="fas fa-users"></i> <span>Personal</span>
     </a>
     <div id="personalSubMenu" class="sub-menu">
         <a href="{% url 'personal' %}" class="{% if request.path == '/OICSec/personal/' %}active{% endif %}">Mostrar
             Personal</a>
-        <a href="{% url 'personal_direccion' %}"
-           class="{% if request.path == '/OICSec/personal/direccion/' %}active{% endif %}">Dirección</a>
+        <a href="{% url 'direcciones' %}"
+           class="{% if request.path == '/OICSec/personal/direcciones/' %}active{% endif %}">Direcciones</a>
         <a href="{% url 'oics' %}" class="{% if request.path == '/OICSec/personal/oics/' %}active{% endif %}">OIC's</a>
     </div>
 
