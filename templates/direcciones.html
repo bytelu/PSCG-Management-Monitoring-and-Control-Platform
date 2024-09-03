@@ -17,6 +17,9 @@
                         <div class="card h-100 text-center">
                             <div class="card-body d-flex flex-column justify-content-center align-items-center p-3">
                                 <h5 class="card-title">{{ oic.nombre }}</h5>
+                                <div class="icon-container mt-auto">
+                                    <i class="fas fa-users fa-3x"></i>
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -27,27 +30,27 @@
 
     <style>
         .card {
-            min-height: 120px; /* Reducir la altura mínima */
-            background-color: #f8f9fa; /* Fondo suave */
-            border: 1px solid #dee2e6; /* Borde ligero */
-            border-radius: 8px; /* Bordes redondeados */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Animación suave al pasar el ratón */
+            min-height: 420px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
 
         .card:hover {
-            transform: translateY(-1px); /* Efecto de elevación al pasar el ratón */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Sombra más intensa al pasar el ratón */
+            transform: translate3d(3px, 3px, 10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .card-title {
-            font-size: 15rem; /* Tamaño grande, pero ajustado */
-            font-weight: 600; /* Negrita moderada */
-            color: #343a40; /* Color oscuro */
+            font-size: 15rem;
+            font-weight: 600;
+            color: #343a40;
         }
 
         .custom-card-link:hover .card-title {
-            color: #000000; /* Color azul al pasar el ratón */
+            color: #000000;
         }
 
         .custom-card-link:hover {
@@ -55,13 +58,13 @@
         }
 
         .oic-card {
-            padding: 0; /* Eliminar padding adicional */
+            padding: 0;
         }
 
         #oic-container {
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-around; /* Distribuir cards uniformemente */
+            justify-content: space-around;
         }
     </style>
 {% endblock %}
