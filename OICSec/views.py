@@ -1240,7 +1240,8 @@ def eliminar_personal_oic_view(request, personal_id):
 
 @login_required
 def eliminar_personal_direccion_view(request, personal_id):
-    return eliminar_personal_view(request, personal_id, 'personal_direccion')
+    direccion = Personal.objects.get(id=personal_id).id_oic.id_direccion.direccion
+    return eliminar_personal_view(request, personal_id, 'personal_direccion', direccion)
 
 
 @login_required
@@ -1446,9 +1447,10 @@ def crear_personal_view(request, oic_id):
 
 
 @login_required
-def crear_personal_direccion_view(request):
+def crear_personal_direccion_view(request, direccion_nombre):
     if request.method == 'POST':
         personal_form = CrearTitularForm(request.POST)
+        oic_personal = Oic.objects.get(nombre=direccion_nombre)
         if personal_form.is_valid():
             personal = personal_form.save()
 
@@ -1456,7 +1458,7 @@ def crear_personal_direccion_view(request):
 
             new_personal = Personal.objects.create(
                 estado=1,
-                id_oic=None,
+                id_oic=oic_personal,
                 id_persona=personal
             )
 
@@ -1469,13 +1471,14 @@ def crear_personal_direccion_view(request):
                 id_tipo_cargo=tipo_cargo_personal_direccion
             )
 
-            return redirect('personal_direccion')
+            return redirect('personal_direccion', direccion_nombre)
 
     else:
         personal_form = CrearTitularForm()
 
     context = {
-        'personal_form': personal_form
+        'personal_form': personal_form,
+        'direccion_nombre': direccion_nombre
     }
     return render(request, 'crear_personal_direccion.html', context)
 

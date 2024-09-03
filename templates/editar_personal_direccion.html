@@ -43,7 +43,7 @@
         </div>
     </div>
     <div class="d-flex justify-content-center mb-3">
-        <a href="{% url 'personal_direccion' %}" class="btn btn-outline-dark btn-lg">
+        <a href="{% url 'personal_direccion' personal.id_oic.nombre %}" class="btn btn-outline-dark btn-lg">
             <i class="fas fa-arrow-left"></i>
         </a>
         <a href="{% url 'eliminar_personal_direccion' personal.id %}" class="btn btn-danger btn-lg ml-3">Eliminar</a>
