@@ -1508,10 +1508,11 @@ def limpiar_personal_oic(request, oic_id):
 
 
 @login_required
-def limpiar_personal_direccion(request):
-    personal = Personal.objects.filter(id_oic=None)
+def limpiar_personal_direccion(request, direccion_nombre):
+    oic_direccion = Oic.objects.get(nombre=direccion_nombre)
+    personal = Personal.objects.filter(id_oic=oic_direccion)
     personal.update(estado=0)
-    return redirect('personal_direccion')
+    return redirect('personal_direccion', direccion_nombre)
 
 
 @login_required

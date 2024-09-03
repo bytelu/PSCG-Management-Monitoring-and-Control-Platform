@@ -84,5 +84,5 @@ urlpatterns = [
          crear_personal_direccion_view, name='crear_personal_direccion'),
     path("download/<int:archivo_id>/", download_archivo, name='download_archivo'),
     path("personal/oics/<int:oic_id>/limpiar", limpiar_personal_oic, name='limpiar_personal_oic'),
-    path("personal/direccion/limpiar", limpiar_personal_direccion, name='limpiar_personal_direccion'),
+    path("personal/direcciones/<str:direccion_nombre>/limpiar", limpiar_personal_direccion, name='limpiar_personal_direccion'),
 ]
