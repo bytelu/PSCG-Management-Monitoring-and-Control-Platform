@@ -688,11 +688,12 @@ def minuta_view(request, fiscalizacion_id):
     return render(request, 'minuta.html', context)
 
 
-def get_or_create_minuta_personal(minuta, tipo_personal, cargo_id, oic=None):
+def get_or_create_minuta_personal(minuta, tipo_personal, cargo_id, oic):
     minuta_personal = MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=tipo_personal).first()
     if not minuta_personal:
         cargo = TipoCargo.objects.filter(id=cargo_id).first()
-        personal_actual = Personal.objects.filter(id_oic=oic, estado=1, cargopersonal__id_tipo_cargo=cargo).first()
+        direccion = oic.id_direccion.direccion
+        personal_actual = Personal.objects.filter(id_oic__id_direccion__direccion=direccion, estado=1, cargopersonal__id_tipo_cargo=cargo).first()
         if not personal_actual:
             return 'Error'
         minuta_personal = MinutaPersonal.objects.create(
@@ -927,20 +928,20 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
         minuta_inicio = minuta.inicio if minuta.inicio else datetime.datetime.now()
         minuta_fin = minuta.fin if minuta.fin else datetime.datetime.now()
 
-        minuta_director = get_or_create_minuta_personal(minuta, 1, 1)
-        minuta_judc = get_or_create_minuta_personal(minuta, 2, 2)
+        minuta_director = get_or_create_minuta_personal(minuta, 1, 1, oic)
+        minuta_judc = get_or_create_minuta_personal(minuta, 2, 2, oic)
         minuta_titular = get_or_create_minuta_personal(minuta, 3, 6, oic)
         minuta_personaloic = get_or_create_minuta_personal(minuta, 4, 7, oic)
         if minuta_director == 'Error' or minuta_judc == 'Error':
             messages.error(request,
                            'Hubo un error con el personal de la dirección, verifica que estos esten registrados '
                            'correctamente.')
-            return redirect('personal_direccion')
+            return redirect('personal_direccion', oic.id_direccion.direccion)
         if minuta_titular == 'Error' or minuta_personaloic == 'Error':
             messages.error(request,
                            'Hubo un error con el personal del OIC, verifica que estos esten registrados correctamente.')
             return redirect('personal_oic', oic.id)
-        judc = get_personal_list(None, 2, minuta_judc)
+        judc = get_personal_list(Oic.objects.get(nombre=oic.id_direccion.direccion), 2, minuta_judc)
         personal = get_personal_list(oic, 7, minuta_personaloic)
 
         context = {
