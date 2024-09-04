@@ -1521,3 +1521,16 @@ def logout_view(request):
     logout(request)
     messages.info(request, 'Has cerrado sesión exitosamente.')
     return redirect('login')
+
+
+@login_required
+def estructuras_view(request):
+    return render(request, 'estructuras.html')
+
+@login_required
+def estructuras_oics_view(request):
+    return render(request, 'wip.html')
+
+@login_required
+def estructuras_actividades_view(request):
+    return render(request, 'wip.html')
