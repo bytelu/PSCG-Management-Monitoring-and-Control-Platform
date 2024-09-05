@@ -15,7 +15,8 @@ class BaseForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
     id_oic = forms.ModelChoiceField(
-        queryset=Oic.objects.all(),
+        # Se excluyen las entidades destinadas a identificación de personal de direcciones.
+        queryset = Oic.objects.exclude(nombre__in=["A", "B", "C"]),
         label='OIC',
         required=False,
         widget=forms.Select(attrs={'class': 'form-control select2'})
