@@ -3,7 +3,7 @@
 {% block content %}
     <div class="container-fluid p-0">
         <!-- Banner Section -->
-        <div class="jumbotron jumbotron-fluid bg-light rounded-0 banner m-0" style="position: relative; width: 100%;">
+        <div class="jumbotron jumbotron-fluid bg-light rounded-0 banner m-0 rellax" data-rellax-speed="-3" style="position: relative; width: 100%;">
             <div class="banner-overlay"></div>
             <div class="container text-center banner-content">
                 <h1 class="display-4 font-weight-bold text-outline">¡Hola, {{ user.first_name }}!</h1>
@@ -26,7 +26,7 @@
                         <i class="fas fa-database fa-3x mb-3 text-dark"></i>
                         <h4 class="card-title font-weight-bold">Gestión de Datos</h4>
                         <p class="card-text">Registra, gestiona y modifica información de auditorías, intervenciones y
-                            controles internos. Administra el personal de direcciones y órganos internos de control, asi
+                            controles internos. Administra el personal de direcciones y órganos internos de control, así
                             como más información relevante.</p>
                     </div>
                 </div>
@@ -74,11 +74,10 @@
 
     <style>
         .banner {
-            width: auto;
             background-image: url('https://images.unsplash.com/photo-1493794179168-82ca7cb00437?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
             background-size: cover;
-            background-position: center;
-            height: fixed;
+            background-position: top;
+            height: 70vh;
             margin-bottom: 0;
             display: flex;
             align-items: center;
@@ -142,4 +141,16 @@
             padding: 2rem;
         }
     </style>
+
+    <script>
+        // Inicializa Rellax para el efecto parallax
+        var rellax = new Rellax('.rellax', {
+            speed: -2,
+            center: true,
+            wrapper: null,
+            round: true,
+            vertical: true,
+            horizontal: false
+        });
+    </script>
 {% endblock %}
