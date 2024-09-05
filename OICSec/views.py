@@ -258,46 +258,72 @@ def get_or_create_actividad_fiscalizacion(data, oic):
     return actividad_fiscalizacion
 
 
-def create_auditoria(auditoria_data, actividad_fiscalizacion):
+def create_or_update_auditoria(auditoria_data, actividad_fiscalizacion):
+    # Se preparan los datos para ser guardados
     materia_obj = get_related_object(Materia, auditoria_data["Materia"])
     programacion_obj = get_related_object(Programacion, auditoria_data["Programacion"])
     enfoque_obj = get_related_object(Enfoque, auditoria_data["Enfoque"])
     temporalidad_obj = get_related_object(Temporalidad, auditoria_data["Temporalidad"])
+    # Se busca si no existe una auditoria con el numero, y actividad de fiscalizacion iguales
+    auditoria = Auditoria.objects.filter(numero=auditoria_data["Numero"], id_actividad_fiscalizacion=actividad_fiscalizacion).first()
 
-    cedula_obj = Cedula.objects.create()
-    Auditoria.objects.create(
-        denominacion=auditoria_data["Denominacion"],
-        numero=auditoria_data["Numero"],
-        objetivo=auditoria_data["Objetivo"],
-        alcance=auditoria_data["Alcance"],
-        ejercicio=auditoria_data["Ejercicio"],
-        unidad=auditoria_data["Unidad"],
-        id_actividad_fiscalizacion=actividad_fiscalizacion,
-        id_materia=materia_obj,
-        id_programacion=programacion_obj,
-        id_enfoque=enfoque_obj,
-        id_temporalidad=temporalidad_obj,
-        id_cedula=cedula_obj
-    )
-    create_conceptos_cedula(cedula_obj, 60)
+    # Si no existe algun coincidente se crea una nueva auditoria, en caso contrario, se actualizan los daots
+    if auditoria is None:
+        cedula_obj = Cedula.objects.create()
+        Auditoria.objects.create(
+            denominacion=auditoria_data["Denominacion"],
+            numero=auditoria_data["Numero"],
+            objetivo=auditoria_data["Objetivo"],
+            alcance=auditoria_data["Alcance"],
+            ejercicio=auditoria_data["Ejercicio"],
+            unidad=auditoria_data["Unidad"],
+            id_actividad_fiscalizacion=actividad_fiscalizacion,
+            id_materia=materia_obj,
+            id_programacion=programacion_obj,
+            id_enfoque=enfoque_obj,
+            id_temporalidad=temporalidad_obj,
+            id_cedula=cedula_obj
+        )
+        create_conceptos_cedula(cedula_obj, 60)
+    else:
+        # Actualizar los datos de la auditoria existente
+        auditoria.denominacion = auditoria_data["Denominacion"]
+        auditoria.objetivo = auditoria_data["Objetivo"]
+        auditoria.alcance = auditoria_data["Alcance"]
+        auditoria.ejercicio = auditoria_data["Ejercicio"]
+        auditoria.unidad = auditoria_data["Unidad"]
+        auditoria.id_materia = materia_obj
+        auditoria.id_programacion = programacion_obj
+        auditoria.id_enfoque = enfoque_obj
+        auditoria.id_temporalidad = temporalidad_obj
+        auditoria.save()
 
 
-def create_control_interno(control_data, actividad_fiscalizacion):
+def create_or_update_control_interno(control_data, actividad_fiscalizacion):
     tipo_revision_obj = get_related_object(TipoRevision, control_data.get("tipo_revision"))
     programa_revision_obj = get_related_object(ProgramaRevision, control_data.get("programa_revision"))
 
-    cedula_obj = Cedula.objects.create()
-    ControlInterno.objects.create(
-        numero=control_data["Numero"],
-        area=control_data["Area"],
-        denominacion=control_data["Denominacion"],
-        objetivo=control_data["Objetivo"],
-        id_actividad_fiscalizacion=actividad_fiscalizacion,
-        id_tipo_revision=tipo_revision_obj,
-        id_programa_revision=programa_revision_obj,
-        id_cedula=cedula_obj
-    )
-    create_conceptos_cedula(cedula_obj, 55)
+    control_interno = ControlInterno.objects.filter(numero=control_data["Numero"], id_actividad_fiscalizacion=actividad_fiscalizacion).first()
+    if control_interno is None:
+        cedula_obj = Cedula.objects.create()
+        ControlInterno.objects.create(
+            numero=control_data["Numero"],
+            area=control_data["Area"],
+            denominacion=control_data["Denominacion"],
+            objetivo=control_data["Objetivo"],
+            id_actividad_fiscalizacion=actividad_fiscalizacion,
+            id_tipo_revision=tipo_revision_obj,
+            id_programa_revision=programa_revision_obj,
+            id_cedula=cedula_obj
+        )
+        create_conceptos_cedula(cedula_obj, 55)
+    else:
+        control_interno.area = control_data["Area"]
+        control_interno.denominacion = control_data["Denominacion"]
+        control_interno.objetivo = control_data["Objetivo"]
+        control_interno.id_tipo_revision = tipo_revision_obj
+        control_interno.id_programa_revision = programa_revision_obj
+        control_interno.save()
 
 
 def get_related_object(model, obj_id):
@@ -313,12 +339,12 @@ def create_conceptos_cedula(cedula, num_celdas):
 
 @login_required
 def upload_paci_view(request):
-    return upload_view(request, extract_func=extract_paci, template_name='upload_paci.html', create_func=create_control_interno)
+    return upload_view(request, extract_func=extract_paci, template_name='upload_paci.html', create_func=create_or_update_control_interno)
 
 
 @login_required
 def upload_paa_view(request):
-    return upload_view(request, extract_func=extract_paa, template_name='upload_paa.html', create_func=create_auditoria)
+    return upload_view(request, extract_func=extract_paa, template_name='upload_paa.html', create_func=create_or_update_auditoria)
 
 
 def clean_oic_text(organo: str):
@@ -405,7 +431,7 @@ def upload_pint_view(request):
                             id_oic=oic_selected
                         )
 
-                    # Crea una intervención nueva con la actividad de fiscalización
+                    # Se preparan los datos para la intervencion
                     tipo_intervencion_obj = None
                     if word_processing_result["Clave"]:
                         tipo_intervencion_obj = TipoIntervencion.objects.get(clave=word_processing_result["Clave"])
@@ -413,32 +439,51 @@ def upload_pint_view(request):
                         tipo_intervencion_obj = get_most_similar_tipo_intervencion(
                             word_processing_result['Tipo de Intervención'])
 
-                    cedula_obj = Cedula.objects.create()
-                    Intervencion.objects.create(
-                        unidad=word_processing_result.get('Área'),
-                        numero=word_processing_result.get('Numero'),
-                        denominacion=word_processing_result.get('Denominación'),
-                        ejercicio=word_processing_result.get('Ejercicio'),
-                        alcance=word_processing_result.get('Alcance y periodo'),
-                        antecedentes=word_processing_result.get('Antecedentes'),
-                        fuerza_auditores=word_processing_result.get('Auditores'),
-                        fuerza_responsables=word_processing_result.get('Responsable'),
-                        fuerza_supervision=word_processing_result.get('Supervisión'),
-                        inicio=convert_to_date(word_processing_result.get('Inicio')),
-                        termino=convert_to_date(word_processing_result.get('Termino')),
-                        objetivo=word_processing_result.get('Objetivo'),
-                        id_actividad_fiscalizacion=actividad_fiscalizacion,
-                        id_tipo_intervencion=tipo_intervencion_obj,
-                        id_cedula=cedula_obj
-                    )
-
-                    for i in range(54):
-                        ConceptoCedula.objects.create(
-                            celda=str(i),
-                            estado=None,
-                            comentario=None,
+                    # Se verifica si existe una intervención, en caso de que no exista, se crea una, en caso contrario unicamente se actualizan sus datos
+                    intervencion = Intervencion.objects.filter(numero=word_processing_result['Numero'], id_actividad_fiscalizacion=actividad_fiscalizacion).first()
+                    if intervencion is None:
+                        # Crea una intervención nueva con la actividad de fiscalización
+                        cedula_obj = Cedula.objects.create()
+                        Intervencion.objects.create(
+                            unidad=word_processing_result.get('Área'),
+                            numero=word_processing_result.get('Numero'),
+                            denominacion=word_processing_result.get('Denominación'),
+                            ejercicio=word_processing_result.get('Ejercicio'),
+                            alcance=word_processing_result.get('Alcance y periodo'),
+                            antecedentes=word_processing_result.get('Antecedentes'),
+                            fuerza_auditores=word_processing_result.get('Auditores'),
+                            fuerza_responsables=word_processing_result.get('Responsable'),
+                            fuerza_supervision=word_processing_result.get('Supervisión'),
+                            inicio=convert_to_date(word_processing_result.get('Inicio')),
+                            termino=convert_to_date(word_processing_result.get('Termino')),
+                            objetivo=word_processing_result.get('Objetivo'),
+                            id_actividad_fiscalizacion=actividad_fiscalizacion,
+                            id_tipo_intervencion=tipo_intervencion_obj,
                             id_cedula=cedula_obj
                         )
+
+                        for i in range(54):
+                            ConceptoCedula.objects.create(
+                                celda=str(i),
+                                estado=None,
+                                comentario=None,
+                                id_cedula=cedula_obj
+                            )
+                    else:
+                        intervencion.unidad = word_processing_result.get('Área')
+                        intervencion.denominacion = word_processing_result.get('Denominación')
+                        intervencion.ejercicio = word_processing_result.get('Ejercicio')
+                        intervencion.alcance = word_processing_result.get('Alcance y periodo')
+                        intervencion.antecedentes = word_processing_result.get('Antecedentes')
+                        intervencion.fuerza_auditores = word_processing_result.get('Auditores')
+                        intervencion.fuerza_responsables = word_processing_result.get('Responsable')
+                        intervencion.fuerza_supervision = word_processing_result.get('Supervisión')
+                        intervencion.inicio = convert_to_date(word_processing_result.get('Inicio'))
+                        intervencion.termino = convert_to_date(word_processing_result.get('Termino'))
+                        intervencion.objetivo = word_processing_result.get('Objetivo')
+                        intervencion.id_tipo_intervencion = tipo_intervencion_obj
+                        intervencion.save()
+
             if result_band:
                 context.update({'word_processing_result': word_result})
             if error_band:
