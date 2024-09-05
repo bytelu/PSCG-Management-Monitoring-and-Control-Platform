@@ -1527,10 +1527,18 @@ def logout_view(request):
 def estructuras_view(request):
     return render(request, 'estructuras.html')
 
+
 @login_required
 def estructuras_oics_view(request):
-    return render(request, 'wip.html')
+    oics = Oic.objects.exclude(nombre__in=['A', 'B', 'C'])
+    return render(request, 'estructuras_oics.html', {'oics': oics})
+
 
 @login_required
 def estructuras_actividades_view(request):
+    return render(request, 'wip.html')
+
+
+@login_required
+def estructura_oic_view(request, oic_id):
     return render(request, 'wip.html')

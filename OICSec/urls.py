@@ -90,8 +90,10 @@ urlpatterns = [
          limpiar_personal_direccion, name='limpiar_personal_direccion'),
     path("estructuras/",
          estructuras_view, name='estructuras'),
-    path("estructras/oics/",
+    path("estructuras/oics/",
          estructuras_oics_view, name='estructuras_oics'),
+    path("estructuras/oics/<int:oic_id>/",
+         estructura_oic_view, name='estructura_oic'),
     path("estructuras/actividades/",
          estructuras_actividades_view, name='estructuras_actividades'),
 ]
