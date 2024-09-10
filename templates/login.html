@@ -2,90 +2,252 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iniciar Sesión</title>
-  <link rel="icon" type="image/png" href="{% static 'LOGO_2023.png' %}">  
-  <style>
-    body {
-      font-family: "Segoe UI", system-ui, sans-serif;
-      background-color: rgb(213, 213, 213);
-      margin: 10px;
-      padding: 10px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      width: 400px; /* Ancho del contenedor */
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-      margin-left: 5px;
-      margin-right: 5px;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      margin-left: 5px;
-    }
-    .form-group input {
-      width: 97%;
-      border: 2px solid #ccc;
-      border-radius: 14px;
-      padding: 8px 5px;
-    }
-    .form-group button {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      background-color: #203342;
-      color: #fff;
-      border-radius: 14px;
-      cursor: pointer;
-    }
-    .form-group button:hover {
-      background-color: #4974a2;
-    }
-    .error-message {
-      color: #ff0000;
-      margin-top: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <link rel="icon" type="image/png" href="{% static 'LOGO_2023.png' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            background-color: #09111c;
+            overflow: hidden;
+        }
+
+        .container {
+            background-color: rgba(241, 250, 238, 0.85);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 1s ease-out;
+            overflow: hidden;
+        }
+
+        h2 {
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #15253d;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border: 2px solid #457b9d;
+            border-radius: 30px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .form-group input:hover {
+            box-shadow: 0 0 10px rgba(69, 123, 157, 0.7);
+            transform: scale(1.05);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #457b9d;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #15253d;
+            transform: scale(1.05);
+        }
+
+        .error-message, .success-message {
+            color: #e63946;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
+<canvas id="background"></canvas>
+<div class="container">
     <h2>Iniciar Sesión</h2>
     <form action="{% url 'login' %}" method="post">
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="usuario">Usuario:</label>
-        <input type="text" id="usuario" name="username" required>
-      </div>
-      <div class="form-group">
-        <label for="contrasena">Contraseña:</label>
-        <input type="password" id="contrasena" name="password" required>
-      </div>
-      {% if messages %}
-      <div class="error-message">
-        {% for message in messages %}
-        <p>{{ message }}</p>
-        {% endfor %}
-      </div>
-      {% endif %}
-      <div class="form-group">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="usuario"></label><input type="text" id="usuario" name="username" placeholder="Usuario" required>
+        </div>
+        <div class="form-group">
+            <label for="contrasena"></label><input type="password" id="contrasena" name="password" placeholder="Contraseña" required>
+        </div>
+        {% if messages %}
+            <div class="error-message">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
         <button type="submit">Iniciar Sesión</button>
-      </div>
     </form>
-  </div>
+</div>
+
+<!-- Script para fondo animado y efectos de interactividad -->
+<script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.7.0/dist/vanilla-tilt.min.js"></script>
+<script>
+    const canvas = document.getElementById('background');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let particlesArray = [];
+    const mouse = {
+        x: null,
+        y: null,
+        radius: 200
+    };
+
+    // Capturar movimiento del mouse
+    window.addEventListener('mousemove', function(event) {
+        mouse.x = event.x;
+        mouse.y = event.y;
+    });
+
+    // Crear partículas
+    class Particle {
+        constructor(x, y, size, speedX, speedY) {
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.speedX = speedX;
+            this.speedY = speedY;
+        }
+
+        update() {
+            // Movimiento continuo
+            this.x += this.speedX;
+            this.y += this.speedY;
+
+            // Rebotar en los bordes
+            if (this.x + this.size > canvas.width || this.x - this.size < 0) {
+                this.speedX = -this.speedX;
+            }
+            if (this.y + this.size > canvas.height || this.y - this.size < 0) {
+                this.speedY = -this.speedY;
+            }
+
+            // Interacción con el mouse
+            let dx = mouse.x - this.x;
+            let dy = mouse.y - this.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Suavizar la repulsión aplicando un factor de interpolación
+            if (distance < mouse.radius + this.size) {
+                let forceDirectionX = dx / distance;
+                let forceDirectionY = dy / distance;
+                let maxDistance = mouse.radius;
+                let force = (maxDistance - distance) / maxDistance;
+
+                // Suavizamos el movimiento de repulsión
+                let movementX = forceDirectionX * force * 5;
+                let movementY = forceDirectionY * force * 5;
+
+                // En lugar de mover instantáneamente, movemos gradualmente
+                this.x -= movementX;
+                this.y -= movementY;
+            }
+
+            this.draw();
+        }
+
+        draw() {
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+
+    // Inicializar las partículas
+    function initParticles() {
+        particlesArray = [];
+        let numberOfParticles = (canvas.width * canvas.height) / 3500;
+        for (let i = 0; i < numberOfParticles; i++) {
+            let size = Math.random() + 0.5;
+            let x = Math.random() * canvas.width;
+            let y = Math.random() * canvas.height;
+            let speedX = (Math.random()) - 0.5;
+            let speedY = (Math.random()) - 0.5;
+            particlesArray.push(new Particle(x, y, size, speedX, speedY));
+        }
+    }
+
+    // Animación de las partículas
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < particlesArray.length; i++) {
+            particlesArray[i].update();
+        }
+        requestAnimationFrame(animateParticles);
+    }
+
+    // Redimensionar el canvas al cambiar el tamaño de la ventana
+    window.addEventListener('resize', function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initParticles();
+    });
+
+    initParticles();
+    animateParticles();
+
+    // Fondo dinámico con movimiento del mouse
+    document.addEventListener("mousemove", function(e) {
+        let x = e.clientX / window.innerWidth;
+        let y = e.clientY / window.innerHeight;
+        document.body.style.background = `radial-gradient(circle at ${x * 100}% ${y * 100}%, #000000, #15253d)`;
+    });
+
+    VanillaTilt.init(document.querySelector(".container"), {
+        max: -4,
+        speed: 5,
+        glare: true,
+        "max-glare": 0.5,
+    });
+</script>
+
 </body>
 </html>
