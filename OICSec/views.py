@@ -10,12 +10,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.http import HttpResponse, FileResponse, Http404
+from django.http import HttpResponse, FileResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from num2words import num2words
 
-from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm, CrearTitularForm
+from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm, CrearTitularForm, \
+    OicForm
 from OICSec.funcs.Actividad import get_actividades
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
@@ -1579,11 +1580,23 @@ def estructuras_oics_view(request):
     return render(request, 'estructuras_oics.html', {'oics': oics})
 
 
+def editar_oic(request, oic_id):
+    oic = get_object_or_404(Oic, id=oic_id)
+    direcciones = Direccion.objects.all()  # Obtener todas las direcciones
+
+    if request.method == 'POST':
+        form = OicForm(request.POST, instance=oic)
+        if form.is_valid():
+            oic = form.save()
+            return JsonResponse({'id': oic.id, 'nombre': oic.nombre})
+        return JsonResponse({'error': 'Error en el formulario'}, status=400)
+    else:
+        form = OicForm(instance=oic)
+        return render(request, 'editar_oic_form.html', {'form': form, 'oic': oic, 'direcciones': direcciones})
+
+
+
 @login_required
 def estructuras_actividades_view(request):
     return render(request, 'wip.html')
 
-
-@login_required
-def estructura_oic_view(request, oic_id):
-    return render(request, 'wip.html')

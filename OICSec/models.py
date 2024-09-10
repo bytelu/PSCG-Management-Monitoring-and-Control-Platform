@@ -165,6 +165,9 @@ class Direccion(models.Model):
     class Meta:
         db_table = 'direccion'
 
+    def __str__(self):
+        return f'{self.direccion}'
+
 
 class Enfoque(models.Model):
     id = models.AutoField(primary_key=True)
@@ -310,8 +313,8 @@ class Observacion(models.Model):
 
 class Oic(models.Model):
     id = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=150, blank=True, null=True)
-    id_direccion = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=True, null=True)
+    nombre = models.CharField(max_length=150, blank=False, null=False)  # No se permite nulo ni blanco
+    id_direccion = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=False, null=False)  # Obligatorio
 
     class Meta:
         db_table = 'oic'

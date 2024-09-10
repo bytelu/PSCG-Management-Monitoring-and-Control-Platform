@@ -205,3 +205,24 @@ class CargoPersonalForm(forms.ModelForm):
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class OicForm(forms.ModelForm):
+    class Meta:
+        model = Oic
+        fields = ['nombre', 'id_direccion']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'required': 'required'}),
+        }
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        if not nombre:
+            raise forms.ValidationError("Este campo es obligatorio.")
+        return nombre
+
+    def clean_id_direccion(self):
+        id_direccion = self.cleaned_data.get('id_direccion')
+        if not id_direccion:
+            raise forms.ValidationError("Este campo es obligatorio.")
+        return id_direccion

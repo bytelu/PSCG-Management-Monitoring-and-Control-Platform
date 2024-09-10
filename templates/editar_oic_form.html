@@ -1,0 +1,23 @@
+<form id="editOICForm" method="POST" action="{% url 'editar_oic' oic.id %}">
+    {% csrf_token %}
+    <h1 class="display-4">{{ oic }}</h1>
+    <div class="form-group">
+        <label for="nombre">Nombre</label>
+        {{ form.nombre }}
+    </div>
+    <div class="form-group">
+        <label>Dirección</label>
+        <div class="direccion-cards d-flex justify-content-between">
+            {% for direccion in direcciones %}
+                <div class="card direccion-card {% if direccion.id == oic.id_direccion.id %}selected{% endif %}"
+                     data-id="{{ direccion.id }}" data-value="{{ direccion.direccion }}">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ direccion.direccion }}</h5>
+                    </div>
+                </div>
+            {% endfor %}
+
+        </div>
+        <input type="hidden" name="id_direccion" id="id_direccion" value="{{ form.id_direccion.value }}">
+    </div>
+</form>
