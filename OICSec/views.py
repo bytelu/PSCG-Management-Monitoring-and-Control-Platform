@@ -1580,6 +1580,7 @@ def estructuras_oics_view(request):
     return render(request, 'estructuras_oics.html', {'oics': oics})
 
 
+@login_required
 def editar_oic(request, oic_id):
     oic = get_object_or_404(Oic, id=oic_id)
     direcciones = Direccion.objects.all()  # Obtener todas las direcciones

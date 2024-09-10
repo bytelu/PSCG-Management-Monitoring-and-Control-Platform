@@ -242,9 +242,13 @@
     });
 
     VanillaTilt.init(document.querySelector(".container"), {
-        max: -4,
-        speed: 5,
+        max: -15,
+        speed: 300,
+        transition: true,
         glare: true,
+        perspective: 1000,
+        "full-page-listening": true,
+        easing: "cubic-bezier(.03,.98,.52,.99)",
         "max-glare": 0.5,
     });
 </script>
