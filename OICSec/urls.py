@@ -96,4 +96,6 @@ urlpatterns = [
          editar_oic, name='editar_oic'),
     path("estructuras/actividades/",
          estructuras_actividades_view, name='estructuras_actividades'),
+    path("actividades/",
+         actividades_view, name='actividades'),
 ]

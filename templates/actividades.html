@@ -1,0 +1,229 @@
+{% extends 'navbar.html' %}
+
+{% block title %}Actividades de fiscalización{% endblock %}
+
+{% block content %}
+    <style>
+        .list-group-item {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border-radius: 30px !important;
+            transition: background-color 1ms ease;
+        }
+
+        .list-group-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .list-group-item a {
+            font-weight: bold;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .auditoria-number {
+            font-size: 1.4em;
+            color: #203342;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .text-muted small {
+            font-size: 0.85em;
+            color: #999999;
+        }
+
+        .btn-modal {
+            z-index: 1;
+        }
+
+        .pagination .page-link {
+            background-color: #ffffff;
+            border: 1px solid #343a40;
+            color: #000000;
+            padding-top: .375rem;
+        }
+
+        .pagination .page-link:hover {
+            background-color: #23272b;
+            border-color: #23272b;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #23272b;
+            border-color: #23272b;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background-color: #ffffff;
+            border-color: #6c757d;
+        }
+
+        .pagination .page-link:focus,
+        .pagination .page-link:active {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .text-decoration-none:hover {
+            text-decoration: none;
+        }
+    </style>
+
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-4">Actividades de Fiscalización</h1>
+        </div>
+
+        <!-- Filtro de OIC -->
+        <form id="filtroForm" action="{% url 'actividades' %}" method="GET" class="container-fluid mb-4 align-items-center">
+            <!-- Fila para el filtro de OIC -->
+            <div class="row mt-xl-4">
+                <div class="col-3">
+                    <label for="oic" class="form-label">Seleccionar OIC:</label>
+                </div>
+                <div class="col-9">
+                    <select name="oic_id" id="oic" class="select2 form-control">
+                        <option value="">Todos los OICs</option>
+                        {% for oic in lista_oics %}
+                            <option value="{{ oic.id }}" {% if oic.id|stringformat:"s" == oic_id %}selected{% endif %}>
+                                {{ oic.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Fila para el filtro de año -->
+            <div class="row mt-xl-4">
+                <div class="col-3">
+                    <label for="anyo" class="form-label">Seleccionar Año:</label>
+                </div>
+                <div class="col-9">
+                    <select name="anyo" id="anyo" class="select2 form-control">
+                        <option value="" {% if not anyo %}selected{% endif %}>Todos los Años</option>
+                        {% for year in lista_anyos %}
+                            <option value="{{ year.anyo }}" {% if year.anyo|stringformat:"s" == anyo %}selected{% endif %}>
+                                {{ year.anyo }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <!-- Actividades de fiscalización -->
+        <ul class="list-group">
+            {% for actividad in page_obj %}
+                <li class="list-group-item d-flex justify-content-between align-items-center" data-toggle="modal" data-target="#modal-{{ actividad.id }}">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="auditoria-number">{{ actividad.anyo }} | {{ actividad.trimestre }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">{{ actividad.id_oic }}</span>
+                        </div>
+                        <div class="text-muted">
+                            <small>Actividad de fiscalización:</small>
+                            <strong>{{ actividad.trimestre }}/{{ actividad.anyo }}</strong>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- Modal -->
+                <div class="modal fade" id="modal-{{ actividad.id }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel-{{ actividad.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalLabel-{{ actividad.id }}">Selecciona una opción:</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <a href="{% url 'minuta' actividad.id %}" class="btn btn-block btn-outline-dark mb-2">Crear minuta</a>
+                                <a href="{% url 'estructuras_actividades' %}" class="btn btn-block btn-outline-dark mb-2">Modificar actividad de fiscalización</a>
+                            </div>
+                            <div class="modal-footer">
+                                <p>
+                                    <button type="button" class="btn btn-outline-danger btn-block" data-dismiss="modal">Cerrar</button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="container mt-3">
+        <!-- Paginación -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;&laquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2().on('change', function () {
+                $(this).closest('form').submit();
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('.btn-modal').forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                });
+            });
+        });
+    </script>
+{% endblock %}

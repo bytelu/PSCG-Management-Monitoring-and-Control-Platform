@@ -142,6 +142,11 @@ def intervenciones_view(request):
 
 
 @login_required
+def actividades_view(request):
+    return get_filtered_objects(request, ActividadFiscalizacion, 'actividades.html')
+
+
+@login_required
 def handle_detail_view(request, model, form_class, object_id, template_name):
     obj = get_object_or_404(model, pk=object_id)
     if request.method == 'POST':

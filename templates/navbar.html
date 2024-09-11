@@ -204,6 +204,8 @@
         .sidenav a:hover {
             background-color: #495057; /* Fondo oscuro en hover */
             color: #f8f9fa; /* Texto claro en hover */
+            scale: 1.01;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
         .sidenav .closebtn {
@@ -283,7 +285,7 @@
         }
 
         .bottom-container a {
-            
+
             border-radius: 25px; /* Esquinas redondeadas para los botones en el contenedor inferior */
             margin: 5px 0; /* Margen entre los botones */
             height: 10px; /* Altura de los botones */
@@ -351,6 +353,10 @@
            class="{% if request.path == '/OICSec/controlesInternos/PACI/' %}active{% endif %}">Subir Control Interno</a>
         <!-- Agrega más sub botones aquí si es necesario -->
     </div>
+    
+    <!-- Botón de actividades de fiscalización -->
+    <a href="{% url 'actividades' %}" class="{% if request.path == '/OICSec/actividades/' %}active{% endif %}"><i
+            class="fas fa-archive"></i> <span>Actividades de fiscalización</span></a>
 
     <!-- Botón principal de Personal -->
     <a href="javascript:void(0)"
@@ -368,15 +374,18 @@
 
     <!-- Botón principal de Estructuras -->
     <a href="javascript:void(0)"
-       class="dropdown-toggle {% if request.path == '/OICSec/estructuras/' or request.path == '/OICSec/estructuras/oics/'%}active{% endif %}"
+       class="dropdown-toggle {% if request.path == '/OICSec/estructuras/' or request.path == '/OICSec/estructuras/oics/' %}active{% endif %}"
        onclick="toggleSubMenu('estructurasSubMenu')">
         <i class="fas fa-building"></i> <span>Estructuras</span>
     </a>
     <div id="estructurasSubMenu" class="sub-menu">
         <a href="{% url 'estructuras' %}" class="{% if request.path == '/OICSec/estructuras/' %}active{% endif %}">Mostrar
             Estructuras</a>
-        <a href="{% url 'estructuras_oics' %}" class="{% if request.path == '/OICSec/estructuras/oics/' %}active{% endif %}">Organos Internos de Control</a>
-        <a href="{% url 'estructuras_actividades' %}" class="{% if request.path == '/OICSec/estructuras/actividades/' %}active{% endif %}">Actividades de fiscalización</a>
+        <a href="{% url 'estructuras_oics' %}"
+           class="{% if request.path == '/OICSec/estructuras/oics/' %}active{% endif %}">Organos Internos de Control</a>
+        <a href="{% url 'estructuras_actividades' %}"
+           class="{% if request.path == '/OICSec/estructuras/actividades/' %}active{% endif %}">Actividades de
+            fiscalización</a>
     </div>
 
     <!-- Contenedor para la parte inferior del sidebar -->
