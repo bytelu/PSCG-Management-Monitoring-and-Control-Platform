@@ -320,7 +320,7 @@
     </a>
     <div id="auditoriasSubMenu" class="sub-menu">
         <a href="{% url 'auditorias' %}" class="{% if request.path == '/OICSec/auditorias/' %}active{% endif %}">Mostrar
-            Auditoría</a>
+            Auditorías</a>
         <a href="{% url 'uploadPaa' %}" class="{% if request.path == '/OICSec/auditorias/PAA/' %}active{% endif %}">Subir
             Auditoría</a>
         <!-- Agrega más sub botones aquí si es necesario -->
@@ -353,40 +353,18 @@
            class="{% if request.path == '/OICSec/controlesInternos/PACI/' %}active{% endif %}">Subir Control Interno</a>
         <!-- Agrega más sub botones aquí si es necesario -->
     </div>
-    
+
     <!-- Botón de actividades de fiscalización -->
     <a href="{% url 'actividades' %}" class="{% if request.path == '/OICSec/actividades/' %}active{% endif %}"><i
             class="fas fa-archive"></i> <span>Actividades de fiscalización</span></a>
 
-    <!-- Botón principal de Personal -->
-    <a href="javascript:void(0)"
-       class="dropdown-toggle {% if request.path == '/OICSec/personal/' or request.path == '/OICSec/personal/direcciones/' or request.path == '/OICSec/personal/oics/' %}active{% endif %}"
-       onclick="toggleSubMenu('personalSubMenu')">
-        <i class="fas fa-users"></i> <span>Personal</span>
-    </a>
-    <div id="personalSubMenu" class="sub-menu">
-        <a href="{% url 'personal' %}" class="{% if request.path == '/OICSec/personal/' %}active{% endif %}">Mostrar
-            Personal</a>
-        <a href="{% url 'direcciones' %}"
-           class="{% if request.path == '/OICSec/personal/direcciones/' %}active{% endif %}">Direcciones</a>
-        <a href="{% url 'oics' %}" class="{% if request.path == '/OICSec/personal/oics/' %}active{% endif %}">OIC's</a>
-    </div>
+    <!-- Botón de órganos internos de control -->
+    <a href="{% url 'estructuras_oics' %}" class="{% if request.path == '/OICSec/oics/' %}active{% endif %}"><i
+            class="fas fa-building"></i> <span>Órganos Internos de Control</span></a>
 
-    <!-- Botón principal de Estructuras -->
-    <a href="javascript:void(0)"
-       class="dropdown-toggle {% if request.path == '/OICSec/estructuras/' or request.path == '/OICSec/estructuras/oics/' %}active{% endif %}"
-       onclick="toggleSubMenu('estructurasSubMenu')">
-        <i class="fas fa-building"></i> <span>Estructuras</span>
-    </a>
-    <div id="estructurasSubMenu" class="sub-menu">
-        <a href="{% url 'estructuras' %}" class="{% if request.path == '/OICSec/estructuras/' %}active{% endif %}">Mostrar
-            Estructuras</a>
-        <a href="{% url 'estructuras_oics' %}"
-           class="{% if request.path == '/OICSec/estructuras/oics/' %}active{% endif %}">Organos Internos de Control</a>
-        <a href="{% url 'estructuras_actividades' %}"
-           class="{% if request.path == '/OICSec/estructuras/actividades/' %}active{% endif %}">Actividades de
-            fiscalización</a>
-    </div>
+    <!-- Botón principal de Personal -->
+    <a href="{% url 'personal' %}" class="{% if request.path == '/OICSec/personal/' %}active{% endif %}"><i
+            class="fas fa-users"></i> <span>Personal</span></a>
 
     <!-- Contenedor para la parte inferior del sidebar -->
     <div class="bottom-container p-3">

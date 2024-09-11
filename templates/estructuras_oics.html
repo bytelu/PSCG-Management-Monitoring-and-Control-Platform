@@ -4,11 +4,6 @@
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center">
             <h1 class="display-4">Órganos Internos de Control</h1>
-            <div class="d-flex">
-                <a href="{% url 'estructuras' %}" class="btn btn-outline-dark mr-2">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-            </div>
         </div>
 
         <div class="mt-4">
@@ -144,7 +139,7 @@
                         $('#editOICModal').modal('hide');
                     });
                 } else {
-                    alert("Hubo un error al guardar los cambios.");
+                    alert("Debes de llenar todos los campos antes de continuar");
                 }
             });
         }
@@ -155,6 +150,10 @@
     <style>
         .card {
             min-height: 150px;
+        }
+
+        .card:hover {
+            scale: 1.05;
         }
 
         .custom-card-link:hover {

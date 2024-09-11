@@ -13,6 +13,7 @@
 
         .list-group-item:hover {
             background-color: #f0f0f0;
+            scale: 1.01;
         }
 
         .list-group-item a {
@@ -47,6 +48,7 @@
         .pagination .page-link:hover {
             background-color: #23272b;
             border-color: #23272b;
+            color: white;
         }
 
         .pagination .page-item.active .page-link {
@@ -141,6 +143,7 @@
                                 </button>
                             </div>
                             <div class="modal-body text-center">
+                                <p>{{ actividad }}</p>
                                 <a href="{% url 'minuta' actividad.id %}" class="btn btn-block btn-outline-dark mb-2">Crear minuta</a>
                                 <a href="{% url 'estructuras_actividades' %}" class="btn btn-block btn-outline-dark mb-2">Modificar actividad de fiscalización</a>
                             </div>
