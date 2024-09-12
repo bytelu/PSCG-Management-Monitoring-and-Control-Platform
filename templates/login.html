@@ -21,7 +21,7 @@
         }
 
         .container {
-            background-color: rgba(241, 250, 238, 0.7);
+            background-color: rgba(255, 255, 255, 0.9);
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 40px 50px rgba(0, 0, 0, 0.9);
@@ -29,7 +29,7 @@
             text-align: center;
             position: relative;
             z-index: 10;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(1px);
             animation: fadeIn 1s ease-out;
             overflow: hidden;
         }
@@ -180,11 +180,9 @@
                 let maxDistance = mouse.radius;
                 let force = (maxDistance - distance) / maxDistance;
 
-                // Suavizamos el movimiento de repulsión
                 let movementX = forceDirectionX * force * 5;
                 let movementY = forceDirectionY * force * 5;
 
-                // En lugar de mover instantáneamente, movemos gradualmente
                 this.x -= movementX;
                 this.y -= movementY;
             }
@@ -201,10 +199,30 @@
         }
     }
 
+    // Conectar partículas
+    function connectParticles() {
+        let opacityValue = 1;
+        for (let a = 0; a < particlesArray.length; a++) {
+            for (let b = a; b < particlesArray.length; b++) {
+                let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
+                              + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                    opacityValue = 1 - (distance / 20000);
+                    ctx.strokeStyle = `rgba(255,255,255,${opacityValue})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                    ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
     // Inicializar las partículas
     function initParticles() {
         particlesArray = [];
-        let numberOfParticles = (canvas.width * canvas.height) / 3500;
+        let numberOfParticles = (canvas.width * canvas.height) / 9000;
         for (let i = 0; i < numberOfParticles; i++) {
             let size = Math.random() + 0.5;
             let x = Math.random() * canvas.width;
@@ -221,6 +239,7 @@
         for (let i = 0; i < particlesArray.length; i++) {
             particlesArray[i].update();
         }
+        connectParticles();
         requestAnimationFrame(animateParticles);
     }
 
