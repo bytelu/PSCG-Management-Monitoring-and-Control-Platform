@@ -136,6 +136,7 @@ def replace_data(doc, data):
         replace_text_in_table(table, regex, data)
 
 
+
 def replace_revision(doc: Document, revision: RevisionDocs):
     """
     Maneja el reemplazo de datos específicos de revisión en tablas dentro de un documento.

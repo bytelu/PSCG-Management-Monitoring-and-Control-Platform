@@ -848,7 +848,7 @@ def update_data_minuta(request, minuta, mes, actividades):
     posicion_word = {
         1: 'primer',
         2: 'segundo',
-        3: 'tercero',
+        3: 'tercer',
         4: 'cuarto'
     }
 
@@ -882,8 +882,8 @@ def update_data_minuta(request, minuta, mes, actividades):
         text_numero_actividades,  # P25
         lista_actividades,  # P26
         num2words(time_fin.hour, lang='es'),  # P27
-        num2words(time_fin.day, lang='es'),  # P28
-        meses_word.get(time_fin.month),  # P29
+        num2words(time_fin.day, lang='es').upper(),  # P28
+        meses_word.get(time_fin.month).upper(),  # P29
         time_fin.year  # P30
     ]
 
@@ -894,6 +894,13 @@ def update_data_minuta(request, minuta, mes, actividades):
     elif mes == 2:
         data.append('PAPELES DE TRABAJO')  # P31
         data.append('los papeles de trabajo')  # P32
+    elif mes == 3:
+        # P31 y P32 no existen en el mes 3
+        data.append('')
+        data.append('')
+
+    data.append(limpiar_cadena(fiscalizacion.id_oic.nombre).upper()) # P33
+    data.append(minuta.id_actividad_fiscalizacion.id_oic.id_direccion.direccion) # P34
 
     return data
 
@@ -907,7 +914,7 @@ def get_actividades_lista(actividades):
         numero = actividades[n].numero
         articulo = "el" if tipo == "control interno" else "la"
         articulo_final = "o" if tipo == "control interno" else "a"
-        lista_actividades += f"{articulo} {tipo} numero {numero} denominad{articulo_final} {denominacion}"
+        lista_actividades += f"{articulo} {tipo} número {numero} denominad{articulo_final} {denominacion}"
         if n == numero_actividades - 2:
             lista_actividades += " y "
         elif n < numero_actividades - 2:
