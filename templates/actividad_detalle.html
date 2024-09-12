@@ -1,0 +1,58 @@
+{% extends 'navbar.html' %}
+{% block title %}Detalle de actividad{% endblock %}
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="display-4">Detalle de actividad de fiscalización</h1>
+        <div>
+            <a href="{% url 'actividades' %}" class="btn btn-outline-dark">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+    </div>
+    {% if result %}
+        <div class="alert alert-success mt-3" role="alert">
+            <strong>Los cambios han sido guardados con exito.</strong>
+        </div>
+    {% endif %}
+    {% if error %}
+        <div class="alert alert-danger mt-3" role="alert">
+            <strong>Ha surgido un error con el guardado de los datos. | {{ error }}</strong>
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-outline-danger btn-lg btn-block" data-toggle="modal" data-target="#myModal">
+            Guardar Cambios
+        </button>
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Confirmar cambios</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p>¿Estas seguro de que deseas guardar los cambios?</p>
+                        <p style="color: red">Esta accion es irreversible</p>
+                    </div>
+                    <div class="modal-footer">
+                        <p>
+                            <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar
+                            </button>
+                        </p>
+                        <p>
+                            <button type="submit" class="btn btn-outline-danger btn-block">Aceptar</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}

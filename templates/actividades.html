@@ -145,7 +145,7 @@
                             <div class="modal-body text-center">
                                 <p>{{ actividad }}</p>
                                 <a href="{% url 'minuta' actividad.id %}" class="btn btn-block btn-outline-dark mb-2">Crear minuta</a>
-                                <a href="{% url 'estructuras_actividades' %}" class="btn btn-block btn-outline-dark mb-2">Modificar actividad de fiscalización</a>
+                                <a href="{% url 'estructuras_actividades' actividad.id %}" class="btn btn-block btn-outline-dark mb-2">Modificar actividad de fiscalización</a>
                             </div>
                             <div class="modal-footer">
                                 <p>

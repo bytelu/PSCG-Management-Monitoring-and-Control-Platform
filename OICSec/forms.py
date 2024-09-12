@@ -6,19 +6,20 @@ from .models import *
 class BaseForm(forms.ModelForm):
     anyo = forms.IntegerField(
         label='Año de actividad de fiscalización',
-        required=False,
+        required=True,
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
-    trimestre = forms.IntegerField(
-        label='Trimestre de actividad de fiscalización',
-        required=False,
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    trimestre = forms.ChoiceField(
+        choices=[(i, i) for i in range(1, 5)],
+        label='Trimestre',
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     id_oic = forms.ModelChoiceField(
         # Se excluyen las entidades destinadas a identificación de personal de direcciones.
         queryset = Oic.objects.exclude(nombre__in=["A", "B", "C"]),
         label='OIC',
-        required=False,
+        required=True,
         widget=forms.Select(attrs={'class': 'form-control select2'})
     )
 
@@ -226,3 +227,28 @@ class OicForm(forms.ModelForm):
         if not id_direccion:
             raise forms.ValidationError("Este campo es obligatorio.")
         return id_direccion
+
+
+class ActividadForm(forms.ModelForm):
+    trimestre = forms.ChoiceField(
+        choices=[(i, i) for i in range(1, 5)],
+        label='Trimestre',
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    class Meta:
+        model = ActividadFiscalizacion
+        fields = ['anyo', 'trimestre', 'id_oic']
+        labels = {
+            'anyo': 'Año',
+            'trimestre': 'Trimestre',
+            'id_oic': 'Órgano Interno de Control'
+        }
+        widgets = {
+            'anyo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'id_oic': forms.Select(attrs={'class': 'form-control select2'})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['id_oic'].queryset = Oic.objects.exclude(nombre__in=['A', 'B', 'C'])

@@ -16,7 +16,7 @@ from django.utils import timezone
 from num2words import num2words
 
 from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm, CrearTitularForm, \
-    OicForm
+    OicForm, ActividadForm
 from OICSec.funcs.Actividad import get_actividades
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
@@ -72,10 +72,10 @@ def get_filtered_objects(request, model, template_name):
     is_actividad_fiscalizacion = (mapping.get(model) == 'actividad_fiscalizacion')
     if is_actividad_fiscalizacion:
         oics_name_query = 'id_oic__nombre'
-        order_query = ['anyo', 'trimestre']
+        order_query = ['id_oic__nombre' ,'anyo', 'trimestre']
     else:
         oics_name_query = 'id_actividad_fiscalizacion__id_oic__nombre'
-        order_query = ['id_actividad_fiscalizacion__id_oic', 'id_actividad_fiscalizacion__anyo', 'id_actividad_fiscalizacion__trimestre', 'numero']
+        order_query = ['id_actividad_fiscalizacion__id_oic__nombre', 'id_actividad_fiscalizacion__anyo', 'id_actividad_fiscalizacion__trimestre', 'numero']
 
     nombres_oics = model.objects.values_list(oics_name_query, flat=True).distinct()
     lista_oics = Oic.objects.filter(nombre__in=nombres_oics).distinct()
@@ -105,7 +105,7 @@ def get_filtered_objects(request, model, template_name):
 
     objects = model.objects.filter(**filter_kwargs).order_by(*order_query)
 
-    paginator = Paginator(objects, 10)
+    paginator = Paginator(objects, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -1575,11 +1575,6 @@ def logout_view(request):
 
 
 @login_required
-def estructuras_view(request):
-    return render(request, 'estructuras.html')
-
-
-@login_required
 def estructuras_oics_view(request):
     oics = Oic.objects.exclude(nombre__in=['A', 'B', 'C'])
     return render(request, 'estructuras_oics.html', {'oics': oics})
@@ -1603,6 +1598,6 @@ def editar_oic(request, oic_id):
 
 
 @login_required
-def estructuras_actividades_view(request):
-    return render(request, 'wip.html')
+def estructuras_actividades_view(request, actividad_id):
+    return handle_detail_view(request, ActividadFiscalizacion, ActividadForm, actividad_id, 'actividad_detalle.html')
 
