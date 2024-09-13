@@ -13,7 +13,7 @@ class BaseForm(forms.ModelForm):
         choices=[(i, i) for i in range(1, 5)],
         label='Trimestre',
         required=True,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control select2'})
     )
     id_oic = forms.ModelChoiceField(
         # Se excluyen las entidades destinadas a identificación de personal de direcciones.
@@ -234,7 +234,7 @@ class ActividadForm(forms.ModelForm):
         choices=[(i, i) for i in range(1, 5)],
         label='Trimestre',
         required=True,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control select2'})
     )
     class Meta:
         model = ActividadFiscalizacion

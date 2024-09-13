@@ -4,34 +4,172 @@
 
 {% block content %}
     <style>
-        .oval-background {
-            border-radius: 20px; /* Ajusta el radio según tus preferencias */
-            padding: 1px 15px; /* Ajusta el relleno según tus preferencias */
-            display: inline-block; /* Para que el contorno se ajuste al texto */
+        /* Estilos generales */
+        body {
+            background-color: #f7f9fc; /* Fondo claro */
+            font-family: 'Roboto', sans-serif;
         }
 
+        .container {
+            margin-top: 3rem;
+        }
+
+        .card {
+            background: #ffffff;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Sombra elegante */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px); /* Efecto hover */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); /* Más sombra */
+        }
+
+        .card-header {
+            background-color: #343a40; /* Color gris oscuro */
+            color: #fff;
+            text-align: center;
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+            font-size: 1.5rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            background: #f4f5f7;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            background: #e9ecef;
+            border: 1px solid #495057; /* Gris oscuro */
+            box-shadow: none;
+        }
+
+        label {
+            font-weight: 500;
+            color: #6c757d; /* Gris */
+        }
+
+        /* Estilos para botones */
+        .btn-outline-dark {
+            background-color: #343a40;
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: background-color 0.3s ease-in-out, transform 0.3s ease;
+        }
+
+        .btn-outline-dark:hover {
+            background-color: #495057;
+            transform: translateY(-2px); /* Efecto hover */
+        }
+
+        /* Estilos para alertas */
+        .alert {
+            border-radius: 50px;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 0.75rem;
+            transition: opacity 0.4s ease;
+        }
+
+        /* Barra de progreso de la fortaleza de la contraseña */
+        .progress {
+            height: 10px;
+            border-radius: 50px;
+            background-color: #e9ecef;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            border-radius: 50px;
+            transition: width 0.3s ease-in-out;
+        }
+
+        /* Estilos para los requisitos de la contraseña */
         .password-requirement {
-            color: red; /* Color inicial para los requisitos no cumplidos */
+            font-size: 0.9rem;
+            color: #dc3545;
+            transition: color 0.3s ease;
         }
 
         .password-requirement.fulfilled {
-            color: green; /* Color para los requisitos cumplidos */
+            color: #28a745; /* Verde */
         }
 
         .password-requirement.nothing {
-            color: gray; /* Color inicial del texto de la lista */
+            color: #6c757d; /* Gris */
         }
+
+        /* Estilo para el mensaje de la fortaleza de la contraseña */
+        .oval-background {
+            border-radius: 20px;
+            padding: 5px 15px;
+            display: inline-block;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .bg-danger {
+            background-color: #dc3545; /* Rojo */
+        }
+
+        .bg-warning {
+            background-color: #ffc107; /* Amarillo */
+        }
+
+        .bg-info {
+            background-color: #17a2b8; /* Azul claro */
+        }
+
+        .bg-primary {
+            background-color: #007bff; /* Azul */
+        }
+
+        .bg-success {
+            background-color: #28a745; /* Verde */
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-body {
+            animation: fadeInUp 0.5s ease both;
+        }
+
     </style>
 
     <div class="container">
-        <div class="row justify-content-center mt-5">
+        <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header display-4">Editar Perfil</div>
+                    <div class="card-header">Editar Perfil</div>
                     {% if success_password %}
-                        <div class="col-md-auto mt-2">
-                            <div class="alert alert-success fade show" role="alert"
-                                 style="font-size: 0.8em;">
+                        <div class="mt-3">
+                            <div class="alert alert-success" role="alert">
                                 <strong>{{ success_password }}</strong>
                             </div>
                         </div>
@@ -40,128 +178,87 @@
                     <div class="card-body">
                         <form method="POST" action="{% url 'perfil' %}">
                             {% csrf_token %}
-
+                            
                             <!-- Cambiar nombre de usuario -->
-                            <div class="form-group row">
-                                <label for="username" class="font-weight-bold col-md-4 col-form-label text-md-right">Nombre
-                                    de
-                                    Usuario</label>
-
-                                <div class="col-md-6">
-                                    <input id="username" type="text" class="form-control" name="username"
-                                           value="{{ user.username }}" required autocomplete="username" autofocus>
-                                    {% if duplicated_profile %}
-                                        <div class="text-center mt-2">
-                                            <div class="alert alert-warning  text-center mx-auto" role="alert"
-                                                 style="font-size: 0.8em;">
-                                                <strong>{{ duplicated_profile }}</strong>
-                                            </div>
+                            <div class="form-group">
+                                <label for="username" class="form-label">Nombre de Usuario</label>
+                                <input id="username" type="text" class="form-control" name="username" value="{{ user.username }}" required autocomplete="username" autofocus>
+                                {% if duplicated_profile %}
+                                    <div class="mt-2">
+                                        <div class="alert alert-warning" role="alert">
+                                            <strong>{{ duplicated_profile }}</strong>
                                         </div>
-                                    {% endif %}
-                                </div>
+                                    </div>
+                                {% endif %}
                             </div>
 
                             <!-- Cambiar nombre -->
-                            <div class="form-group row">
-                                <label for="first_name" class="font-weight-bold col-md-4 col-form-label text-md-right">Nombre</label>
-
-                                <div class="col-md-6">
-                                    <input id="first_name" type="text" class="form-control" name="first_name"
-                                           value="{{ user.first_name }}" required autocomplete="given-name">
-                                </div>
+                            <div class="form-group">
+                                <label for="first_name" class="form-label">Nombre</label>
+                                <input id="first_name" type="text" class="form-control" name="first_name" value="{{ user.first_name }}" required autocomplete="given-name">
                             </div>
 
                             <!-- Cambiar apellido -->
-                            <div class="form-group row">
-                                <label for="last_name" class="font-weight-bold col-md-4 col-form-label text-md-right">Apellido</label>
-
-                                <div class="col-md-6">
-                                    <input id="last_name" type="text" class="form-control" name="last_name"
-                                           value="{{ user.last_name }}" required autocomplete="family-name">
-                                </div>
+                            <div class="form-group">
+                                <label for="last_name" class="form-label">Apellido</label>
+                                <input id="last_name" type="text" class="form-control" name="last_name" value="{{ user.last_name }}" required autocomplete="family-name">
                             </div>
 
                             <!-- Cambiar contraseña -->
-                            <div class="form-group row">
-                                <label for="password" class="font-weight-bold col-md-4 col-form-label text-md-right">Contraseña
-                                    Actual</label>
-
-                                <div class="col-md-6">
-                                    <input id="password" type="password" class="form-control" name="password" required
-                                           autocomplete="current-password">
-
-                                    {% if error_password %}
-                                        <div class="col-md-auto mt-2">
-                                            <div class="alert alert-danger fade show text-center mx-auto" role="alert"
-                                                 style="font-size: 0.8em;">
-                                                <strong>{{ error_password }}</strong>
-                                            </div>
+                            <div class="form-group">
+                                <label for="password" class="form-label">Contraseña Actual</label>
+                                <input id="password" type="password" class="form-control" name="password" required autocomplete="current-password">
+                                {% if error_password %}
+                                    <div class="mt-2">
+                                        <div class="alert alert-danger" role="alert">
+                                            <strong>{{ error_password }}</strong>
                                         </div>
-                                    {% endif %}
-                                </div>
+                                    </div>
+                                {% endif %}
                             </div>
-
 
                             <!-- Nueva contraseña -->
-                            <div class="form-group row">
-                                <label for="new_password"
-                                       class="font-weight-bold col-md-4 col-form-label text-md-right">Nueva
-                                    Contraseña</label>
+                            <div class="form-group">
+                                <label for="new_password" class="form-label">Nueva Contraseña</label>
+                                <input id="new_password" type="password" class="form-control" name="new_password">
+                            </div>
 
-                                <div class="col-md-6">
-                                    <input id="new_password" type="password" class="form-control" name="new_password">
+                            <!-- Progreso de fortaleza de contraseña -->
+                            <div class="form-group">
+                                <div class="progress">
+                                    <div id="password_strength_progress" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
 
-                            <div class="form-group row">
-                                <div class="col-md-6 offset-md-4">
-                                    <div class="progress">
-                                        <div id="password_strength_progress" class="progress-bar" role="progressbar"
-                                             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <div class="col-md-6 offset-md-4">
-                                    <span id="password_strength_message"></span>
-                                </div>
+                            <div class="form-group">
+                                <span id="password_strength_message"></span>
                             </div>
 
                             <!-- Lista de requisitos de contraseña -->
-                            <div class="form-group row">
-                                <label class="font-weight-bold col-md-4 col-form-label text-md-right"></label>
-                                <div class="col-md-6" id="password_requirements_container">
-                                    <ul id="password_requirements">
-                                        <li class="password-requirement nothing">Al menos 8 caracteres</li>
-                                        <li class="password-requirement nothing">Al menos una letra mayúscula</li>
-                                        <li class="password-requirement nothing">Al menos una letra minúscula</li>
-                                        <li class="password-requirement nothing">Al menos un número</li>
-                                    </ul>
-                                </div>
+                            <div class="form-group">
+                                <ul id="password_requirements" class="list-unstyled">
+                                    <li class="password-requirement nothing">Al menos 8 caracteres</li>
+                                    <li class="password-requirement nothing">Al menos una letra mayúscula</li>
+                                    <li class="password-requirement nothing">Al menos una letra minúscula</li>
+                                    <li class="password-requirement nothing">Al menos un número</li>
+                                </ul>
                             </div>
 
                             <!-- Confirmar contraseña -->
-                            <div class="form-group row">
-                                <label for="confirm_password"
-                                       class="font-weight-bold col-md-4 col-form-label text-md-right">Confirmar
-                                    Contraseña</label>
-                                <div class="col-md-6">
-                                    <input id="confirm_password" type="password" class="form-control"
-                                           name="confirm_password">
-                                </div>
+                            <div class="form-group">
+                                <label for="confirm_password" class="form-label">Confirmar Contraseña</label>
+                                <input id="confirm_password" type="password" class="form-control" name="confirm_password">
                             </div>
-                            <div class="form-group row">
-                                <div class="col-md-6 offset-md-4">
-                                    <span id="password_match_message"></span>
-                                </div>
+
+                            <div class="form-group">
+                                <span id="password_match_message"></span>
                             </div>
-                            <div class="form-group row mb-0">
-                                <div class="col-md-6 offset-md-4">
-                                    <button id="submit_button" type="submit" class="btn btn-outline-dark">
-                                        Guardar Cambios
-                                    </button>
-                                </div>
+
+                            <!-- Botón de guardar cambios -->
+                            <div class="form-group text-center">
+                                <button id="submit_button" type="submit" class="btn btn-outline-dark w-100" disabled>
+                                    Guardar Cambios
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -172,11 +269,11 @@
 
     <script>
         $(document).ready(function () {
-            var newPasswordChanged = false; // Variable para controlar si se ha cambiado la contraseña nueva
+            var newPasswordChanged = false;
 
-            // Función para comprobar la contraseña y los requisitos
+            // Comprobar las contraseñas y requisitos
             $('#confirm_password, #new_password').on('keyup', function () {
-                newPasswordChanged = true; // Se establece como true cuando se modifica la contraseña nueva
+                newPasswordChanged = true;
                 checkPasswordsAndRequirements();
             });
 
@@ -186,7 +283,6 @@
                 var requirements = $('#password_requirements li');
                 var allRequirementsMet = true;
 
-                // Verificar si las contraseñas coinciden
                 if (password === confirmPassword) {
                     $('#password_match_message').text('Las contraseñas coinciden').css('color', 'green');
                 } else {
@@ -194,23 +290,22 @@
                     allRequirementsMet = false;
                 }
 
-                // Verificar requisitos de contraseña solo si se ha cambiado la contraseña nueva
                 if (newPasswordChanged) {
                     requirements.each(function () {
                         var requirement = $(this);
                         var regex;
                         switch (requirement.index()) {
                             case 0:
-                                regex = /.{8,}/; // Al menos 8 caracteres
+                                regex = /.{8,}/;
                                 break;
                             case 1:
-                                regex = /[A-Z]/; // Al menos una letra mayúscula
+                                regex = /[A-Z]/;
                                 break;
                             case 2:
-                                regex = /[a-z]/; // Al menos una letra minúscula
+                                regex = /[a-z]/;
                                 break;
                             case 3:
-                                regex = /\d/; // Al menos un número
+                                regex = /\d/;
                                 break;
                         }
                         if (!regex.test(password)) {
@@ -222,11 +317,9 @@
                     });
                 }
 
-                // Habilitar o deshabilitar el botón
                 $('#submit_button').prop('disabled', !allRequirementsMet || password !== confirmPassword);
             }
 
-            // Función para verificar la fortaleza de la contraseña
             $('#new_password').on('keyup', function () {
                 var password = $(this).val();
                 var result = zxcvbn(password);
@@ -236,11 +329,11 @@
                 switch (score) {
                     case 0:
                         progressClass = 'bg-danger';
-                        message = 'Constraseña muy debil';
+                        message = 'Constraseña muy débil';
                         break;
                     case 1:
                         progressClass = 'bg-warning';
-                        message = 'Contraseña debil';
+                        message = 'Contraseña débil';
                         break;
                     case 2:
                         progressClass = 'bg-info';
@@ -256,11 +349,8 @@
                         break;
                 }
                 $('#password_strength_progress').removeClass().addClass('progress-bar ' + progressClass).css('width', (score * 25) + '%');
-                $('#password_strength_message').text(message).removeClass().addClass('oval-background offset-md-0 text-md-center').addClass(progressClass);
-
-                checkPasswordRequirements();
+                $('#password_strength_message').text(message).removeClass().addClass('oval-background text-center').addClass(progressClass);
             });
-
         });
     </script>
 

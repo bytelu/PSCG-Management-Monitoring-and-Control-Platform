@@ -291,6 +291,91 @@
             height: 10px; /* Altura de los botones */
             box-sizing: border-box; /* Incluye padding y border en el cálculo de la altura */
         }
+
+        .form-control {
+            background: #f4f5f7; /* Fondo claro */
+            border: none;
+            padding: 0.75rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            background: #e9ecef; /* Fondo ligeramente más claro al enfocarse */
+            border: 1px solid #495057; /* Borde gris oscuro al enfocarse */
+            box-shadow: none;
+        }
+
+        label {
+            font-weight: 500;
+            color: #6c757d; /* Color gris oscuro para las etiquetas */
+        }
+        
+        /* Estilo para el contenedor de select2 */
+        .select2-container .select2-selection--single {
+            background: #f4f5f7; /* Fondo claro */
+            border: none;
+            padding: 0.75rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            height: auto; /* Ajuste de altura */
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Estilo para el contenedor de select2 cuando está enfocado */
+        .select2-container--default .select2-selection--single:focus,
+        .select2-container--default .select2-selection--single .select2-selection__rendered:focus {
+            background: #e9ecef; /* Fondo ligeramente más claro al enfocarse */
+            border: 1px solid #495057; /* Borde gris oscuro al enfocarse */
+            box-shadow: none;
+        }
+        
+        /* Estilo para el texto dentro del select2 */
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #495057; /* Color del texto */
+            padding: 0; /* Eliminar padding adicional */
+            margin-left: 0.75rem; /* Espacio entre el borde y el texto */
+            line-height: 1.5; /* Ajuste de la altura de línea */
+        }
+        
+        /* Estilo para la flecha del select2 */
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        /* Estilo para la lista de elementos */
+        .select2-container--default .select2-results__option {
+            background: #f4f5f7; /* Fondo claro */
+            color: #495057; /* Color del texto */
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        /* Estilo para el elemento seleccionado */
+        .select2-container--default .select2-results__option--selected {
+            background: #e9ecef; /* Fondo ligeramente más claro */
+            color: #495057; /* Color del texto */
+        }
+        
+        /* Estilo para el elemento en hover */
+        .select2-container--default .select2-results__option--highlighted {
+            background: #e9ecef; /* Fondo ligeramente más claro */
+            color: #495057; /* Color del texto */
+        }
+        
+        /* Estilo para el cuadro de búsqueda */
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background: #f4f5f7; /* Fondo claro */
+            border: none;
+            padding: 0.75rem;
+            border-radius: 10px;
+            color: #495057; /* Color del texto */
+        }
+
     </style>
 
 

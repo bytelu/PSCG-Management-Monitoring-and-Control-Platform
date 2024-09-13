@@ -91,7 +91,7 @@
 
                     <div class="form-group">
                         <label for="JUDC">JUD de coordinación</label>
-                        <select class="form-control" id="JUDC" name="JUDC">
+                        <select class="form-control select2" id="JUDC" name="JUDC">
                             {% for jud in JUDC %}
                                 <option value="{{ jud.id }}"
                                         {% if jud.id == JUDC_actual.id %}selected{% endif %}>{{ jud.id_persona.honorifico }} {{ jud.id_persona.nombre }} {{ jud.id_persona.apellido }}</option>
@@ -107,7 +107,7 @@
 
                     <div class="form-group">
                         <label for="personal">Personal de estructura de fiscalización</label>
-                        <select class="form-control" id="personal" name="personal">
+                        <select class="form-control select2" id="personal" name="personal">
                             {% for persona in personal %}
                                 <option value="{{ persona.id }}"
                                         {% if persona.id == personal_actual.id %}selected{% endif %}>{{ persona.id_persona.honorifico }} {{ persona.id_persona.nombre }} {{ persona.id_persona.apellido }}</option>
