@@ -1,9 +1,10 @@
 {% extends 'navbar.html' %}
 {% block title %}Personal de OIC's{% endblock %}
+
 {% block content %}
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center">
-            <h1 class="display-4">Personal de direcciones</h1>
+            <h1 class="display-4">Personal de Direcciones</h1>
             <div class="d-flex">
                 <a href="{% url 'personal' %}" class="btn btn-outline-dark mr-2">
                     <i class="fas fa-arrow-left"></i>
@@ -13,12 +14,12 @@
         <div id="oic-container" class="mt-4 row">
             {% for oic in direcciones %}
                 <div class="oic-card col-12 col-md-3 mb-4" data-name="{{ oic.nombre }}">
-                    <a href="{% url 'personal_direccion' oic.nombre %}" class="text-decoration-none text-dark custom-card-link">
-                        <div class="card h-100 text-center">
-                            <div class="card-body d-flex flex-column justify-content-center align-items-center p-3">
-                                <h5 class="card-title">{{ oic.nombre }}</h5>
+                    <a href="{% url 'personal_direccion' oic.nombre %}" class="text-decoration-none custom-card-link">
+                        <div class="card h-100 text-center p-4">
+                            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                                <h5 class="card-title text-dark">{{ oic.nombre }}</h5> <!-- Cambiado a color negro -->
                                 <div class="icon-container mt-auto">
-                                    <i class="fas fa-users fa-3x"></i>
+                                    <i class="fas fa-users fa-4x"></i> <!-- Cambiado a gris oscuro -->
                                 </div>
                             </div>
                         </div>
@@ -30,31 +31,41 @@
 
     <style>
         .card {
-            min-height: 420px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
+            background-color: #ffffff;
+            border: none;
             border-radius: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+            height: 100%;
         }
 
         .card:hover {
-            transform: translate3d(3px, 3px, 10px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-body {
+            padding: 2rem;
         }
 
         .card-title {
-            font-size: 15rem;
+            font-size: 1.5rem;
             font-weight: 600;
-            color: #343a40;
+            color: #343a40; /* Color oscuro por defecto */
         }
 
+        /* Evita subrayado y cambios en el color al hacer hover */
         .custom-card-link:hover .card-title {
-            color: #000000;
+            color: #030303; /* Mantiene el mismo color oscuro */
+        }
+
+        .custom-card-link:hover i {
+            color: #000000; /* Cambia el color del ícono a gris oscuro en hover */
         }
 
         .custom-card-link:hover {
-            text-decoration: none;
+            text-decoration: none; /* Evita el subrayado del texto */
+            color: #000000; /* Cambia el color del ícono a gris oscuro en hover */
         }
 
         .oic-card {
@@ -65,6 +76,11 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: space-around;
+        }
+
+        /* Estilos para el icono de usuarios */
+        .icon-container i {
+            color: #6c757d; /* Color gris oscuro por defecto */
         }
     </style>
 {% endblock %}

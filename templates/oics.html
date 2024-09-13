@@ -1,5 +1,6 @@
 {% extends 'navbar.html' %}
 {% block title %}Personal de OIC's{% endblock %}
+
 {% block content %}
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center">
@@ -10,9 +11,18 @@
                 </a>
             </div>
         </div>
+
+        <!-- Campo de búsqueda -->
         <div class="mt-4">
             <input type="text" id="search" class="form-control" placeholder="Buscar OIC..." onkeyup="filterOIC()">
         </div>
+
+        <!-- Contenedor del mensaje de "No se encontraron resultados" -->
+        <div id="noResults" class="alert alert-warning mt-3" style="display:none;">
+            No se encontraron resultados.
+        </div>
+
+        <!-- Contenedor de las tarjetas de OIC -->
         <div id="oic-container" class="mt-4 row">
             {% for oic in oics %}
                 <div class="oic-card col-12 col-md-4 mb-4" data-name="{{ oic.nombre }}">
@@ -32,15 +42,25 @@
         function filterOIC() {
             let input = document.getElementById('search').value.toLowerCase();
             let oicCards = document.getElementsByClassName('oic-card');
+            let noResults = document.getElementById('noResults');
+            let countVisible = 0;
 
             for (let i = 0; i < oicCards.length; i++) {
                 let card = oicCards[i];
                 let name = card.getAttribute('data-name').toLowerCase();
                 if (name.includes(input)) {
                     card.style.display = '';
+                    countVisible++;
                 } else {
                     card.style.display = 'none';
                 }
+            }
+
+            // Mostrar o ocultar el mensaje de "No se encontraron resultados"
+            if (countVisible === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
             }
         }
     </script>
@@ -49,7 +69,7 @@
         .card {
             min-height: 150px;
         }
-        
+
         .card:hover {
             scale: 1.05;
         }
@@ -61,6 +81,12 @@
         .custom-card-link:hover i,
         .custom-card-link:hover h5 {
             text-decoration: none;
+        }
+
+        /* Estilo para el mensaje de alerta */
+        .alert {
+            font-size: 1rem;
+            text-align: center;
         }
     </style>
 {% endblock %}
