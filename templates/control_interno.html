@@ -122,6 +122,37 @@
                 </div>
             </div>
         </form>
+    
+        <div class="container mt-3">
+            <!-- Alerta para controles internos con datos faltantes -->
+            {% if elementos_incompletos %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);">
+                    <h4 class="alert-heading" style="font-size: 1.5rem; font-weight: bold;">
+                        ¡Atención! Controles Internos con datos faltantes
+                    </h4>
+                    <p>Algunos Controles Internos contienen campos importantes vacíos. Revisa y completa la información:</p>
+                    <hr style="border-color: rgba(255, 255, 255, 0.2);">
+                    <ul class="list-unstyled">
+                        {% for control in elementos_incompletos %}
+                            <li class="d-flex align-items-center" style="padding: 10px 0;">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                <div>
+                                    <strong>CI-{{ control.numero }}/{{ control.id_actividad_fiscalizacion.anyo }}</strong> de <strong>{{ control.id_actividad_fiscalizacion.id_oic }}</strong>
+                                </div>
+                                <a href="{% url 'control_detalle' control.id %}" class="ml-auto">
+                                    <button class="btn btn-sm btn-outline-danger" style="border-radius: 20px; padding: 0.375rem 1.25rem; font-size: 0.875rem;">
+                                        Ver detalles
+                                    </button>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="top: 15px; right: 15px;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endif %}
+        </div>
 
         <!-- Controles Internos -->
         <ul class="list-group">

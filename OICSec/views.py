@@ -72,15 +72,18 @@ def get_filtered_objects(request, model, template_name):
     is_actividad_fiscalizacion = (mapping.get(model) == 'actividad_fiscalizacion')
     if is_actividad_fiscalizacion:
         oics_name_query = 'id_oic__nombre'
-        order_query = ['id_oic__nombre' ,'anyo', 'trimestre']
+        order_query = ['id_oic__nombre', 'anyo', 'trimestre']
     else:
         oics_name_query = 'id_actividad_fiscalizacion__id_oic__nombre'
-        order_query = ['id_actividad_fiscalizacion__id_oic__nombre', 'id_actividad_fiscalizacion__anyo', 'id_actividad_fiscalizacion__trimestre', 'numero']
+        order_query = ['id_actividad_fiscalizacion__id_oic__nombre', 'id_actividad_fiscalizacion__anyo',
+                       'id_actividad_fiscalizacion__trimestre', 'numero']
 
+    # Obtener los nombres de OICs y años
     nombres_oics = model.objects.values_list(oics_name_query, flat=True).distinct()
     lista_oics = Oic.objects.filter(nombre__in=nombres_oics).distinct()
     lista_anyos = ActividadFiscalizacion.objects.values('anyo').distinct()
 
+    # Filtros de OIC y Año
     oic_id = request.GET.get('oic_id')
     anyo = request.GET.get('anyo')
     filter_oic_band = oic_id == 'None'
@@ -103,7 +106,19 @@ def get_filtered_objects(request, model, template_name):
         else:
             filter_kwargs['id_actividad_fiscalizacion__anyo'] = anyo
 
+    # Filtrar objetos y ordenar
     objects = model.objects.filter(**filter_kwargs).order_by(*order_query)
+
+    # Buscar elementos con datos faltantes
+    elementos_incompletos = []
+    if not is_actividad_fiscalizacion:
+        for obj in objects:
+            if obj.id_actividad_fiscalizacion.anyo is None or obj.id_actividad_fiscalizacion.trimestre is None or obj.id_actividad_fiscalizacion.id_oic is None or obj.numero is None:
+                elementos_incompletos.append(obj)
+    else:
+        for obj in objects:
+            if obj.anyo is None or obj.trimestre is None:
+                elementos_incompletos.append(obj)
 
     paginator = Paginator(objects, 20)
     page_number = request.GET.get('page')
@@ -120,7 +135,8 @@ def get_filtered_objects(request, model, template_name):
         'lista_anyos': lista_anyos,
         'oic_id': oic_id,
         'anyo': anyo,
-        mapping.get(model): objects
+        mapping.get(model): objects,
+        'elementos_incompletos': elementos_incompletos,  # Añadimos la lista de elementos incompletos
     }
 
     return render(request, template_name, context)
