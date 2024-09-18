@@ -4,6 +4,15 @@
 
 {% block content %}
     <style>
+
+        :root {
+            --bg-danger: #dc3545;
+            --bg-warning: #ffc107;
+            --bg-info: #17a2b8;
+            --bg-primary: #007bff;
+            --bg-success: #28a745;
+        }
+
         /* Estilos generales */
         body {
             background-color: #f7f9fc; /* Fondo claro */
@@ -11,19 +20,34 @@
         }
 
         .container {
-            margin-top: 3rem;
+            margin-bottom: 2rem; /* Espaciado debajo de la tarjeta */
         }
+
 
         .card {
             background: #ffffff;
-            border: none;
-            border-radius: 20px;
+            margin-bottom: 2rem;
+            border-radius: 60px; /* Borde redondeado inicial */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Sombra elegante */
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            /* Animación para el borde redondeado */
+            animation: borderRadiusAnimation 1s ease-out forwards;
+            overflow: hidden;
+        }
+
+
+        /* Animación para el borde redondeado */
+        @keyframes borderRadiusAnimation {
+            0% {
+                border-radius: 0; /* Comienza cuadrada */
+            }
+            100% {
+                border-radius: 60px; /* Termina con borde redondeado */
+            }
         }
 
         .card:hover {
-            transform: translateY(-10px); /* Efecto hover */
+            transform: translateY(-2px); /* Efecto hover */
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); /* Más sombra */
         }
 
@@ -159,13 +183,13 @@
         .card-body {
             animation: fadeInUp 0.5s ease both;
         }
-        
+
         .messages {
             list-style: none;
             padding: 0;
             margin: 20px 0;
         }
-        
+
         .messages li {
             margin-bottom: 10px;
             padding: 15px;
@@ -173,33 +197,33 @@
             font-size: 1rem;
             transition: all 0.3s ease;
         }
-        
+
         .messages li.alert {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-radius: 50px;
             font-weight: bold;
         }
-        
+
         .messages li.alert-success {
             background-color: #d4edda; /* Verde claro */
             color: #155724;
         }
-        
+
         .messages li.alert-danger {
             background-color: #f8d7da; /* Rojo claro */
             color: #721c24;
         }
-        
+
         .messages li.alert-warning {
             background-color: #fff3cd; /* Amarillo claro */
             color: #856404;
         }
-        
+
         .messages li.alert-info {
             background-color: #d1ecf1; /* Azul claro */
             color: #0c5460;
         }
-        
+
         .btn-close {
             background: none;
             border: none;
@@ -209,7 +233,7 @@
             line-height: 0;
             color: #000;
         }
-        
+
         .btn-close:hover {
             opacity: 1;
         }
@@ -228,14 +252,14 @@
         {% endif %}
     <div class="container">
         <div class="row justify-content-center mt-5">
-            <div class="col-md-8">
+            <div class="col-md-10">
                 <div class="card">
                     <div class="card-header display-4">Editar Perfil</div>
 
                     <div class="card-body">
                         <form method="POST" action="{% url 'perfil' %}">
                             {% csrf_token %}
-                            
+
                             <!-- Cambiar nombre de usuario -->
                             <div class="form-group">
                                 <label for="username" class="form-label">Nombre de Usuario</label>
@@ -324,91 +348,103 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
     <script>
-        $(document).ready(function () {
-            var newPasswordChanged = false;
+    $(document).ready(function () {
+        var newPasswordChanged = false;
 
-            // Comprobar las contraseñas y requisitos
-            $('#confirm_password, #new_password').on('keyup', function () {
-                newPasswordChanged = true;
-                checkPasswordsAndRequirements();
-            });
+        // Comprobar las contraseñas y requisitos
+        $('#confirm_password, #new_password').on('keyup', function () {
+            newPasswordChanged = true;
+            checkPasswordsAndRequirements();
+        });
 
-            function checkPasswordsAndRequirements() {
-                var password = $('#new_password').val();
-                var confirmPassword = $('#confirm_password').val();
-                var requirements = $('#password_requirements li');
-                var allRequirementsMet = true;
+        function checkPasswordsAndRequirements() {
+            var password = $('#new_password').val();
+            var confirmPassword = $('#confirm_password').val();
+            var requirements = $('#password_requirements li');
+            var allRequirementsMet = true;
 
-                if (password === confirmPassword) {
-                    $('#password_match_message').text('Las contraseñas coinciden').css('color', 'green');
-                } else {
-                    $('#password_match_message').text('Las contraseñas no coinciden').css('color', 'red');
-                    allRequirementsMet = false;
-                }
-
-                if (newPasswordChanged) {
-                    requirements.each(function () {
-                        var requirement = $(this);
-                        var regex;
-                        switch (requirement.index()) {
-                            case 0:
-                                regex = /.{8,}/;
-                                break;
-                            case 1:
-                                regex = /[A-Z]/;
-                                break;
-                            case 2:
-                                regex = /[a-z]/;
-                                break;
-                            case 3:
-                                regex = /\d/;
-                                break;
-                        }
-                        if (!regex.test(password)) {
-                            requirement.removeClass('fulfilled nothing').addClass('not-fulfilled');
-                            allRequirementsMet = false;
-                        } else {
-                            requirement.removeClass('not-fulfilled nothing').addClass('fulfilled');
-                        }
-                    });
-                }
-
-                $('#submit_button').prop('disabled', !allRequirementsMet || password !== confirmPassword);
+            if (password === confirmPassword) {
+                $('#password_match_message').text('Las contraseñas coinciden').css('color', 'green');
+            } else {
+                $('#password_match_message').text('Las contraseñas no coinciden').css('color', 'red');
+                allRequirementsMet = false;
             }
 
-            $('#new_password').on('keyup', function () {
-                var password = $(this).val();
-                var result = zxcvbn(password);
-                var score = result.score;
-                var progressClass = '';
-                var message = '';
-                switch (score) {
-                    case 0:
-                        progressClass = 'bg-danger';
-                        message = 'Constraseña muy débil';
-                        break;
-                    case 1:
-                        progressClass = 'bg-warning';
-                        message = 'Contraseña débil';
-                        break;
-                    case 2:
-                        progressClass = 'bg-info';
-                        message = 'Contraseña aceptable';
-                        break;
-                    case 3:
-                        progressClass = 'bg-primary';
-                        message = 'Contraseña fuerte';
-                        break;
-                    case 4:
-                        progressClass = 'bg-success';
-                        message = 'Contraseña muy fuerte';
-                        break;
-                }
-                $('#password_strength_progress').removeClass().addClass('progress-bar ' + progressClass).css('width', (score * 25) + '%');
-                $('#password_strength_message').text(message).removeClass().addClass('oval-background text-center').addClass(progressClass);
+            if (newPasswordChanged) {
+                requirements.each(function () {
+                    var requirement = $(this);
+                    var regex;
+                    switch (requirement.index()) {
+                        case 0:
+                            regex = /.{8,}/;
+                            break;
+                        case 1:
+                            regex = /[A-Z]/;
+                            break;
+                        case 2:
+                            regex = /[a-z]/;
+                            break;
+                        case 3:
+                            regex = /\d/;
+                            break;
+                    }
+                    if (!regex.test(password)) {
+                        requirement.removeClass('fulfilled nothing').addClass('not-fulfilled');
+                        allRequirementsMet = false;
+                    } else {
+                        requirement.removeClass('not-fulfilled nothing').addClass('fulfilled');
+                    }
+                });
+            }
+
+            $('#submit_button').prop('disabled', !allRequirementsMet || password !== confirmPassword);
+        }
+
+        $('#new_password').on('keyup', function () {
+            var password = $(this).val();
+            var result = zxcvbn(password);
+            var score = result.score;
+            var progressClass = '';
+            var message = '';
+            var progressWidth = (score * 25) + '%';
+
+            switch (score) {
+                case 0:
+                    progressClass = 'bg-danger';
+                    message = 'Contraseña muy débil';
+                    break;
+                case 1:
+                    progressClass = 'bg-warning';
+                    message = 'Contraseña débil';
+                    break;
+                case 2:
+                    progressClass = 'bg-info';
+                    message = 'Contraseña aceptable';
+                    break;
+                case 3:
+                    progressClass = 'bg-primary';
+                    message = 'Contraseña fuerte';
+                    break;
+                case 4:
+                    progressClass = 'bg-success';
+                    message = 'Contraseña muy fuerte';
+                    break;
+            }
+
+            // Usa GSAP para animar la barra de progreso
+            gsap.to('#password_strength_progress', {
+                duration: 0.5,
+                width: progressWidth,
+                backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--' + progressClass),
+                ease: "power2.inOut"
             });
+
+            $('#password_strength_message').text(message).removeClass().addClass('oval-background text-center').addClass(progressClass);
         });
-    </script>
+    });
+</script>
+
 
 {% endblock %}
