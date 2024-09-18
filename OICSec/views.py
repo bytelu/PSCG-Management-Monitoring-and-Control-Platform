@@ -1113,34 +1113,37 @@ def perfil_view(request):
         password = request.POST.get('password')
         new_password = request.POST.get('new_password')
 
-        # Verificar contraseñas
-        user = authenticate(username=user.username, password=password)
-        if user is not None:  # La contraseña actual es correcta
-            if username != user.username:
-                if User.objects.filter(username=username).exists():
-                    return render(request, 'profile.html', {
-                        'duplicated_profile': f'El nombre de usuario "{username}" ya se encuentra en uso, favor de '
-                                              f'escoger otro.'})
-            # Se verifica si se han ingresado una nueva contraseña y confirmar contraseña
-            if new_password:
-                # Guardar nueva contraseña
+        # Verificar la contraseña actual
+        user_authenticated = authenticate(username=user.username, password=password)
+
+        if user_authenticated is not None:  # La contraseña actual es correcta
+            # Verificar si el nombre de usuario ya está en uso por otro usuario
+            if username != user.username and User.objects.filter(username=username).exists():
+                messages.error(request, f'El nombre de usuario "{username}" ya está en uso. Elige otro.')
+                return redirect('perfil')
+
+            # Actualizar los datos del perfil (username, first_name, last_name)
+            user.username = username
+            user.first_name = first_name
+            user.last_name = last_name
+
+            if new_password:  # Si se proporciona una nueva contraseña
+                # Cambiar la contraseña del usuario
                 user.set_password(new_password)
+                # Guardar los cambios del usuario
                 user.save()
-                # Actualizar los datos del usuario
-                user.username = username
-                user.first_name = first_name
-                user.last_name = last_name
-                user.save()
-                # Se actualiza la sesión de autenticación
+                # Actualizar la sesión de autenticación para evitar cierre de sesión
                 update_session_auth_hash(request, user)
-                return render(request, 'profile.html', {'success_password': 'Perfil actualizado correctamente.'})
+                # Mensaje de éxito para perfil y contraseña actualizados
+                messages.success(request, 'Perfil y contraseña actualizados correctamente.')
             else:
-                # Se actualizan unicamente los datos del usuario
-                user.username = username
-                user.first_name = first_name
-                user.last_name = last_name
+                # Guardar los cambios del usuario sin modificar la contraseña
                 user.save()
-                return render(request, 'profile.html', {'success_password': 'Perfil actualizado correctamente.'})
+                # Mensaje de éxito solo para perfil actualizado
+                messages.success(request, 'Perfil actualizado correctamente.')
+
+            return redirect('perfil')
+
         else:
             # Contraseña actual incorrecta
             return render(request, 'profile.html', {'error_password': 'La contraseña es incorrecta.'})

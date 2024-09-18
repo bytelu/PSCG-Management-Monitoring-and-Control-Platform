@@ -159,21 +159,78 @@
         .card-body {
             animation: fadeInUp 0.5s ease both;
         }
+        
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        
+        .messages li {
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 20px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .messages li.alert {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 50px;
+            font-weight: bold;
+        }
+        
+        .messages li.alert-success {
+            background-color: #d4edda; /* Verde claro */
+            color: #155724;
+        }
+        
+        .messages li.alert-danger {
+            background-color: #f8d7da; /* Rojo claro */
+            color: #721c24;
+        }
+        
+        .messages li.alert-warning {
+            background-color: #fff3cd; /* Amarillo claro */
+            color: #856404;
+        }
+        
+        .messages li.alert-info {
+            background-color: #d1ecf1; /* Azul claro */
+            color: #0c5460;
+        }
+        
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            opacity: 0.7;
+            float: right;
+            line-height: 0;
+            color: #000;
+        }
+        
+        .btn-close:hover {
+            opacity: 1;
+        }
+
 
     </style>
-
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+                    <li class="alert alert-dismissible fade show {% if message.tags %}alert-{{ message.tags }}{% endif %}" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     <div class="container">
-        <div class="row justify-content-center">
+        <div class="row justify-content-center mt-5">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">Editar Perfil</div>
-                    {% if success_password %}
-                        <div class="mt-3">
-                            <div class="alert alert-success" role="alert">
-                                <strong>{{ success_password }}</strong>
-                            </div>
-                        </div>
-                    {% endif %}
+                    <div class="card-header display-4">Editar Perfil</div>
 
                     <div class="card-body">
                         <form method="POST" action="{% url 'perfil' %}">
@@ -256,7 +313,7 @@
 
                             <!-- Botón de guardar cambios -->
                             <div class="form-group text-center">
-                                <button id="submit_button" type="submit" class="btn btn-outline-dark w-100" disabled>
+                                <button id="submit_button" type="submit" class="btn btn-outline-dark w-100">
                                     Guardar Cambios
                                 </button>
                             </div>
