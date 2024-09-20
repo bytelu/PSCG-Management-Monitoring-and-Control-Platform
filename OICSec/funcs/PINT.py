@@ -238,7 +238,6 @@ def extract_pint(path):
 
         return data
     except Exception as e:
-        print(e)
         return None
 
 

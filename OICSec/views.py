@@ -401,22 +401,23 @@ def get_most_similar_tipo_intervencion(tipo_str):
 def upload_pint_view(request):
     lista_oics = Oic.objects.all()
     similar_oic = None
+    processed_files = []  # Lista para archivos procesados exitosamente
+    error_files = []  # Lista para archivos con errores
+
     context = {
         'lista_oics': lista_oics,
         'similar_oic': similar_oic
     }
-    word_result = 'Se procesaron los siguientes archivos'
-    result_band = False
-    word_error = 'Hubo un error al procesar los archivos'
-    error_band = False
 
     if request.method == 'POST':
         word_files = request.FILES.getlist('word_files')
+
+        # Verifica si no se han seleccionado archivos
         if not word_files:
             context.update(
                 {
-                    'word_processing_error': 'Error al procesar los archivos | Nombre de error: None-files | '
-                                             'Consulte manual de usuario para más información.'
+                    'word_processing_error': [
+                        'Error al procesar los archivos. Ningún archivo fue seleccionado.']
                 }
             )
             return render(request, 'upload_pint.html', context=context)
@@ -424,28 +425,31 @@ def upload_pint_view(request):
         try:
             for word_file in word_files:
                 word_processing_result = extract_pint(word_file)
+
+                # Si el resultado es None, hubo un error al procesar el archivo
                 if word_processing_result is None:
-                    word_error += f'\n{word_file.name}'
-                    error_band = True
+                    error_files.append(word_file.name)
                 else:
-                    word_result += f'\n{word_file.name}'
-                    result_band = True
+                    processed_files.append(word_file.name)  # Archivo procesado con éxito
                     max_similarity = 0
+
+                    # Buscar el OIC más similar
                     for oic in lista_oics:
-                        similarity = SequenceMatcher(None, clean_oic_text(word_processing_result.get('Ente Público')),
-                                                     oic.nombre).ratio()
+                        similarity = SequenceMatcher(None, clean_oic_text(word_processing_result.get('Ente Público')), oic.nombre).ratio()
                         if similarity > max_similarity:
                             max_similarity = similarity
                             similar_oic = oic
+
                     oic_selected = similar_oic if similar_oic else None
 
-                    # Verifica que hay actividad de fiscalización
+                    # Verificar actividad de fiscalización
                     actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
                         anyo=word_processing_result['Año'],
                         trimestre=word_processing_result['Trimestre'],
                         id_oic=oic_selected
                     ).first()
-                    # Si no existe, crea una actividad de fiscalización
+
+                    # Si no existe actividad de fiscalización, crearla
                     if not actividad_fiscalizacion:
                         actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
                             anyo=word_processing_result['Año'],
@@ -453,18 +457,22 @@ def upload_pint_view(request):
                             id_oic=oic_selected
                         )
 
-                    # Se preparan los datos para la intervencion
+                    # Verificar tipo de intervención
                     tipo_intervencion_obj = None
-                    if word_processing_result["Clave"]:
+                    if word_processing_result.get("Clave"):
                         tipo_intervencion_obj = TipoIntervencion.objects.get(clave=word_processing_result["Clave"])
-                    elif word_processing_result['Tipo de Intervención']:
+                    elif word_processing_result.get('Tipo de Intervención'):
                         tipo_intervencion_obj = get_most_similar_tipo_intervencion(
                             word_processing_result['Tipo de Intervención'])
 
-                    # Se verifica si existe una intervención, en caso de que no exista, se crea una, en caso contrario unicamente se actualizan sus datos
-                    intervencion = Intervencion.objects.filter(numero=word_processing_result['Numero'], id_actividad_fiscalizacion=actividad_fiscalizacion).first()
+                    # Verificar si ya existe la intervención, si no, crearla
+                    intervencion = Intervencion.objects.filter(
+                        numero=word_processing_result['Numero'],
+                        id_actividad_fiscalizacion=actividad_fiscalizacion
+                    ).first()
+
                     if intervencion is None:
-                        # Crea una intervención nueva con la actividad de fiscalización
+                        # Crear nueva intervención
                         cedula_obj = Cedula.objects.create()
                         Intervencion.objects.create(
                             unidad=word_processing_result.get('Área'),
@@ -484,6 +492,7 @@ def upload_pint_view(request):
                             id_cedula=cedula_obj
                         )
 
+                        # Crear conceptos de cédula asociados
                         for i in range(54):
                             ConceptoCedula.objects.create(
                                 celda=str(i),
@@ -492,6 +501,7 @@ def upload_pint_view(request):
                                 id_cedula=cedula_obj
                             )
                     else:
+                        # Actualizar intervención existente
                         intervencion.unidad = word_processing_result.get('Área')
                         intervencion.denominacion = word_processing_result.get('Denominación')
                         intervencion.ejercicio = word_processing_result.get('Ejercicio')
@@ -506,19 +516,22 @@ def upload_pint_view(request):
                         intervencion.id_tipo_intervencion = tipo_intervencion_obj
                         intervencion.save()
 
-            if result_band:
-                context.update({'word_processing_result': word_result})
-            if error_band:
-                context.update({'word_processing_error': word_error})
-            return render(request, 'upload_pint.html', context=context)
-        except Exception as e:
-            word_error = (f'Error al procesar los archivos Word\n Nombre de error: {str(e)} | Consulte '
-                          f'el manual de usuario para más información')
-            context.update({'word_processing_error': word_error})
+            # Agregar listas de archivos procesados y con error al contexto
+            if processed_files:
+                context['word_processing_result'] = processed_files
+            if error_files:
+                context['word_processing_error'] = error_files
+
             return render(request, 'upload_pint.html', context=context)
 
-    if request.method == 'GET':
-        return render(request, 'upload_pint.html', context=context)
+        except Exception as e:
+            context.update({
+                'word_processing_error': [
+                    f'Error al procesar los archivos. Detalle del error: {str(e)}. Consulte el manual de usuario para más información.']
+            })
+            return render(request, 'upload_pint.html', context=context)
+
+    return render(request, 'upload_pint.html', context=context)
 
 
 @login_required
