@@ -218,21 +218,33 @@ def upload_view(request, extract_func, template_name, create_func):
 
 
 def handle_post_request(request, lista_oics, extract_func, template_name, create_func):
-    excel_file = request.FILES.get('excel_file')
+    excel_files = request.FILES.getlist('excel_files')
+    context = {
+        'lista_oics': lista_oics,
+    }
+    processed_files = []
+    error_files = []
+    if not excel_files:
+        context['excel_processing_error'] = ['Ningún archivo fue seleccionado.']
+        return render(request, 'upload_paa.html', context=context)
 
     try:
-        data = extract_func(excel_file)
+        for excel_file in excel_files:
+            data = extract_func(excel_file)
 
-        if data is None:
-            return render_error(request, lista_oics, template_name, 'Error al procesar el archivo Excel | Nombre de error: None-results')
+            if data is None:
+                error_files.append(excel_file.name)
+            else:
+                processed_files.append(excel_file.name)
+                with transaction.atomic():
+                    process_data(data, lista_oics, create_func)
 
-        with transaction.atomic():
-            process_data(data, lista_oics, create_func)
+        if processed_files:
+            context['excel_processing_result'] = processed_files
+        if error_files:
+            context['excel_processing_error'] = error_files
 
-        return render(request, template_name, {
-            'excel_processing_result': data,
-            'lista_oics': lista_oics,
-        })
+        return render(request, template_name, context=context)
 
     except Exception as e:
         return render_error(request, lista_oics, template_name, f'Error al procesar el archivo Excel | Nombre de error: {str(e)}')

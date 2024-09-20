@@ -1,71 +1,216 @@
 {% extends 'navbar.html' %}
 
 {% block title %}
-    Subir Auditorias
+    Subir Auditorías
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center">
-    <h1 class="display-4">Subir auditoria</h1>
-    <a href="{% url 'auditorias' %}" class="btn btn-outline-dark">
-        <i class="fas fa-arrow-left"></i>
-    </a>
-</div>
-<div class="container my-5 d-flex justify-content-center align-items-center">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title d-flex justify-content-center align-items-center">Subir PAA</h2>
-        </div>
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <!-- Nuevo botón personalizado para cargar archivos -->
-                    <label for="formFile" class="form-label text-center">Aquí deberás seleccionar únicamente un archivo excel de tipo PAA:</label>
-                    <label for="fileInput" class="btn btn-outline-dark btn-lg btn-block">Seleccionar Archivo</label>
-                    <!-- Nuevo input de archivo oculto -->
-                    <input type="file" id="fileInput" name="excel_file"
-                           onchange="document.getElementById('fileNameLabel').innerText = 'Archivo seleccionado: ' + this.files[0].name">
-                    <!-- Etiqueta para mostrar el nombre del archivo seleccionado -->
-                    <p id="fileNameLabel"></p>
-                </div>
-                <button type="submit" class="btn btn-outline-dark btn-lg btn-block">Subir Archivo</button>
-            </form>
-            {% if excel_processing_result %}
-                <div class="alert alert-success mt-3" role="alert">
-                    <strong>Éxito al procesar el archivo!! | Los datos han sido guardados con éxito!!</strong>
-                </div>
-            {% endif %}
-            {% if excel_processing_error %}
-                <div class="alert alert-danger mt-3" role="alert">
-                    <strong>Error:</strong> {{ excel_processing_error }}
-                </div>
-            {% endif %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-4">Subir auditorías</h1>
+        <a href="{% url 'auditorias' %}" class="btn btn-outline-dark">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="container my-5">
+        <div class="card shadow-lg border-0 rounded-lg">
+            <div class="card-header bg-dark text-white text-center">
+                <h2 class="card-title">Subir PAA</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4 text-center">
+                        <label for="fileInput" class="btn btn-outline-dark btn-sm w-100">
+                            <i class="fas fa-file-upload"></i> Seleccionar Archivos
+                        </label>
+                        <input type="file" id="fileInput" name="excel_files" multiple onchange="updateFileList(this)" hidden>
+                    </div>
+
+                    <!-- Contenedor de archivos seleccionados -->
+                    <div id="fileListContainer" class="file-list-container mb-4"></div>
+
+                    <button type="submit" class="btn btn-dark btn-sm w-100">Subir Archivos</button>
+                </form>
+
+                <!-- Mensajes de resultado -->
+                <div id="resultContainer" class="result-container mt-4"></div>
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block styles %}
-<style>
-    /* Estilos personalizados para el botón de carga de archivo */
+    <style>
+        .card {
+            max-width: 900px;
+            margin: auto;
+            border-radius: 30px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            overflow: auto;
+        }
 
-    #fileInput {
-        display: none; /* Oculta el input de archivo original */
-    }
+        .file-list-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
 
-    #fileNameLabel {
-        text-align: center; /* Centra el texto */
-    }
-</style>
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 180px;
+            height: 180px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .file-item i {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .file-item span {
+            display: block;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+            word-break: break-word;
+        }
+
+        .file-item.success {
+            border-color: #28a745;
+        }
+
+        .file-item.error {
+            border-color: #dc3545;
+        }
+
+        .result-header {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .result-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .result-container > div {
+            margin-bottom: 30px;
+        }
+
+        .file-list-container .success,
+        .file-list-container .error {
+            justify-content: center;
+        }
+
+        .success-container, .error-container {
+            margin-top: 30px;
+        }
+    </style>
 {% endblock %}
 
 {% block scripts %}
-<script>
-    $(document).ready(function () {
-        $('.select2').select2({
-            theme: "bootstrap-5"
+    <script>
+        function updateFileList(input) {
+            const fileListContainer = document.getElementById('fileListContainer');
+            fileListContainer.innerHTML = ''; // Limpiar el contenedor antes de agregar los archivos
+
+            if (input.files.length > 0) {
+                Array.from(input.files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.classList.add('file-item');
+
+                    const fileIcon = document.createElement('i');
+                    fileIcon.classList.add('fas', 'fa-file-alt');
+                    fileItem.appendChild(fileIcon);
+
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.textContent = file.name;
+                    fileItem.appendChild(fileNameSpan);
+
+                    fileListContainer.appendChild(fileItem);
+                });
+            } else {
+                fileListContainer.innerHTML = '<p class="text-muted">No se han seleccionado archivos.</p>';
+            }
+        }
+
+        function showProcessedFiles(successFiles, errorFiles) {
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = '';
+
+            if (successFiles.length > 0) {
+                const successDiv = document.createElement('div');
+                successDiv.innerHTML = '<h4 class="result-header text-success">Archivos Procesados Exitosamente</h4>';
+                const successContainer = document.createElement('div');
+                successContainer.classList.add('file-list-container');
+                successFiles.forEach(fileName => {
+                    const fileItem = document.createElement('div');
+                    fileItem.classList.add('file-item', 'success');
+
+                    const fileIcon = document.createElement('i');
+                    fileIcon.classList.add('fas', 'fa-check-circle');
+                    fileItem.appendChild(fileIcon);
+
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.textContent = fileName;
+                    fileItem.appendChild(fileNameSpan);
+
+                    successContainer.appendChild(fileItem);
+                });
+                successDiv.appendChild(successContainer);
+                resultContainer.appendChild(successDiv);
+            }
+
+            if (errorFiles.length > 0) {
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = '<h4 class="result-header text-danger">Errores en los Archivos</h4>';
+                const errorContainer = document.createElement('div');
+                errorContainer.classList.add('file-list-container');
+                errorFiles.forEach(fileName => {
+                    const fileItem = document.createElement('div');
+                    fileItem.classList.add('file-item', 'error');
+
+                    const fileIcon = document.createElement('i');
+                    fileIcon.classList.add('fas', 'fa-times-circle');
+                    fileItem.appendChild(fileIcon);
+
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.textContent = fileName;
+                    fileItem.appendChild(fileNameSpan);
+
+                    errorContainer.appendChild(fileItem);
+                });
+                errorDiv.appendChild(errorContainer);
+                resultContainer.appendChild(errorDiv);
+            } 
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const successFiles = {{ excel_processing_result|default:"[]"|safe }};
+            const errorFiles = {{ excel_processing_error|default:"[]"|safe }};
+
+            // Llamar a la función para mostrar los resultados
+            showProcessedFiles(successFiles, errorFiles);
         });
-    });
-</script>
+    </script>
 {% endblock %}
