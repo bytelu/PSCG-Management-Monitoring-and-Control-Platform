@@ -4,6 +4,7 @@ import os
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import Http404
 from django.test import TestCase, Client
 from django.urls import reverse
 
@@ -11,7 +12,7 @@ from .forms import AuditoriaForm, ControlForm, IntervencionForm
 from .models import ActividadFiscalizacion, Oic, Auditoria, ControlInterno, Intervencion, TipoIntervencion, Cedula, \
     ConceptoCedula, Minuta, ConceptoMinuta, Archivo
 from .signals import is_last_record_in_activity
-from .views import convert_to_date, clean_oic_text, get_most_similar_tipo_intervencion
+from .views import convert_to_date, clean_oic_text, get_most_similar_tipo_intervencion, get_cedula_conceptos
 
 
 class LoggedIn(TestCase):
@@ -144,15 +145,79 @@ class IntervencionesViewTest(LoggedIn):
         self.assertTemplateUsed(response, 'intervenciones.html')
 
 
+class ActividadesViewTest(LoggedIn):
+
+    def setUp(self):
+        super().setUp()
+        # Crear un OIC y Actividades de Fiscalización para pruebas
+        self.oic = Oic.objects.create(nombre="OIC Test")
+        self.actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+            id_oic=self.oic, anyo=2024, trimestre=1)
+        self.actividad_fiscalizacion_incompleta = ActividadFiscalizacion.objects.create(
+            id_oic=self.oic, anyo=None, trimestre=None)
+
+    def test_actividades_view_status_code(self):
+        # Comprobar que la vista se carga correctamente
+        response = self.client.get(reverse('actividades'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_actividades_view_template_used(self):
+        # Verificar que se utiliza la plantilla correcta
+        response = self.client.get(reverse('actividades'))
+        self.assertTemplateUsed(response, 'actividades.html')
+
+    def test_actividades_view_with_oic_and_year_filter(self):
+        # Probar filtro por OIC y año
+        response = self.client.get(reverse('actividades'), {'oic_id': self.oic.id, 'anyo': 2024})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.actividad_fiscalizacion)
+        self.assertNotContains(response, self.actividad_fiscalizacion_incompleta)
+
+    def test_actividades_view_without_filters(self):
+        # Probar sin filtros, debe mostrar todas las actividades
+        response = self.client.get(reverse('actividades'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.actividad_fiscalizacion)
+        self.assertContains(response, self.actividad_fiscalizacion_incompleta)
+
+    def test_incomplete_activities_identification(self):
+        # Verificar que se identifican las actividades con datos incompletos
+        response = self.client.get(reverse('actividades'))
+        self.assertEqual(response.status_code, 200)
+        elementos_incompletos = response.context['elementos_incompletos']
+        self.assertIn(self.actividad_fiscalizacion_incompleta, elementos_incompletos)
+
+    def test_pagination(self):
+        # Probar la paginación creando más de 20 actividades
+        for i in range(25):
+            ActividadFiscalizacion.objects.create(id_oic=self.oic, anyo=2025, trimestre=2)
+
+        response = self.client.get(reverse('actividades'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['page_obj'].has_next())
+        self.assertEqual(len(response.context['page_obj'].object_list), 20)  # Debe haber 20 en la primera página
+
+        # Comprobar segunda página
+        response = self.client.get(reverse('actividades') + '?page=2')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['page_obj'].has_next())  # No debe haber más páginas
+
+    def test_partial_filter_oic_only(self):
+        # Probar con solo el filtro de OIC
+        response = self.client.get(reverse('actividades'), {'oic_id': self.oic.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.actividad_fiscalizacion)
+
+
 class HandleDetailViewTest(LoggedIn):
 
     def setUp(self):
         super().setUp()
         self.oic = Oic.objects.create(nombre="OIC1")
         self.actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
-            id_oic=self.oic, anyo=2024)
+            id_oic=self.oic, anyo=2024, trimestre=3)
         self.actividad_fiscalizacion_2 = ActividadFiscalizacion.objects.create(
-            id_oic=self.oic, anyo=2025)
+            id_oic=self.oic, anyo=2025, trimestre=3)
         self.auditoria = Auditoria.objects.create(id_actividad_fiscalizacion=self.actividad_fiscalizacion)
         self.control_interno = ControlInterno.objects.create(id_actividad_fiscalizacion=self.actividad_fiscalizacion_2)
         self.intervencion = Intervencion.objects.create(id_actividad_fiscalizacion=self.actividad_fiscalizacion_2)
@@ -167,7 +232,8 @@ class HandleDetailViewTest(LoggedIn):
     def test_post_auditoria_detail(self):
         response = self.client.post(reverse('auditoria_detalle', args=[self.auditoria.id]), {
             'anyo': '2026',
-            'id_oic': self.oic.id
+            'id_oic': self.oic.id,
+            'trimestre': 3
         })
         self.assertEqual(response.status_code, 200)
         self.auditoria.refresh_from_db()
@@ -184,7 +250,8 @@ class HandleDetailViewTest(LoggedIn):
     def test_post_control_interno_detail(self):
         response = self.client.post(reverse('control_detalle', args=[self.control_interno.id]), {
             'anyo': '2024',
-            'id_oic': self.oic.id
+            'id_oic': self.oic.id,
+            'trimestre': 3
         })
         self.assertEqual(response.status_code, 200)
         self.control_interno.refresh_from_db()
@@ -201,7 +268,8 @@ class HandleDetailViewTest(LoggedIn):
     def test_post_intervencion_detail(self):
         response = self.client.post(reverse('intervencion_detalle', args=[self.intervencion.id]), {
             'anyo': '2025',
-            'id_oic': self.oic.id
+            'id_oic': self.oic.id,
+            'trimestre': 3
         })
         self.assertEqual(response.status_code, 200)
         self.intervencion.refresh_from_db()
@@ -299,7 +367,7 @@ class UploadPaaViewTest(LoggedIn):
 
     def test_post_valid_upload_paa_view(self):
         response = self.client.post(reverse('uploadPaa'), {
-            'excel_file': SimpleUploadedFile('test_paa.xlsx', self.valid_excel_data)
+            'excel_files': SimpleUploadedFile('test_paa.xlsx', self.valid_excel_data)
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(Auditoria.objects.exists())
@@ -307,11 +375,39 @@ class UploadPaaViewTest(LoggedIn):
 
     def test_post_invalid_upload_paa_view(self):
         response = self.client.post(reverse('uploadPaa'), {
-            'excel_file': SimpleUploadedFile('test_paa_invalid.xlsx', self.invalid_excel_data)
+            'excel_files': SimpleUploadedFile('test_paa_invalid.xlsx', self.invalid_excel_data)
         })
         self.assertEqual(response.status_code, 200)
         self.assertIn('excel_processing_error', response.context)
-        self.assertIn('Error al procesar el archivo Excel', response.context['excel_processing_error'])
+
+    def test_post_update_existing_auditoria(self):
+        actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+            id_oic=self.oic,
+            anyo=2024,
+            trimestre=1
+        )
+
+        auditoria = Auditoria.objects.create(
+            denominacion="Denominación Original",
+            numero=1,
+            objetivo="Objetivo Original",
+            alcance="Alcance Original",
+            ejercicio="2023",
+            unidad="Unidad Original",
+            id_actividad_fiscalizacion=actividad_fiscalizacion,
+        )
+
+        response = self.client.post(reverse('uploadPaa'), {
+            'excel_files': SimpleUploadedFile('test_paa.xlsx', self.valid_excel_data)
+        })
+
+        auditoria.refresh_from_db()
+        self.assertEqual(auditoria.denominacion, "test")
+        self.assertEqual(auditoria.objetivo, "test")
+        self.assertEqual(auditoria.alcance, "test")
+        self.assertEqual(auditoria.unidad, "test")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('excel_processing_result', response.context)
 
 
 class UploadPaciViewTest(LoggedIn):
@@ -336,7 +432,7 @@ class UploadPaciViewTest(LoggedIn):
 
     def test_post_valid_upload_paci_view(self):
         response = self.client.post(reverse('uploadPaci'), {
-            'excel_file': SimpleUploadedFile('test_paci.xlsx', self.valid_excel_data)
+            'excel_files': SimpleUploadedFile('test_paci.xlsx', self.valid_excel_data)
         })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(ControlInterno.objects.exists())
@@ -344,11 +440,37 @@ class UploadPaciViewTest(LoggedIn):
 
     def test_post_invalid_upload_paci_view(self):
         response = self.client.post(reverse('uploadPaci'), {
-            'excel_file': SimpleUploadedFile('test_paci_invalid.xlsx', self.invalid_excel_data)
+            'excel_files': SimpleUploadedFile('test_paci_invalid.xlsx', self.invalid_excel_data)
         })
         self.assertEqual(response.status_code, 200)
         self.assertIn('excel_processing_error', response.context)
-        self.assertIn('Error al procesar el archivo Excel', response.context['excel_processing_error'])
+
+    def test_post_update_existing_control_interno(self):
+        actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+            id_oic=self.oic,
+            anyo=2024,
+            trimestre=2
+        )
+
+        control_interno = ControlInterno.objects.create(
+            denominacion="Denominación Original",
+            numero=1,
+            objetivo="Objetivo Original",
+            ejercicio="2023",
+            area="Unidad Original",
+            id_actividad_fiscalizacion=actividad_fiscalizacion,
+        )
+
+        response = self.client.post(reverse('uploadPaci'), {
+            'excel_files': SimpleUploadedFile('test_paci.xlsx', self.valid_excel_data)
+        })
+
+        control_interno.refresh_from_db()
+        self.assertEqual(control_interno.denominacion, "test")
+        self.assertEqual(control_interno.objetivo, "test")
+        self.assertEqual(control_interno.area, "test")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('excel_processing_result', response.context)
 
 
 class CleanOicTextTestCase(TestCase):
@@ -412,6 +534,36 @@ class UploadPintViewTestCase(LoggedIn):
         response = self.client.post(reverse('uploadPint'), {})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Error al procesar los archivos')
+
+    def test_post_update_existing_intervencion(self):
+        actividad_fiscalizacion = ActividadFiscalizacion.objects.create(
+            id_oic=self.oic,
+            anyo=2024,
+            trimestre=3
+        )
+
+        intervencion = Intervencion.objects.create(
+            numero=4,
+            id_tipo_intervencion=self.tipo_intervencion,
+            id_actividad_fiscalizacion=actividad_fiscalizacion,
+            denominacion="Denominación Original",
+            objetivo="Objetivo Original"
+        )
+
+        fixtures_dir = os.path.join(os.path.dirname(__file__), 'fixtures', 'test_documents')
+        excel_file_path = os.path.join(fixtures_dir, 'test_pint.docx')
+        with open(excel_file_path, 'rb') as word_file:
+            file_content = word_file.read()
+        word_file = SimpleUploadedFile("test_pint.docx", file_content,
+                                       content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+        response = self.client.post(reverse('uploadPint'), {'word_files': [word_file]})
+
+        intervencion.refresh_from_db()
+        self.assertEqual(intervencion.denominacion, "test")
+        self.assertEqual(intervencion.objetivo, "test")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('word_processing_result', response.context)
 
 
 def create_and_register_file(related_instance, filename):
@@ -536,3 +688,44 @@ class DeleteViewTests(LoggedIn):
         self.assertTrue(is_last_record_in_activity(self.auditoria))
         self.assertTrue(is_last_record_in_activity(self.controlinterno))
 
+
+class GetCedulaConceptosTestCase(LoggedIn):
+    def setUp(self):
+        super().setUp()
+        self.oic = Oic.objects.create(nombre="OIC Test")
+
+        self.cedula = Cedula.objects.create()
+
+        self.concepto1 = ConceptoCedula.objects.create(
+            id_cedula=self.cedula,
+            celda='A1',
+            estado=1,
+            comentario='Comentario 1'
+        )
+        self.concepto2 = ConceptoCedula.objects.create(
+            id_cedula=self.cedula,
+            celda='A2',
+            estado=2,
+            comentario=None  # Comentario vacío
+        )
+
+        self.auditoria = Auditoria.objects.create(
+            id_cedula=self.cedula,
+        )
+
+    def test_get_cedula_conceptos(self):
+        cedula, conceptos, conceptos_dict = get_cedula_conceptos(self.auditoria)
+
+        # Verifica que se haya recuperado la cedula correctamente
+        self.assertEqual(cedula.id, self.cedula.id)
+
+        # Verifica que se hayan recuperado los conceptos correctamente
+        self.assertIn(self.concepto1, conceptos)
+        self.assertIn(self.concepto2, conceptos)
+
+        # Verifica el diccionario de conceptos
+        expected_dict = {
+            'A1': {'estado': 1, 'comentario': 'Comentario 1'},
+            'A2': {'estado': 2, 'comentario': ''}
+        }
+        self.assertEqual(conceptos_dict, expected_dict)
