@@ -603,11 +603,12 @@ def update_conceptos(conceptos, request):
 
 def get_supervision_data(kind, model_instance, fiscalizacion, request):
     data = None
+
     if kind == 1:
-        materia = model_instance.id_materia.clave
-        programacion = model_instance.id_programacion.clave
-        enfoque = model_instance.id_enfoque.clave
-        temporalidad = model_instance.id_temporalidad.clave
+        materia = model_instance.id_materia.clave if model_instance.id_materia else None
+        programacion = model_instance.id_programacion.clave if model_instance.id_programacion else None
+        enfoque = model_instance.id_enfoque.clave if model_instance.id_enfoque else None
+        temporalidad = model_instance.id_temporalidad.clave if model_instance.id_temporalidad else None
         data = SupervisionData(
             OIC=str(
                 model_instance.id_actividad_fiscalizacion.id_oic.nombre)
@@ -620,8 +621,8 @@ def get_supervision_data(kind, model_instance, fiscalizacion, request):
             Clave=(
                 f'{materia}-{programacion}-{enfoque}-{temporalidad}'
                 if all(
-                    [model_instance.id_materia.clave, model_instance.id_programacion.clave,
-                     model_instance.id_enfoque.clave, model_instance.id_temporalidad.clave]) else ''),
+                    [model_instance.id_materia, model_instance.id_programacion,
+                     model_instance.id_enfoque, model_instance.id_temporalidad]) else ''),
             Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}' if fiscalizacion.trimestre else '',
             Objetivo=model_instance.objetivo if model_instance.objetivo else '',
             Area=model_instance.unidad if model_instance.unidad else '',
@@ -748,12 +749,8 @@ def cedula_view(request, model, id_model):
         cedula, conceptos, _ = get_cedula_conceptos(model_instance)
         conceptos_lista = update_conceptos(conceptos, request)
         supervision_data = get_supervision_data(kind, model_instance, fiscalizacion, request)
-        if supervision_data:
-            # Se guarda en el sistema de archivos
-            file_path = create_cedula(kind=kind, data=supervision_data, conceptos=conceptos_lista)
-            return save_file_and_respond(file_path, cedula, supervision_data)
-        else:
-            return HttpResponse("No se pudo generar la cédula.", status=500)
+        file_path = create_cedula(kind=kind, data=supervision_data, conceptos=conceptos_lista)
+        return save_file_and_respond(file_path, cedula, supervision_data)
 
 
 @login_required

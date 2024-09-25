@@ -4,7 +4,6 @@ import os
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.http import Http404
 from django.test import TestCase, Client
 from django.urls import reverse
 
@@ -313,10 +312,10 @@ class AuditoriaDetalleViewTest(LoggedIn):
 
     def setUp(self):
         super().setUp()
-        Auditoria.objects.create()
+        self.auditoria = Auditoria.objects.create()
 
     def test_auditoria_detalle_view(self):
-        response = self.client.get(reverse('auditoria_detalle', args=[1]))  # Test with a sample ID
+        response = self.client.get(reverse('auditoria_detalle', args=[self.auditoria.id]))  # Test with a sample ID
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'auditoria_detalle.html')
 
@@ -325,10 +324,10 @@ class ControlInternoDetalleViewTest(LoggedIn):
 
     def setUp(self):
         super().setUp()
-        ControlInterno.objects.create()
+        self.control_interno = ControlInterno.objects.create()
 
     def test_control_interno_detalle_view(self):
-        response = self.client.get(reverse('control_detalle', args=[1]))  # Test with a sample ID
+        response = self.client.get(reverse('control_detalle', args=[self.control_interno.id]))  # Test with a sample ID
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'control_detalle.html')
 
@@ -337,10 +336,10 @@ class IntervencionDetalleViewTest(LoggedIn):
 
     def setUp(self):
         super().setUp()
-        Intervencion.objects.create(id=1)
+        self.intervencion = Intervencion.objects.create(id=1)
 
     def test_intervencion_detalle_view(self):
-        response = self.client.get(reverse('intervencion_detalle', args=[1]))  # Test with a sample ID
+        response = self.client.get(reverse('intervencion_detalle', args=[self.intervencion.id]))  # Test with a sample ID
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'intervencion_detalle.html')
 
@@ -729,3 +728,113 @@ class GetCedulaConceptosTestCase(LoggedIn):
             'A2': {'estado': 2, 'comentario': ''}
         }
         self.assertEqual(conceptos_dict, expected_dict)
+
+
+class CedulaViewTests(LoggedIn):
+
+    def setUp(self):
+        super().setUp()
+        self.oic = Oic.objects.create(nombre="OIC Test")
+
+        self.actividad = ActividadFiscalizacion.objects.create(id_oic=self.oic)
+
+        # Creación de los objetos necesarios para las pruebas
+        self.cedula = Cedula.objects.create()
+        self.concepto1 = ConceptoCedula.objects.create(
+            id_cedula=self.cedula,
+            celda='0',
+            estado=1,
+            comentario='Comentario 1'
+        )
+        self.concepto2 = ConceptoCedula.objects.create(
+            id_cedula=self.cedula,
+            celda='1',
+            estado=2,
+            comentario=None  # Comentario vacío
+        )
+
+        self.auditoria = Auditoria.objects.create(
+            id_cedula=self.cedula,
+            id_actividad_fiscalizacion=self.actividad
+        )
+
+        self.url = reverse('auditoria_cedula', kwargs={'auditoria_id': self.auditoria.id})
+
+    def test_cedula_view_get(self):
+        response = self.client.get(self.url)
+
+        # Verifica que la respuesta sea correcta
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'cedula.html')
+
+        # Verificar que los conceptos se pasaron correctamente al contexto
+        conceptos_dict = response.context['conceptos']
+        expected_dict = {
+            '0': {'estado': 1, 'comentario': 'Comentario 1'},
+            '1': {'estado': 2, 'comentario': ''}
+        }
+        self.assertEqual(conceptos_dict, expected_dict)
+
+    def test_cedula_view_post(self):
+        post_data = {
+            'estado-0': '1',
+            'comentario-0': 'Nuevo comentario A1',
+            'estado-1': '2',
+            'comentario-1': 'Nuevo comentario A2',
+            'fecha': '2024-09-25'
+        }
+
+        response = self.client.post(self.url, data=post_data)
+        self.assertEqual(response.status_code, 200)
+
+        # Verifica que la respuesta contiene un archivo adjunto
+        self.assertTrue(response.has_header('Content-Disposition'))
+        self.assertIn('attachment; filename=', response['Content-Disposition'])
+
+        # Verifica el tipo MIME para archivos Excel
+        self.assertEqual(response['Content-Type'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        # Verifica que el archivo tenga algún contenido
+        self.assertGreater(len(response.content), 0)
+
+        # Verifica que los conceptos se actualizaron en la base de datos
+        concepto1_actualizado = ConceptoCedula.objects.get(celda='0')
+        self.assertEqual(concepto1_actualizado.comentario, 'Nuevo comentario A1')
+
+        concepto2_actualizado = ConceptoCedula.objects.get(celda='1')
+        self.assertEqual(concepto2_actualizado.comentario, 'Nuevo comentario A2')
+
+
+    def test_cedula_view_con_intervencion(self):
+        intervencion = Intervencion.objects.create(id_cedula=self.cedula)
+        url_intervencion = reverse('intervencion_cedula', kwargs={'intervencion_id': intervencion.id})
+
+        response = self.client.get(url_intervencion)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'cedula.html')
+
+        # Verificar que los conceptos se pasaron correctamente al contexto
+        conceptos_dict = response.context['conceptos']
+        expected_dict = {
+            '0': {'estado': 1, 'comentario': 'Comentario 1'},
+            '1': {'estado': 2, 'comentario': ''}
+        }
+        self.assertEqual(conceptos_dict, expected_dict)
+
+    def test_cedula_view_con_control_interno(self):
+        control_interno = ControlInterno.objects.create(id_cedula=self.cedula)
+        url_control_interno = reverse('control_cedula', kwargs={'control_id': control_interno.id})
+
+        response = self.client.get(url_control_interno)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'cedula.html')
+
+        # Verificar que los conceptos se pasaron correctamente al contexto
+        conceptos_dict = response.context['conceptos']
+        expected_dict = {
+            '0': {'estado': 1, 'comentario': 'Comentario 1'},
+            '1': {'estado': 2, 'comentario': ''}
+        }
+        self.assertEqual(conceptos_dict, expected_dict)
+
