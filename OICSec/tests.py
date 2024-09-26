@@ -874,7 +874,7 @@ class CedulaViewTests(LoggedIn):
         self.assertEqual(conceptos_dict, expected_dict)
 
 
-class MinutaViewTest(LoggedIn):
+class MinutaViewGetTest(LoggedIn):
 
     def setUp(self):
         super().setUp()
@@ -982,3 +982,172 @@ class MinutaViewTest(LoggedIn):
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(len(messages), 1)
         self.assertEqual(str(messages[0]), 'Hubo un error con el personal del OIC, verifica que estos esten registrados correctamente.')
+
+
+class MinutaViewPostTests(LoggedIn):
+
+    def setUp(self):
+        super().setUp()
+        call_command('loaddata', 'OICSec/fixtures/initial_data.json')
+        self.oic = Oic.objects.get(pk=1)
+        self.actividad = ActividadFiscalizacion.objects.create(id_oic=self.oic)
+        self.direccion_oic = Oic.objects.get(pk=53)
+        self.auditoria = Auditoria.objects.create(id_actividad_fiscalizacion=self.actividad)
+        self.intervencion = Intervencion.objects.create(id_actividad_fiscalizacion=self.actividad)
+        self.control = ControlInterno.objects.create(id_actividad_fiscalizacion=self.actividad)
+
+        self.persona_director = Persona.objects.create(honorifico='Sr.', nombre='Juan', apellido='Pérez')
+        self.persona_judc = Persona.objects.create(honorifico='Dra.', nombre='Ana', apellido='López')
+        self.persona_titular = Persona.objects.create(honorifico='Lic.', nombre='Luis', apellido='Gómez')
+        self.persona_oic = Persona.objects.create(honorifico='Ing.', nombre='María', apellido='Fernández')
+
+        self.personal_director = Personal.objects.create(estado=1, id_oic=self.direccion_oic, id_persona=self.persona_director)
+        self.personal_judc = Personal.objects.create(estado=1, id_oic=self.direccion_oic, id_persona=self.persona_judc)
+        self.personal_titular = Personal.objects.create(estado=1, id_oic=self.oic, id_persona=self.persona_titular)
+        self.personal_oic = Personal.objects.create(estado=1, id_oic=self.oic, id_persona=self.persona_oic)
+
+        CargoPersonal.objects.create(nombre='Director', id_tipo_cargo=TipoCargo.objects.get(id=1), id_personal=self.personal_director)
+        CargoPersonal.objects.create(nombre='JUDC', id_tipo_cargo=TipoCargo.objects.get(id=2), id_personal=self.personal_judc)
+        CargoPersonal.objects.create(nombre='Titular', id_tipo_cargo=TipoCargo.objects.get(id=6), id_personal=self.personal_titular)
+        CargoPersonal.objects.create(nombre='Personal OIC', id_tipo_cargo=TipoCargo.objects.get(id=7), id_personal=self.personal_oic)
+
+    def test_minuta_mes_view_post(self):
+        mes = 3
+        self.url = reverse('minuta_mes', args=[self.actividad.id, mes])
+        # Siempre se preparan previamente datos en el metodo get antes de pasar al post
+        get_response = self.client.get(self.url)
+        self.assertEqual(get_response.status_code, 200)
+
+        post_data = {
+            'estado-A1': '4',
+            'comentario-A1': 'Comentario actualizado B0',
+            'estado-A2': '2',
+            'comentario-A2': 'Comentario actualizado B1',
+            'fecha': '2024-09-25',
+            'JUDC': self.personal_judc.id,
+            'personal': self.personal_oic.id,
+            'inicio': "2024-09-26T14:30",
+            'fin': "2024-09-26T14:30"
+        }
+
+        # Realiza la solicitud POST con los datos del formulario
+        response = self.client.post(self.url, data=post_data)
+
+        # Verifica que la respuesta sea exitosa
+        self.assertEqual(response.status_code, 200)
+
+        # Si la vista genera un archivo o realiza una acción similar
+        self.assertTrue(response.has_header('Content-Disposition'))
+        self.assertIn('attachment; filename=', response['Content-Disposition'])
+
+        # Verifica el tipo MIME del archivo generado (si aplica)
+        self.assertEqual(response['Content-Type'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+        # Verifica que el archivo tenga algún contenido
+        self.assertGreater(len(response.content), 0)
+
+        # Verifica que los conceptos de la minuta mensual se actualizaron en la base de datos
+        concepto_actualizado = ConceptoMinuta.objects.get(clave='1', id_minuta=Minuta.objects.get(id_actividad_fiscalizacion=self.actividad), tipo_concepto=1)
+        self.assertEqual(concepto_actualizado.comentario, 'Comentario actualizado B0')
+
+
+class PerfilViewTests(LoggedIn):
+
+    def setUp(self):
+        super().setUp()
+        self.user2 = User.objects.create_user(username='testuser2', password='12345')
+        self.url = reverse('perfil')
+
+    def test_perfil_view_get(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'profile.html')
+
+    def test_perfil_view_post_successful_profile_update(self):
+        post_data = {
+            'username': 'new_username',
+            'first_name': 'NuevoNombre',
+            'last_name': 'NuevoApellido',
+            'password': '12345',  # Contraseña actual correcta
+            'new_password': ''    # No se actualiza la contraseña
+        }
+
+        # Realiza la solicitud POST
+        response = self.client.post(self.url, data=post_data)
+
+        # Verifica que la respuesta redirige a la vista de perfil
+        self.assertRedirects(response, self.url)
+
+        # Verifica que el usuario ha sido actualizado
+        user_actualizado = User.objects.get(pk=self.user.pk)
+        self.assertEqual(user_actualizado.username, 'new_username')
+        self.assertEqual(user_actualizado.first_name, 'NuevoNombre')
+        self.assertEqual(user_actualizado.last_name, 'NuevoApellido')
+
+        # Verifica que no se cambió la contraseña
+        self.assertTrue(self.client.login(username='new_username', password='12345'))
+
+    def test_perfil_view_post_successful_password_update(self):
+        post_data = {
+            'username': 'testuser',
+            'first_name': 'NuevoNombre',
+            'last_name': 'NuevoApellido',
+            'password': '12345',         # Contraseña actual correcta
+            'new_password': 'new_pass'   # Se actualiza la contraseña
+        }
+
+        # Realiza la solicitud POST
+        response = self.client.post(self.url, data=post_data)
+
+        # Verifica que la respuesta redirige a la vista de perfil
+        self.assertRedirects(response, self.url)
+
+        # Verifica que el usuario ha sido actualizado
+        user_actualizado = User.objects.get(pk=self.user.pk)
+        self.assertEqual(user_actualizado.first_name, 'NuevoNombre')
+        self.assertEqual(user_actualizado.last_name, 'NuevoApellido')
+
+        # Verifica que la contraseña se ha actualizado
+        self.assertTrue(self.client.login(username='testuser', password='new_pass'))
+
+    def test_perfil_view_post_wrong_current_password(self):
+        post_data = {
+            'username': 'testuser',
+            'first_name': 'NuevoNombre',
+            'last_name': 'NuevoApellido',
+            'password': 'wrong_password',  # Contraseña incorrecta
+            'new_password': 'new_pass'
+        }
+
+        # Realiza la solicitud POST
+        response = self.client.post(self.url, data=post_data)
+
+        # Verifica que la vista regresa un error de contraseña incorrecta
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('La contraseña es incorrecta.', response.content.decode())
+
+        # Verifica que el usuario no se actualizó
+        user_no_actualizado = User.objects.get(pk=self.user.pk)
+        self.assertEqual(user_no_actualizado.first_name, '')
+
+    def test_perfil_view_post_repited_username(self):
+        post_data = {
+            'username': 'username2',
+            'first_name': '',
+            'last_name': '',
+            'password': '12345',  # Contraseña actual correcta
+            'new_password': ''  # No se actualiza la contraseña
+        }
+
+        # Realiza la solicitud POST
+        response = self.client.post(self.url, data=post_data)
+
+        # Verifica que la respuesta redirige a la vista de perfil
+        self.assertRedirects(response, self.url)
+
+        # Verifica que el usuario ha sido actualizado
+        user_actualizado = User.objects.get(pk=self.user.pk)
+        self.assertEqual(user_actualizado.username, 'new_username')
+
+        # Verifica que no se cambió la contraseña
+        self.assertTrue(self.client.login(username='new_username', password='12345'))

@@ -915,7 +915,7 @@ def update_data_minuta(request, minuta, mes, actividades):
         CargoPersonal.objects.get(id_personal=personal).nombre,  # P20
         num2words(mes, lang='es'),  # P21
         posicion_word.get(fiscalizacion.trimestre),  # P22
-        num2words(fiscalizacion.anyo, lang='es'),  # P23
+        num2words(fiscalizacion.anyo if fiscalizacion.anyo else 0, lang='es'),  # P23
         limpiar_cadena(fiscalizacion.id_oic.nombre),  # P24
         text_numero_actividades,  # P25
         lista_actividades,  # P26
