@@ -3,13 +3,15 @@ import os
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.messages import get_messages
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import TestCase, Client
 from django.urls import reverse
 
 from .forms import AuditoriaForm, ControlForm, IntervencionForm
 from .models import ActividadFiscalizacion, Oic, Auditoria, ControlInterno, Intervencion, TipoIntervencion, Cedula, \
-    ConceptoCedula, Minuta, ConceptoMinuta, Archivo
+    ConceptoCedula, Minuta, ConceptoMinuta, Archivo, Persona, Personal, CargoPersonal, TipoCargo
 from .signals import is_last_record_in_activity
 from .views import convert_to_date, clean_oic_text, get_most_similar_tipo_intervencion, get_cedula_conceptos
 
@@ -740,16 +742,34 @@ class CedulaViewTests(LoggedIn):
 
         # Creación de los objetos necesarios para las pruebas
         self.cedula = Cedula.objects.create()
-        self.concepto1 = ConceptoCedula.objects.create(
+        self.concepto0 = ConceptoCedula.objects.create(
             id_cedula=self.cedula,
             celda='0',
-            estado=1,
+            estado=0,
             comentario='Comentario 1'
+        )
+        self.concepto1 = ConceptoCedula.objects.create(
+            id_cedula=self.cedula,
+            celda='1',
+            estado=1,
+            comentario=None  # Comentario vacío
         )
         self.concepto2 = ConceptoCedula.objects.create(
             id_cedula=self.cedula,
-            celda='1',
+            celda='2',
+            estado=3,
+            comentario=None  # Comentario vacío
+        )
+        self.concepto3 = ConceptoCedula.objects.create(
+            id_cedula=self.cedula,
+            celda='3',
             estado=2,
+            comentario=None  # Comentario vacío
+        )
+        self.concepto4 = ConceptoCedula.objects.create(
+            id_cedula=self.cedula,
+            celda='4',
+            estado=4,
             comentario=None  # Comentario vacío
         )
 
@@ -770,17 +790,26 @@ class CedulaViewTests(LoggedIn):
         # Verificar que los conceptos se pasaron correctamente al contexto
         conceptos_dict = response.context['conceptos']
         expected_dict = {
-            '0': {'estado': 1, 'comentario': 'Comentario 1'},
-            '1': {'estado': 2, 'comentario': ''}
+            '0': {'estado': 0, 'comentario': 'Comentario 1'},
+            '1': {'estado': 1, 'comentario': ''},
+            '2': {'estado': 3, 'comentario': ''},
+            '3': {'estado': 2, 'comentario': ''},
+            '4': {'estado': 4, 'comentario': ''},
         }
         self.assertEqual(conceptos_dict, expected_dict)
 
     def test_cedula_view_post(self):
         post_data = {
-            'estado-0': '1',
-            'comentario-0': 'Nuevo comentario A1',
-            'estado-1': '2',
-            'comentario-1': 'Nuevo comentario A2',
+            'estado-0': '4',
+            'comentario-0': 'Nuevo comentario A0',
+            'estado-1': '3',
+            'comentario-1': 'Nuevo comentario A1',
+            'estado-2': '2',
+            'comentario-2': 'Nuevo comentario A2',
+            'estado-3': '1',
+            'comentario-3': 'Nuevo comentario A3',
+            'estado-4': '0',
+            'comentario-4': 'Nuevo comentario A4',
             'fecha': '2024-09-25'
         }
 
@@ -798,10 +827,10 @@ class CedulaViewTests(LoggedIn):
 
         # Verifica que los conceptos se actualizaron en la base de datos
         concepto1_actualizado = ConceptoCedula.objects.get(celda='0')
-        self.assertEqual(concepto1_actualizado.comentario, 'Nuevo comentario A1')
+        self.assertEqual(concepto1_actualizado.comentario, 'Nuevo comentario A0')
 
         concepto2_actualizado = ConceptoCedula.objects.get(celda='1')
-        self.assertEqual(concepto2_actualizado.comentario, 'Nuevo comentario A2')
+        self.assertEqual(concepto2_actualizado.comentario, 'Nuevo comentario A1')
 
 
     def test_cedula_view_con_intervencion(self):
@@ -816,8 +845,11 @@ class CedulaViewTests(LoggedIn):
         # Verificar que los conceptos se pasaron correctamente al contexto
         conceptos_dict = response.context['conceptos']
         expected_dict = {
-            '0': {'estado': 1, 'comentario': 'Comentario 1'},
-            '1': {'estado': 2, 'comentario': ''}
+            '0': {'estado': 0, 'comentario': 'Comentario 1'},
+            '1': {'estado': 1, 'comentario': ''},
+            '2': {'estado': 3, 'comentario': ''},
+            '3': {'estado': 2, 'comentario': ''},
+            '4': {'estado': 4, 'comentario': ''},
         }
         self.assertEqual(conceptos_dict, expected_dict)
 
@@ -833,8 +865,120 @@ class CedulaViewTests(LoggedIn):
         # Verificar que los conceptos se pasaron correctamente al contexto
         conceptos_dict = response.context['conceptos']
         expected_dict = {
-            '0': {'estado': 1, 'comentario': 'Comentario 1'},
-            '1': {'estado': 2, 'comentario': ''}
+            '0': {'estado': 0, 'comentario': 'Comentario 1'},
+            '1': {'estado': 1, 'comentario': ''},
+            '2': {'estado': 3, 'comentario': ''},
+            '3': {'estado': 2, 'comentario': ''},
+            '4': {'estado': 4, 'comentario': ''},
         }
         self.assertEqual(conceptos_dict, expected_dict)
 
+
+class MinutaViewTest(LoggedIn):
+
+    def setUp(self):
+        super().setUp()
+        call_command('loaddata', 'OICSec/fixtures/initial_data.json')
+        self.oic = Oic.objects.get(pk=1)
+        self.actividad = ActividadFiscalizacion.objects.create(id_oic=self.oic)
+
+    def test_minuta_view(self):
+        response = self.client.get(reverse('minuta', args=[self.actividad.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'minuta.html')
+
+    def test_minuta_mes_view(self):
+        self.direccion_oic = Oic.objects.get(pk=53)
+        # Crear personas
+        self.persona_director = Persona.objects.create(honorifico='Sr.', nombre='Juan', apellido='Pérez')
+        self.persona_judc = Persona.objects.create(honorifico='Dra.', nombre='Ana', apellido='López')
+        self.persona_titular = Persona.objects.create(honorifico='Lic.', nombre='Luis', apellido='Gómez')
+        self.persona_oic = Persona.objects.create(honorifico='Ing.', nombre='María', apellido='Fernández')
+
+        # Crear personal
+        self.personal_director = Personal.objects.create(estado=1, id_oic=self.direccion_oic,
+                                                         id_persona=self.persona_director)
+        self.personal_judc = Personal.objects.create(estado=1, id_oic=self.direccion_oic, id_persona=self.persona_judc)
+        self.personal_titular = Personal.objects.create(estado=1, id_oic=self.oic, id_persona=self.persona_titular)
+        self.personal_oic = Personal.objects.create(estado=1, id_oic=self.oic, id_persona=self.persona_oic)
+
+        # Crear cargos de personal
+        CargoPersonal.objects.create(nombre='Director', id_tipo_cargo=TipoCargo.objects.get(id=1),
+                                     id_personal=self.personal_director)
+        CargoPersonal.objects.create(nombre='JUDC', id_tipo_cargo=TipoCargo.objects.get(id=2),
+                                     id_personal=self.personal_judc)
+        CargoPersonal.objects.create(nombre='Titular', id_tipo_cargo=TipoCargo.objects.get(id=6),
+                                     id_personal=self.personal_titular)
+        CargoPersonal.objects.create(nombre='Personal OIC', id_tipo_cargo=TipoCargo.objects.get(id=7),
+                                     id_personal=self.personal_oic)
+
+        mes = 3
+        response = self.client.get(reverse('minuta_mes', args=[self.actividad.id, mes]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'minuta_mes.html')
+        self.assertIn('mes', response.context)
+        self.assertEqual(response.context['mes'], mes)
+        self.assertIn('actividades', response.context)
+        self.assertIn('oic', response.context)
+
+    def test_redireccion_error_personal_direccion(self):
+        self.direccion_oic = Oic.objects.get(pk=53)
+        # Crear personas sin personal de dirección
+        # self.persona_director = Persona.objects.create(honorifico='Sr.', nombre='Juan', apellido='Pérez')
+        # self.persona_judc = Persona.objects.create(honorifico='Dra.', nombre='Ana', apellido='López')
+        self.persona_titular = Persona.objects.create(honorifico='Lic.', nombre='Luis', apellido='Gómez')
+        self.persona_oic = Persona.objects.create(honorifico='Ing.', nombre='María', apellido='Fernández')
+
+        # Crear personal
+        # self.personal_director = Personal.objects.create(estado=1, id_oic=self.direccion_oic, id_persona=self.persona_director)
+        # self.personal_judc = Personal.objects.create(estado=1, id_oic=self.direccion_oic, id_persona=self.persona_judc)
+        self.personal_titular = Personal.objects.create(estado=1, id_oic=self.oic, id_persona=self.persona_titular)
+        self.personal_oic = Personal.objects.create(estado=1, id_oic=self.oic, id_persona=self.persona_oic)
+
+        # Crear cargos de personal
+        # CargoPersonal.objects.create(nombre='Director', id_tipo_cargo=TipoCargo.objects.get(id=1), id_personal=self.personal_director)
+        # CargoPersonal.objects.create(nombre='JUDC', id_tipo_cargo=TipoCargo.objects.get(id=2), id_personal=self.personal_judc)
+        CargoPersonal.objects.create(nombre='Titular', id_tipo_cargo=TipoCargo.objects.get(id=6), id_personal=self.personal_titular)
+        CargoPersonal.objects.create(nombre='Personal OIC', id_tipo_cargo=TipoCargo.objects.get(id=7), id_personal=self.personal_oic)
+
+        mes = 3
+        # Hacer la llamada a la vista que procesa esta lógica
+        response = self.client.get(reverse('minuta_mes', args=[self.actividad.id, mes]))
+
+        # Comprobar que se redirige a la URL correcta
+        self.assertRedirects(response, reverse('personal_direccion', args=[self.direccion_oic.id_direccion.direccion]))
+        # Comprobar que el mensaje de error está en la respuesta
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]),'Hubo un error con el personal de la dirección, verifica que estos esten registrados correctamente.')
+
+    def test_redireccion_por_error_personal_oic(self):
+        self.direccion_oic = Oic.objects.get(pk=53)
+        # Crear personas sin personal de oic
+        self.persona_director = Persona.objects.create(honorifico='Sr.', nombre='Juan', apellido='Pérez')
+        self.persona_judc = Persona.objects.create(honorifico='Dra.', nombre='Ana', apellido='López')
+        # self.persona_titular = Persona.objects.create(honorifico='Lic.', nombre='Luis', apellido='Gómez')
+        # self.persona_oic = Persona.objects.create(honorifico='Ing.', nombre='María', apellido='Fernández')
+
+        # Crear personal
+        self.personal_director = Personal.objects.create(estado=1, id_oic=self.direccion_oic, id_persona=self.persona_director)
+        self.personal_judc = Personal.objects.create(estado=1, id_oic=self.direccion_oic, id_persona=self.persona_judc)
+        # self.personal_titular = Personal.objects.create(estado=1, id_oic=self.oic, id_persona=self.persona_titular)
+        # self.personal_oic = Personal.objects.create(estado=1, id_oic=self.oic, id_persona=self.persona_oic)
+
+        # Crear cargos de personal
+        CargoPersonal.objects.create(nombre='Director', id_tipo_cargo=TipoCargo.objects.get(id=1), id_personal=self.personal_director)
+        CargoPersonal.objects.create(nombre='JUDC', id_tipo_cargo=TipoCargo.objects.get(id=2), id_personal=self.personal_judc)
+        # CargoPersonal.objects.create(nombre='Titular', id_tipo_cargo=TipoCargo.objects.get(id=6), id_personal=self.personal_titular)
+        # CargoPersonal.objects.create(nombre='Personal OIC', id_tipo_cargo=TipoCargo.objects.get(id=7), id_personal=self.personal_oic)
+
+        mes = 3
+        # Hacer la llamada a la vista que procesa esta lógica
+        response = self.client.get(reverse('minuta_mes', args=[self.actividad.id, mes]))
+
+        # Comprobar que se redirige a la URL correcta
+        self.assertRedirects(response, reverse('personal_oic', args=[self.oic.id]))
+        # Comprobar que el mensaje de error está en la respuesta
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), 'Hubo un error con el personal del OIC, verifica que estos esten registrados correctamente.')

@@ -18,8 +18,8 @@ def get_actividades(auditoria, intervencion, control_interno):
     for intv in intervencion:
         tipo = "intervención"
         denominacion = intv.denominacion
-        character = "R" if intv.id_tipo_intervencion.clave == 13 else (
-            "V" if intv.id_tipo_intervencion.clave == 14 else "O")
+        character = ("R" if intv.id_tipo_intervencion.clave == 13 else (
+            "V" if intv.id_tipo_intervencion.clave == 14 else "O")) if intv.id_tipo_intervencion else ''
         numero = f"{character}-{intv.numero}/{intv.id_actividad_fiscalizacion.anyo}"
         actividad = Actividad(tipo, denominacion, numero)
         actividades.append(actividad)
