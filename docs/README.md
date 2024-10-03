@@ -3,7 +3,6 @@
 </p>
 
 <hr>
-
 <h1 style="text-align: center;">PSCG</h1>
 
 **PSCG** es una aplicación integral desarrollada con Django, diseñada para optimizar la gestión y supervisión en el
@@ -307,7 +306,7 @@ o acceder a la información de perfil del usuario, respectivamente.
 
 Para acceder a información mas detallada, se puede acceder a los archivos
 de [documentación de desarrollador](developer_manual) o a los archivos
-de [documentación de despliegue](deployment_manual), también se pueden tener ejemplos de uso en [tests](tests), ademas
+de [documentación de despliegue](deployment_manual), también se puede obtener información sobre los test realizados en [tests](tests), ademas
 de como ya se menciono, tener acceso a los [manuales de usuario](user_manual), donde se tiene una introducción al
 sistema, y una guia de errores que pueden surgir durante su uso y como tratarlos.
 

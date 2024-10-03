@@ -47,8 +47,7 @@ distintas interfaces.
 ## Vista de actividades
 
 En primera instancia se encuentran las actividades principales que son auditorías, intervenciones y controles internos.
-Estas tienen una sección a la cual se accede presionando el botón correspondiente y seleccionando la opción **Mostrar
-** ~auditorias~, ~intervenciones~, ~controles internos~ o ~personal~,
+Estas tienen una sección a la cual se accede presionando el botón correspondiente y seleccionando la opción **Mostrar** ~auditorias~, ~intervenciones~, ~controles internos~ o ~personal~,
 donde se puede visualizar, para las tres primeras mencionadas, un listado de las actividades correspondientes, ordenado
 por año de manera decreciente, el cual puede ser filtrado por medio de controles de filtro por año y órgano interno de
 control. Ademas, en la parte inferior se muestra una paginación, que muestra los 10 primeros resultados encontrados, y
