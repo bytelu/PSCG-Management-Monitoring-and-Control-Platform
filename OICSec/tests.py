@@ -1145,9 +1145,13 @@ class PerfilViewTests(LoggedIn):
         # Verifica que la respuesta redirige a la vista de perfil
         self.assertRedirects(response, self.url)
 
-        # Verifica que el usuario ha sido actualizado
+        # Verifica que el usuario no ha sido actualizado
         user_actualizado = User.objects.get(pk=self.user.pk)
-        self.assertEqual(user_actualizado.username, 'new_username')
+        self.assertEqual(user_actualizado.username, 'username2')
 
         # Verifica que no se cambió la contraseña
-        self.assertTrue(self.client.login(username='new_username', password='12345'))
+        self.assertTrue(self.client.login(username='username', password='12345'))
+
+        # Verifica que se da un mensaje de advertencia al usuario
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn('El nombre de usuario "username2" ya está en uso. Elige otro.', [str(msg) for msg in messages])
