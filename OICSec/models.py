@@ -294,6 +294,20 @@ class MinutaPersonal(models.Model):
         db_table = 'minuta_personal'
 
 
+class CedulaPersonal(models.Model):
+    TIPO_CHOICES = [
+        (1, 'Director Coordinación'),
+        (2, 'Titular OIC'),
+    ]
+    id = models.AutoField(primary_key=True)
+    tipo_personal = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
+    id_cedula = models.ForeignKey('Cedula', on_delete=models.CASCADE, blank=True, null=True)
+    id_personal = models.ForeignKey('Personal', on_delete=models.CASCADE, blank=True, null=True)
+
+    class Meta:
+        db_table = 'cedula_personal'
+
+
 class Observacion(models.Model):
     id = models.AutoField(primary_key=True)
     numero = models.CharField(max_length=2, blank=True, null=True)
@@ -313,8 +327,8 @@ class Observacion(models.Model):
 
 class Oic(models.Model):
     id = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=150, blank=False, null=False)  # No se permite nulo ni blanco
-    id_direccion = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=False, null=False)  # Obligatorio
+    nombre = models.CharField(max_length=150, blank=True, null=True)
+    id_direccion = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         db_table = 'oic'
