@@ -23,6 +23,10 @@ class SupervisionData:
         Objetivo (str): Objetivo de la supervisión.
         Area (str): Área supervisada.
         Ejercicio (str): Ejercicio fiscal.
+        Nombre_Director (str): Nombre del director
+        Cargo_Director (str): Cargo del director
+        Nombre_Titular (str): Nombre del titular del OIC
+        Cargo_Titular (str): Cargo del titular del OIC
     """
     OIC: str
     Numero: str
@@ -33,6 +37,10 @@ class SupervisionData:
     Objetivo: str
     Area: str
     Ejercicio: str
+    Nombre_Director: str
+    Cargo_Director: str
+    Nombre_Titular: str
+    Cargo_Titular: str
 
 
 @dataclass
@@ -95,13 +103,14 @@ class Styles:
         target_cell.fill = self.styles.get(kind)
 
 
-def write_data(data: SupervisionData, sheet: Worksheet):
+def write_data(data: SupervisionData, sheet: Worksheet, kind: int):
     """
     Escribe los datos generales de supervisión en celdas específicas de una hoja de cálculo.
 
     Args:
         data (SupervisionData): Datos generales de la supervisión.
         sheet (Worksheet): Hoja de cálculo donde se escribirán los datos.
+        kind (int): Tipo de supervisión (1: Auditoria, 2: Intervención, 3: Control interno).
     """
     datafields = {
         'OIC': 'C11',
@@ -114,6 +123,28 @@ def write_data(data: SupervisionData, sheet: Worksheet):
         'Area': 'C21',
         'Ejercicio': 'J21'
     }
+    if kind == 1:
+        datafields.update({
+        'Nombre_Director': 'B132',
+        'Cargo_Director': 'B133',
+        'Nombre_Titular': 'E132',
+        'Cargo_Titular': 'E133'
+        })
+    if kind == 2:
+        datafields.update({
+            'Nombre_Director': 'C108',
+            'Cargo_Director': 'C109',
+            'Nombre_Titular': 'E108',
+            'Cargo_Titular': 'E109'
+        })
+    if kind == 3:
+        datafields.update({
+            'Nombre_Director': 'C129',
+            'Cargo_Director': 'C130',
+            'Nombre_Titular': 'E129',
+            'Cargo_Titular': 'E130'
+        })
+
     for key, field in datafields.items():
         value = getattr(data, key)
         if value is not None:
@@ -228,7 +259,7 @@ def cedula(kind: int, data: SupervisionData, conceptos: ConceptosLista) -> Optio
 
     sheet = workbook[sheet_name]
 
-    write_data(data=data, sheet=sheet)
+    write_data(data=data, sheet=sheet, kind=kind)
 
     estilos = Styles(workbook['styles'])
 

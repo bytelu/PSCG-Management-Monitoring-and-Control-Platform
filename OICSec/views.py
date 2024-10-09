@@ -603,7 +603,21 @@ def update_conceptos(conceptos, request):
 
 def get_supervision_data(kind, model_instance, fiscalizacion, request):
     data = None
+    fecha_str = request.POST.get('fecha')
+    fecha = datetime.datetime.strptime(fecha_str, '%Y-%m-%d').strftime('%d/%m/%Y') if fecha_str else ''
+    if fecha_str:
+        model_instance.id_cedula.realizacion = datetime.datetime.strptime(fecha_str, '%Y-%m-%d')
+    else:
+        model_instance.id_cedula.realizacion = None
+    model_instance.id_cedula.save()
+    model_instance.save()
 
+    director = CedulaPersonal.objects.get(tipo_personal=1, id_cedula=model_instance.id_cedula).id_personal
+    nombre_director = f'{director.id_persona.honorifico} {director.id_persona.nombre} {director.id_persona.apellido}'.upper()
+    cargo_director = f'{CargoPersonal.objects.get(id_personal=director, id_tipo_cargo=1).nombre}'.upper()
+    titular = CedulaPersonal.objects.get(tipo_personal=2, id_cedula=model_instance.id_cedula).id_personal
+    nombre_titular = f'{titular.id_persona.honorifico} {titular.id_persona.nombre} {titular.id_persona.apellido}'.upper()
+    cargo_titular = f'{CargoPersonal.objects.get(id_personal=titular, id_tipo_cargo=6).nombre}'.upper()
     if kind == 1:
         materia = model_instance.id_materia.clave if model_instance.id_materia else None
         programacion = model_instance.id_programacion.clave if model_instance.id_programacion else None
@@ -616,8 +630,7 @@ def get_supervision_data(kind, model_instance, fiscalizacion, request):
             Numero=f'A-{model_instance.numero}/{fiscalizacion.anyo}' if all(
                 [model_instance.numero, fiscalizacion.anyo]) else '',
             Nombre=str(model_instance.denominacion) if model_instance.denominacion else '',
-            Fecha=datetime.datetime.strptime(request.POST.get('fecha'), '%Y-%m-%d').strftime(
-                '%d/%m/%Y') if request.POST.get('fecha') else '',
+            Fecha=fecha,
             Clave=(
                 f'{materia}-{programacion}-{enfoque}-{temporalidad}'
                 if all(
@@ -626,7 +639,11 @@ def get_supervision_data(kind, model_instance, fiscalizacion, request):
             Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}' if fiscalizacion.trimestre else '',
             Objetivo=model_instance.objetivo if model_instance.objetivo else '',
             Area=model_instance.unidad if model_instance.unidad else '',
-            Ejercicio=model_instance.ejercicio if model_instance.ejercicio else ''
+            Ejercicio=model_instance.ejercicio if model_instance.ejercicio else '',
+            Nombre_Director=nombre_director,
+            Cargo_Director=cargo_director,
+            Nombre_Titular=nombre_titular,
+            Cargo_Titular=cargo_titular
         )
     elif kind == 2:
         clave = 'R' if model_instance.id_tipo_intervencion.clave == 13 else (
@@ -637,13 +654,16 @@ def get_supervision_data(kind, model_instance, fiscalizacion, request):
             if model_instance.id_actividad_fiscalizacion.id_oic.nombre else '',
             Numero=f'{clave}-{model_instance.numero}/{fiscalizacion.anyo}',
             Nombre=str(model_instance.denominacion) if model_instance.denominacion else '',
-            Fecha=datetime.datetime.strptime(request.POST.get('fecha'), '%Y-%m-%d').strftime(
-                '%d/%m/%Y') if request.POST.get('fecha') else '',
+            Fecha=fecha,
             Clave=f'{model_instance.id_tipo_intervencion.clave}',
             Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}' if fiscalizacion.trimestre else '',
             Objetivo=model_instance.objetivo if model_instance.objetivo else '',
             Area=model_instance.unidad if model_instance.unidad else '',
-            Ejercicio=model_instance.ejercicio if model_instance.ejercicio else ''
+            Ejercicio=model_instance.ejercicio if model_instance.ejercicio else '',
+            Nombre_Director=nombre_director,
+            Cargo_Director=cargo_director,
+            Nombre_Titular=nombre_titular,
+            Cargo_Titular=cargo_titular
         )
     elif kind == 3:
         tipo_revision = \
@@ -658,13 +678,16 @@ def get_supervision_data(kind, model_instance, fiscalizacion, request):
             if model_instance.id_actividad_fiscalizacion.id_oic.nombre else '',
             Numero=f'CI {model_instance.numero}/{fiscalizacion.anyo}',
             Nombre=str(model_instance.denominacion) if model_instance.denominacion else '',
-            Fecha=datetime.datetime.strptime(request.POST.get('fecha'), '%Y-%m-%d').strftime(
-                '%d/%m/%Y') if request.POST.get('fecha') else '',
+            Fecha=fecha,
             Clave=clave,
             Anyo_Trimestre=f'0{fiscalizacion.trimestre}/{fiscalizacion.anyo}' if fiscalizacion.trimestre else '',
             Objetivo=model_instance.objetivo if model_instance.objetivo else '',
             Area=model_instance.area if model_instance.area else '',
-            Ejercicio=model_instance.ejercicio if model_instance.ejercicio else ''
+            Ejercicio=model_instance.ejercicio if model_instance.ejercicio else '',
+            Nombre_Director=nombre_director,
+            Cargo_Director=cargo_director,
+            Nombre_Titular=nombre_titular,
+            Cargo_Titular=cargo_titular
         )
     return data
 
@@ -739,19 +762,54 @@ def cedula_view(request, model, id_model):
         'control_interno': model_instance if kind == 3 else None,
         'fiscalizacion': fiscalizacion
     }
+    cedula, conceptos, conceptos_dict = get_cedula_conceptos(model_instance)
     if request.method == 'GET':
-        _, _, conceptos_dict = get_cedula_conceptos(model_instance)
+        realizacion = cedula.realizacion if cedula.realizacion else datetime.datetime.now()
+        director = get_or_create_cedula_personal(cedula, 1, 1, fiscalizacion.id_oic)
+        titular = get_or_create_cedula_personal(cedula, 2, 6, fiscalizacion.id_oic)
+        if director == 'Error':
+            messages.error(request,
+                           'Hubo un error con el personal de la dirección, verifica que estos estén registrados '
+                           'correctamente.')
+            return redirect('personal_direccion', fiscalizacion.id_oic.id_direccion.direccion)
+        if titular == 'Error':
+            messages.error(request,
+                           'Hubo un error con el personal del OIC, verifica que estos esten registrados correctamente.')
+            return redirect('personal_oic', fiscalizacion.id_oic.id)
+        context.update({'director': director.id_personal.id_persona})
+        context.update({'titular': titular.id_personal.id_persona})
         context.update({'conceptos': conceptos_dict})
         context.update({'archivo': model_instance.id_cedula.id_archivo})
+        context.update({'realizacion': realizacion})
         return render(request, 'cedula.html', context)
 
     if request.method == 'POST':
-        cedula, conceptos, _ = get_cedula_conceptos(model_instance)
+        
         conceptos_lista = update_conceptos(conceptos, request)
         supervision_data = get_supervision_data(kind, model_instance, fiscalizacion, request)
         file_path = create_cedula(kind=kind, data=supervision_data, conceptos=conceptos_lista)
         return save_file_and_respond(file_path, cedula, supervision_data)
 
+
+def get_or_create_cedula_personal(cedula, tipo_personal, cargo_id, oic):
+    cedula_personal = CedulaPersonal.objects.filter(id_cedula=cedula, tipo_personal=tipo_personal).first()
+    if not cedula_personal:
+        cargo = TipoCargo.objects.filter(id=cargo_id).first()
+        persona_actual = None
+        if tipo_personal == 1:
+            direccion = oic.id_direccion.direccion
+            personal_actual = Personal.objects.filter(id_oic__id_direccion__direccion=direccion, estado=1,
+                                                      cargopersonal__id_tipo_cargo=cargo).first()
+        else:
+            personal_actual = Personal.objects.filter(id_oic=oic, estado=1, cargopersonal__id_tipo_cargo=cargo).first()
+        if not personal_actual:
+            return 'Error'
+        cedula_personal = CedulaPersonal.objects.create(
+            tipo_personal=tipo_personal,
+            id_cedula=cedula,
+            id_personal=personal_actual
+        )
+    return cedula_personal
 
 @login_required
 def auditoria_cedula_view(request, auditoria_id):
@@ -781,8 +839,13 @@ def get_or_create_minuta_personal(minuta, tipo_personal, cargo_id, oic):
     minuta_personal = MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=tipo_personal).first()
     if not minuta_personal:
         cargo = TipoCargo.objects.filter(id=cargo_id).first()
-        direccion = oic.id_direccion.direccion
-        personal_actual = Personal.objects.filter(id_oic__id_direccion__direccion=direccion, estado=1, cargopersonal__id_tipo_cargo=cargo).first()
+        persona_actual = None
+        if tipo_personal in [1, 2]:
+            direccion = oic.id_direccion.direccion
+            personal_actual = Personal.objects.filter(id_oic__id_direccion__direccion=direccion, estado=1,
+                                                      cargopersonal__id_tipo_cargo=cargo).first()
+        else:
+            personal_actual = Personal.objects.filter(id_oic=oic, estado=1, cargopersonal__id_tipo_cargo=cargo).first()
         if not personal_actual:
             return 'Error'
         minuta_personal = MinutaPersonal.objects.create(
@@ -1030,7 +1093,7 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
         minuta_personaloic = get_or_create_minuta_personal(minuta, 4, 7, oic)
         if minuta_director == 'Error' or minuta_judc == 'Error':
             messages.error(request,
-                           'Hubo un error con el personal de la dirección, verifica que estos esten registrados '
+                           'Hubo un error con el personal de la dirección, verifica que estos estén registrados '
                            'correctamente.')
             return redirect('personal_direccion', oic.id_direccion.direccion)
         if minuta_titular == 'Error' or minuta_personaloic == 'Error':

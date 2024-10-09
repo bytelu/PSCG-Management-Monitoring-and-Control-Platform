@@ -98,6 +98,7 @@ class AuditoriaObservacion(models.Model):
 
 class Cedula(models.Model):
     id = models.AutoField(primary_key=True)
+    realizacion = models.DateTimeField(blank=True, null=True)
     id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
@@ -252,7 +253,6 @@ class Minuta(models.Model):
     inicio = models.DateTimeField(blank=True, null=True)
     fin = models.DateTimeField(blank=True, null=True)
     mes = models.IntegerField(blank=True, null=True)
-    id_tipo_minuta = models.ForeignKey('TipoMinuta', on_delete=models.CASCADE, blank=True, null=True)
     id_actividad_fiscalizacion = models.ForeignKey('ActividadFiscalizacion', on_delete=models.CASCADE, blank=True,
                                                    null=True)
     id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
@@ -380,17 +380,6 @@ class TipoIntervencion(models.Model):
 
     class Meta:
         db_table = 'tipo_intervencion'
-
-    def __str__(self):
-        return str(self.tipo)
-
-
-class TipoMinuta(models.Model):
-    id = models.AutoField(primary_key=True)
-    tipo = models.CharField(max_length=200, blank=True, null=True)
-
-    class Meta:
-        db_table = 'tipo_minuta'
 
     def __str__(self):
         return str(self.tipo)
