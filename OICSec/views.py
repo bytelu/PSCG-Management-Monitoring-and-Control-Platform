@@ -1709,6 +1709,6 @@ def editar_oic(request, oic_id):
 
 
 @login_required
-def estructuras_actividades_view(request, actividad_id):
+def estructuras_periodos_view(request, actividad_id):
     return handle_detail_view(request, ActividadFiscalizacion, ActividadForm, actividad_id, 'actividad_detalle.html')
 

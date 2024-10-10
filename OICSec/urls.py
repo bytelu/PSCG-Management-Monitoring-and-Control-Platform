@@ -92,8 +92,8 @@ urlpatterns = [
          estructuras_oics_view, name='estructuras_oics'),
     path('oics/<int:oic_id>/',
          editar_oic, name='editar_oic'),
-    path("actividades/",
-         actividades_view, name='actividades'),
-    path("actividades/<int:actividad_id>",
-         estructuras_actividades_view, name='estructuras_actividades'),
+    path("periodos/",
+         actividades_view, name='periodos'),
+    path("periodos/<int:actividad_id>",
+         estructuras_periodos_view, name='estructuras_periodos'),
 ]
