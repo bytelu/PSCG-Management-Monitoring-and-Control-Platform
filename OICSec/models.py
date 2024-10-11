@@ -59,7 +59,12 @@ class Archivo(models.Model):
 
 
 class Auditoria(models.Model):
+    ESTADO_CHOICES = [
+        (0, 'Inactivo'),
+        (1, 'Activo')
+    ]
     id = models.AutoField(primary_key=True)
+    estado = models.IntegerField(choices=ESTADO_CHOICES, blank=True, null=True)
     denominacion = models.CharField(max_length=2000, blank=True, null=True)
     numero = models.IntegerField(blank=True, null=True)
     objetivo = models.CharField(max_length=2000, blank=True, null=True)
@@ -85,6 +90,19 @@ class Auditoria(models.Model):
                 if self.id_actividad_fiscalizacion and self.id_actividad_fiscalizacion.id_oic \
                 else 'Sin OIC'
         return f'A-{self.numero if self.numero else None}/{self.id_actividad_fiscalizacion.anyo if self.id_actividad_fiscalizacion else None} | {oic_nombre}'
+
+
+class AuditoriaArchivos(models.Model):
+    TIPO_CHOICES = [
+        (0, 'PAA'),
+        (1, 'Incorporación'),
+        (2, 'Cancelación'),
+        (3, 'Modificación')
+    ]
+    id = models.AutoField(primary_key=True)
+    tipo = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
+    id_auditoria = models.ForeignKey('Auditoria', on_delete=models.CASCADE, blank=True, null=True)
+    id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
 
 
 class AuditoriaObservacion(models.Model):
@@ -148,6 +166,19 @@ class ControlInterno(models.Model):
             return f'CI {self.numero}/{self.id_actividad_fiscalizacion.anyo} | {self.id_actividad_fiscalizacion.id_oic}'
         else:
             return f'CI {self.numero}/None | None'
+
+
+class ControlArchivos(models.Model):
+    TIPO_CHOICES = [
+        (0, 'PACI'),
+        (1, 'Incorporación'),
+        (2, 'Cancelación'),
+        (3, 'Modificación')
+    ]
+    id = models.AutoField(primary_key=True)
+    tipo = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
+    id_control = models.ForeignKey('ControlInterno', on_delete=models.CASCADE, blank=True, null=True)
+    id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
 
 
 class ControlInternoObservacion(models.Model):
@@ -225,6 +256,19 @@ class Intervencion(models.Model):
             anyo = self.id_actividad_fiscalizacion.anyo
             oic = self.id_actividad_fiscalizacion.id_oic
         return f"{character}-{self.numero}/{anyo} | {oic}"
+
+
+class IntervencionArchivos(models.Model):
+    TIPO_CHOICES = [
+        (0, 'PINT'),
+        (1, 'Incorporación'),
+        (2, 'Cancelación'),
+        (3, 'Modificación')
+    ]
+    id = models.AutoField(primary_key=True)
+    tipo = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
+    id_intervencion = models.ForeignKey('Intervencion', on_delete=models.CASCADE, blank=True, null=True)
+    id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
 
 
 class IntervencionObservacion(models.Model):
