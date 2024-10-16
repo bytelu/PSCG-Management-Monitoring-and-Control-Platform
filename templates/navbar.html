@@ -437,6 +437,10 @@
         <!-- Agrega más sub botones aquí si es necesario -->
     </div>
 
+    <!-- Botón de actividades de formato especial Incorporación, modificación, cancelación (actualmente únicamente para auditorias) -->
+    <a href="{% url 'uploadIMC' %}" class="{% if request.path == '/OICSec/IMC/' %}active{% endif %}"><i
+            class="fas fa-book"></i> <span>Formato IMC</span></a>
+
     <!-- Botón de actividades de fiscalización -->
     <a href="{% url 'periodos' %}" class="{% if request.path == '/OICSec/periodos/' %}active{% endif %}"><i
             class="fas fa-archive"></i> <span>Periodos de fiscalización</span></a>

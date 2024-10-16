@@ -126,7 +126,8 @@
         <div class="container mt-3">
             <!-- Alerta estilizada para auditorías con datos faltantes -->
             {% if elementos_incompletos %}
-                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert"
+                     style="border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);">
                     <h4 class="alert-heading" style="font-size: 1.5rem; font-weight: bold;">
                         ¡Atención! Auditorías con datos faltantes
                     </h4>
@@ -137,17 +138,20 @@
                             <li class="d-flex align-items-center" style="padding: 10px 0;">
                                 <i class="fas fa-exclamation-circle mr-2"></i>
                                 <div>
-                                    <strong>A-{{ auditoria.numero }}/{{ auditoria.id_actividad_fiscalizacion.anyo }}</strong> de <strong>{{ auditoria.id_actividad_fiscalizacion.id_oic }}</strong>
+                                    <strong>A-{{ auditoria.numero }}/{{ auditoria.id_actividad_fiscalizacion.anyo }}</strong>
+                                    de <strong>{{ auditoria.id_actividad_fiscalizacion.id_oic }}</strong>
                                 </div>
                                 <a href="{% url 'auditoria_detalle' auditoria.id %}" class="ml-auto">
-                                    <button class="btn btn-sm btn-outline-danger" style="border-radius: 20px; padding: 0.375rem 1.25rem; font-size: 0.875rem;">
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            style="border-radius: 20px; padding: 0.375rem 1.25rem; font-size: 0.875rem;">
                                         Ver detalles
                                     </button>
                                 </a>
                             </li>
                         {% endfor %}
                     </ul>
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="top: 15px; right: 15px;">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"
+                            style="top: 15px; right: 15px;">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -171,15 +175,20 @@
                             <strong>{{ auditoria.id_actividad_fiscalizacion.trimestre }}/{{ auditoria.id_actividad_fiscalizacion.anyo }}</strong>
                         </div>
                     </div>
-
-                    <!-- Button trigger modal -->
-                    <div>
-                        <button type="button" class="btn btn-outline-dark p-0 btn-modal"
-                                style="width: 40px; height: 40px; line-height: 40px;"
-                                onclick="$('#modal-{{ auditoria.id }}').modal('show');">
-                            <i class="fas fa-plus"></i>
-                        </button>
-
+                    <div class="d-flex justify-content-end" style="gap: 10px;">
+                        <!-- Button historial de archivos -->
+                        <a href="{% url 'auditoria_archivos' auditoria.id %}" class="btn btn-outline-dark">
+                            <i class="fas fa-history"></i>
+                        </a>
+    
+                        <!-- Button trigger modal -->
+                        <div>
+                            <button type="button" class="btn btn-outline-dark p-0 btn-modal"
+                                    style="width: 40px; height: 40px; line-height: 40px;"
+                                    onclick="$('#modal-{{ auditoria.id }}').modal('show');">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
                 </li>
 
@@ -230,7 +239,8 @@
                         </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
+                        <a class="page-link" href="?page=
+                                {{ page_obj.previous_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Previous">
                             <span aria-hidden="true">&laquo;</span>
                         </a>
@@ -248,20 +258,23 @@
                     {% if page_obj.number == num %}
                         <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                     {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %}
-                        <li class="page-item"><a class="page-link" href="?page={{ num }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}">{{ num }}</a>
+                        <li class="page-item"><a class="page-link" href="?page=
+                                {{ num }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}">{{ num }}</a>
                         </li>
                     {% endif %}
                 {% endfor %}
 
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
+                        <a class="page-link" href="?page=
+                                {{ page_obj.next_page_number }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
                         </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
+                        <a class="page-link" href="?page=
+                                {{ page_obj.paginator.num_pages }}{% if oic_id %}&oic_id={{ oic_id }}{% endif %}{% if anyo %}&anyo={{ anyo }}{% endif %}"
                            aria-label="Last">
                             <span aria-hidden="true">&raquo;&raquo;</span>
                         </a>

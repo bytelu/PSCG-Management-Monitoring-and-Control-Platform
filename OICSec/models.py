@@ -104,6 +104,9 @@ class AuditoriaArchivos(models.Model):
     id_auditoria = models.ForeignKey('Auditoria', on_delete=models.CASCADE, blank=True, null=True)
     id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
 
+    class Meta:
+        db_table = 'auditoria_archivos'
+
 
 class AuditoriaObservacion(models.Model):
     id = models.AutoField(primary_key=True)
@@ -179,6 +182,9 @@ class ControlArchivos(models.Model):
     tipo = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
     id_control = models.ForeignKey('ControlInterno', on_delete=models.CASCADE, blank=True, null=True)
     id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
+
+    class Meta:
+        db_table = 'control_archivos'
 
 
 class ControlInternoObservacion(models.Model):
@@ -269,6 +275,9 @@ class IntervencionArchivos(models.Model):
     tipo = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
     id_intervencion = models.ForeignKey('Intervencion', on_delete=models.CASCADE, blank=True, null=True)
     id_archivo = models.ForeignKey('Archivo', on_delete=models.CASCADE, blank=True, null=True)
+
+    class Meta:
+        db_table = 'intervencion_archivos'
 
 
 class IntervencionObservacion(models.Model):

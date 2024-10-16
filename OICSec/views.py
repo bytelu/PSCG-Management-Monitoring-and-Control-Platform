@@ -226,7 +226,7 @@ def handle_post_request(request, lista_oics, extract_func, template_name, create
     error_files = []
     if not excel_files:
         context['excel_processing_error'] = ['Ningún archivo fue seleccionado.']
-        return render(request, 'upload_paa.html', context=context)
+        return render(request, template_name, context=context)
 
     try:
         for excel_file in excel_files:
@@ -237,7 +237,7 @@ def handle_post_request(request, lista_oics, extract_func, template_name, create
             else:
                 processed_files.append(excel_file.name)
                 with transaction.atomic():
-                    process_data(data, lista_oics, create_func)
+                    process_data(data, lista_oics, create_func, excel_file)
 
         if processed_files:
             context['excel_processing_result'] = processed_files
@@ -257,7 +257,7 @@ def render_error(request, lista_oics, template_name, error_message):
     })
 
 
-def process_data(data, lista_oics, create_func):
+def process_data(data, lista_oics, create_func, excel_file):
     """
         Función genérica para procesar datos extraídos del Excel y crear los objetos correspondientes.
         :param data: Datos extraídos del Excel.
@@ -269,7 +269,7 @@ def process_data(data, lista_oics, create_func):
 
         for item_data in excel_processing_result[1]:
             actividad_fiscalizacion = get_or_create_actividad_fiscalizacion(item_data, similar_oic)
-            create_func(item_data, actividad_fiscalizacion)
+            create_func(item_data, actividad_fiscalizacion, excel_file)
 
 
 def get_most_similar_oic(excel_oic_name, lista_oics):
@@ -292,7 +292,7 @@ def get_or_create_actividad_fiscalizacion(data, oic):
     return actividad_fiscalizacion
 
 
-def create_or_update_auditoria(auditoria_data, actividad_fiscalizacion):
+def create_or_update_auditoria(auditoria_data, actividad_fiscalizacion, excel_file):
     # Se preparan los datos para ser guardados
     materia_obj = get_related_object(Materia, auditoria_data["Materia"])
     programacion_obj = get_related_object(Programacion, auditoria_data["Programacion"])
@@ -301,10 +301,10 @@ def create_or_update_auditoria(auditoria_data, actividad_fiscalizacion):
     # Se busca si no existe una auditoria con el numero, y actividad de fiscalizacion iguales
     auditoria = Auditoria.objects.filter(numero=auditoria_data["Numero"], id_actividad_fiscalizacion=actividad_fiscalizacion).first()
 
-    # Si no existe algun coincidente se crea una nueva auditoria, en caso contrario, se actualizan los daots
+    # Si no existe algun coincidente se crea una nueva auditoria, en caso contrario, se actualizan los datos
     if auditoria is None:
         cedula_obj = Cedula.objects.create()
-        Auditoria.objects.create(
+        auditoria = Auditoria.objects.create(
             denominacion=auditoria_data["Denominacion"],
             numero=auditoria_data["Numero"],
             objetivo=auditoria_data["Objetivo"],
@@ -332,15 +332,44 @@ def create_or_update_auditoria(auditoria_data, actividad_fiscalizacion):
         auditoria.id_temporalidad = temporalidad_obj
         auditoria.save()
 
+    auditoria_archivo = AuditoriaArchivos.objects.filter(tipo=0, id_auditoria=auditoria).first()
+    if auditoria_archivo is None:
+        base_dir = os.path.dirname(__file__)
+        rel_path = '../media/auditoria/'
+        destino = os.path.normpath(os.path.join(base_dir, rel_path))
 
-def create_or_update_control_interno(control_data, actividad_fiscalizacion):
+        os.makedirs(destino, exist_ok=True)
+
+        output_filename = f'PAA - {auditoria.id_actividad_fiscalizacion.anyo}.xlsx'
+        output_path = os.path.join(destino, output_filename)
+
+        with open(output_path, 'wb+') as destination:
+            for chunk in excel_file.chunks():
+                destination.write(chunk)
+
+        archivo_obj = Archivo.objects.filter(nombre = output_filename).first()
+        if not archivo_obj:
+            archivo_obj = Archivo.objects.create(
+                archivo=output_path,
+                nombre=output_filename
+            )
+
+        if not AuditoriaArchivos.objects.filter(id_auditoria=auditoria).exists():
+            AuditoriaArchivos.objects.create(
+                tipo=0,
+                id_auditoria=auditoria,
+                id_archivo=archivo_obj
+            )
+
+
+def create_or_update_control_interno(control_data, actividad_fiscalizacion, excel_file):
     tipo_revision_obj = get_related_object(TipoRevision, control_data.get("tipo_revision"))
     programa_revision_obj = get_related_object(ProgramaRevision, control_data.get("programa_revision"))
 
     control_interno = ControlInterno.objects.filter(numero=control_data["Numero"], id_actividad_fiscalizacion=actividad_fiscalizacion).first()
     if control_interno is None:
         cedula_obj = Cedula.objects.create()
-        ControlInterno.objects.create(
+        control_interno = ControlInterno.objects.create(
             numero=control_data["Numero"],
             area=control_data["Area"],
             denominacion=control_data["Denominacion"],
@@ -358,6 +387,36 @@ def create_or_update_control_interno(control_data, actividad_fiscalizacion):
         control_interno.id_tipo_revision = tipo_revision_obj
         control_interno.id_programa_revision = programa_revision_obj
         control_interno.save()
+
+    control_archivo = ControlArchivos.objects.filter(tipo=0, id_control=control_interno).first()
+    if control_archivo is None:
+        base_dir = os.path.dirname(__file__)
+        rel_path = '../media/controlinterno/'
+        destino = os.path.normpath(os.path.join(base_dir, rel_path))
+
+        # Se crea el directorio si no existe
+        os.makedirs(destino, exist_ok=True)
+
+        output_filename = f'PACI - {control_interno.id_actividad_fiscalizacion.anyo}.xlsx'
+        output_path = os.path.join(destino, output_filename)
+
+        with open(output_path, 'wb+') as destination:
+            for chunk in excel_file.chunks():
+                destination.write(chunk)
+
+        archivo_obj = Archivo.objects.filter(nombre = output_filename).first()
+        if not archivo_obj:
+            archivo_obj = Archivo.objects.create(
+                archivo=output_path,
+                nombre=output_filename
+            )
+
+        if not ControlArchivos.objects.filter(id_control=control_interno).exists():
+            ControlArchivos.objects.create(
+                tipo=0,
+                id_control=control_interno,
+                id_archivo=archivo_obj
+            )
 
 
 def get_related_object(model, obj_id):
@@ -379,6 +438,14 @@ def upload_paci_view(request):
 @login_required
 def upload_paa_view(request):
     return upload_view(request, extract_func=extract_paa, template_name='upload_paa.html', create_func=create_or_update_auditoria)
+
+
+@login_required
+def upload_IMC_view(request):
+    if request.method == 'POST':
+        pass
+    if request.method == 'GET':
+        return render(request, 'IMC.html')
 
 
 def clean_oic_text(organo: str):
@@ -486,7 +553,7 @@ def upload_pint_view(request):
                     if intervencion is None:
                         # Crear nueva intervención
                         cedula_obj = Cedula.objects.create()
-                        Intervencion.objects.create(
+                        intervencion = Intervencion.objects.create(
                             unidad=word_processing_result.get('Área'),
                             numero=word_processing_result.get('Numero'),
                             denominacion=word_processing_result.get('Denominación'),
@@ -527,6 +594,35 @@ def upload_pint_view(request):
                         intervencion.objetivo = word_processing_result.get('Objetivo')
                         intervencion.id_tipo_intervencion = tipo_intervencion_obj
                         intervencion.save()
+
+                    intervencion_archivo = IntervencionArchivos.objects.filter(tipo=0, id_intervencion=intervencion).first()
+                    if intervencion_archivo is None:
+                        base_dir = os.path.dirname(__file__)
+                        rel_path = '../media/intervenciones/'
+                        destino = os.path.normpath(os.path.join(base_dir, rel_path))
+
+                        os.makedirs(destino, exist_ok=True)
+
+                        output_filename = f'PINT - {intervencion.id_actividad_fiscalizacion.anyo}.docx'
+                        output_path = os.path.join(destino, output_filename)
+
+                        with open(output_path, 'wb+') as destination:
+                            for chunk in word_file.chunks():
+                                destination.write(chunk)
+
+                        archivo_obj = Archivo.objects.filter(nombre=output_filename).first()
+                        if not archivo_obj:
+                            archivo_obj = Archivo.objects.create(
+                                archivo=output_path,
+                                nombre=output_filename
+                            )
+
+                        if not IntervencionArchivos.objects.filter(id_intervencion=intervencion).exists():
+                            IntervencionArchivos.objects.create(
+                                tipo=0,
+                                id_intervencion=intervencion,
+                                id_archivo=archivo_obj
+                            )
 
             # Agregar listas de archivos procesados y con error al contexto
             if processed_files:
@@ -795,7 +891,6 @@ def get_or_create_cedula_personal(cedula, tipo_personal, cargo_id, oic):
     cedula_personal = CedulaPersonal.objects.filter(id_cedula=cedula, tipo_personal=tipo_personal).first()
     if not cedula_personal:
         cargo = TipoCargo.objects.filter(id=cargo_id).first()
-        persona_actual = None
         if tipo_personal == 1:
             direccion = oic.id_direccion.direccion
             personal_actual = Personal.objects.filter(id_oic__id_direccion__direccion=direccion, estado=1,
@@ -839,7 +934,6 @@ def get_or_create_minuta_personal(minuta, tipo_personal, cargo_id, oic):
     minuta_personal = MinutaPersonal.objects.filter(id_minuta=minuta, tipo_personal=tipo_personal).first()
     if not minuta_personal:
         cargo = TipoCargo.objects.filter(id=cargo_id).first()
-        persona_actual = None
         if tipo_personal in [1, 2]:
             direccion = oic.id_direccion.direccion
             personal_actual = Personal.objects.filter(id_oic__id_direccion__direccion=direccion, estado=1,
@@ -1707,8 +1801,19 @@ def editar_oic(request, oic_id):
         return render(request, 'editar_oic_form.html', {'form': form, 'oic': oic, 'direcciones': direcciones})
 
 
-
 @login_required
 def estructuras_periodos_view(request, actividad_id):
     return handle_detail_view(request, ActividadFiscalizacion, ActividadForm, actividad_id, 'actividad_detalle.html')
 
+
+@login_required
+def auditoria_archivos_view(request, auditoria_id):
+    return render(request, 'wip.html')
+
+@login_required
+def control_archivos_view(request, control_id):
+    return render(request, 'wip.html')
+
+@login_required
+def intervencion_archivos_view(request, intervencion_id):
+    return render(request, 'wip.html')

@@ -38,6 +38,9 @@
             <a href="{% url 'controlInterno' %}" class="btn btn-outline-dark">
                 <i class="fas fa-arrow-left"></i>
             </a>
+            <a href="{% url 'control_archivos' object_id %}" class="btn btn-outline-dark">
+                <i class="fas fa-history"></i>
+            </a>
         </div>
     </div>
     {% if result %}
