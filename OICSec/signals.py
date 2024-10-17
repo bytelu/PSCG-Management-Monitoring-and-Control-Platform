@@ -1,6 +1,8 @@
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from .models import Auditoria, Intervencion, ControlInterno, ConceptoCedula, Minuta, ConceptoMinuta
+
+from .models import Auditoria, Intervencion, ControlInterno, ConceptoCedula, Minuta, ConceptoMinuta, AuditoriaArchivos, \
+    IntervencionArchivos, ControlArchivos
 
 
 def delete_cedula_related_records(cedula):
@@ -14,6 +16,32 @@ def delete_cedula_related_records(cedula):
 
     # Eliminar la Cedula
     cedula.delete()
+
+
+def delete_activity_files(instance):
+    # Eliminar archivos de Auditoria relacionados
+    if isinstance(instance, Auditoria):
+        auditoria_archivos = AuditoriaArchivos.objects.filter(id_auditoria=instance).exclude(tipo=0)
+        for auditoria_archivo in auditoria_archivos:
+            if auditoria_archivo.id_archivo:
+                auditoria_archivo.id_archivo.delete()
+            auditoria_archivo.delete()
+
+    # Eliminar archivos de Intervencion relacionados
+    if isinstance(instance, Intervencion):
+        intervencion_archivos = IntervencionArchivos.objects.filter(id_intervencion=instance)
+        for intervencion_archivo in intervencion_archivos:
+            if intervencion_archivo.id_archivo:
+                intervencion_archivo.id_archivo.delete()
+            intervencion_archivo.delete()
+
+    # Eliminar archivos de ControlInterno relacionados
+    if isinstance(instance, ControlInterno):
+        control_archivos = ControlArchivos.objects.filter(id_control=instance).exclude(tipo=0)
+        for control_archivo in control_archivos:
+            if control_archivo.id_archivo:
+                control_archivo.id_archivo.delete()
+            control_archivo.delete()
 
 
 def delete_minuta_related_records(actividad):
@@ -52,6 +80,13 @@ def is_last_record_in_activity(instance):
     return not (remaining_auditoria or remaining_intervencion or remaining_controlinterno)
 
 
+@receiver(pre_delete, sender=Auditoria)
+@receiver(pre_delete, sender=Intervencion)
+@receiver(pre_delete, sender=ControlInterno)
+def delete_related_files(sender, instance, **kwargs):
+    delete_activity_files(instance)
+
+
 @receiver(post_delete, sender=Auditoria)
 @receiver(post_delete, sender=Intervencion)
 @receiver(post_delete, sender=ControlInterno)
@@ -60,8 +95,7 @@ def delete_related_records(sender, instance, **kwargs):
     if instance.id_cedula:
         delete_cedula_related_records(instance.id_cedula)
 
-    actividad = instance.id_actividad_fiscalizacion
-
     # Verificar si es el último registro en la actividad
     if is_last_record_in_activity(instance):
+        actividad = instance.id_actividad_fiscalizacion
         delete_minuta_related_records(actividad)
