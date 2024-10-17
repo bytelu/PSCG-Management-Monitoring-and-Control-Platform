@@ -31,7 +31,6 @@
             <button type="button" class="btn btn-outline-dark" data-toggle="modal" data-target="#modal_delete">
                 Borrar
             </button>
-            <!-- Aquí está tu modal para borrar -->
             <div class="modal fade" id="modal_delete" tabindex="-1" role="dialog" aria-labelledby="label_delete"
                  aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -47,9 +46,15 @@
                             <p style="color: red">Esta acción es irreversible</p>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar
-                            </button>
-                            <a href="{% url 'auditoria-delete' object_id %}" class="btn btn-outline-danger">Aceptar</a>
+                            <p>
+                                <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">
+                                    Cerrar
+                                </button>
+                            </p>
+                            <p>
+                                <a href="{% url 'auditoria-delete' object_id %}"
+                                   class="btn btn-outline-danger">Aceptar</a>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -94,9 +99,13 @@
                         <p style="color: red">Esta acción es irreversible</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar
-                        </button>
-                        <button type="submit" class="btn btn-outline-danger btn-block">Aceptar</button>
+                        <p>
+                            <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar
+                            </button>
+                        </p>
+                        <p>
+                            <button type="submit" class="btn btn-outline-danger btn-block">Aceptar</button>
+                        </p>
                     </div>
                 </div>
             </div>

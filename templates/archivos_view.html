@@ -1,0 +1,38 @@
+{% extends 'navbar.html' %}
+
+{% block title %}Archivos de {{ tipo }} - {{ numero }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">{{ tipo }} {{ numero }}</h2>
+    <p class="text-muted text-center">{{ oic }}</p>
+
+    <!-- Si hay archivos, mostrar una lista estilizada -->
+    <div class="row justify-content-center">
+        {% if archivos %}
+            <div class="col-lg-8">
+                <div class="list-group shadow-sm">
+                    {% for archivo in archivos %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3 mb-3 border rounded-lg">
+                            <div>
+                                <h5 class="mb-1 font-weight-bold text-dark">{{ archivo.id_archivo.nombre }}</h5>
+                                <small class="text-muted">Tipo: {{ archivo.get_tipo_display }}</small>
+                            </div>
+                            <a href="{% url 'download_archivo' archivo.id_archivo.id %}" class="btn btn-outline-primary btn-sm d-flex align-items-center">
+                                <i class="fas fa-download"></i>
+                                <span class="ml-2">Descargar</span>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="col-lg-6">
+                <div class="alert alert-warning text-center" role="alert">
+                    No se encontraron archivos asociados a este {{ tipo }}.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

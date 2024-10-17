@@ -1,6 +1,16 @@
 {% extends 'navbar.html' %}
 {% block title %}Inicio{% endblock %}
 {% block content %}
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-danger">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
 <div class="container-fluid p-0">
     <!-- Banner Section -->
     <div class="jumbotron jumbotron-fluid bg-light rounded-0 banner m-0 rellax" style="position: relative; width: 100%;">

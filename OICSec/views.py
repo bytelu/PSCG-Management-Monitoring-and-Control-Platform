@@ -506,7 +506,7 @@ def upload_imc_view(request):
 
                             os.makedirs(destino, exist_ok=True)
 
-                            output_filename = f'Incorporación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.xlsx'
+                            output_filename = f'Incorporación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.docx'
                             output_path = os.path.join(destino, output_filename)
 
                             with open(output_path, 'wb+') as destination:
@@ -552,7 +552,7 @@ def upload_imc_view(request):
 
                                     os.makedirs(destino, exist_ok=True)
 
-                                    output_filename = f'Cancelación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.xlsx'
+                                    output_filename = f'Cancelación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.docx'
                                     output_path = os.path.join(destino, output_filename)
 
                                     with open(output_path, 'wb+') as destination:
@@ -567,7 +567,7 @@ def upload_imc_view(request):
                                                 nombre=output_filename
                                             )
 
-                                        if not AuditoriaArchivos.objects.filter(id_auditoria=auditoria).exists():
+                                        if not AuditoriaArchivos.objects.filter(id_auditoria=auditoria, tipo=2).exists():
                                             AuditoriaArchivos.objects.create(
                                                 tipo=2,
                                                 id_auditoria=auditoria,
@@ -603,7 +603,7 @@ def upload_imc_view(request):
 
                                     os.makedirs(destino, exist_ok=True)
 
-                                    output_filename = f'Cancelación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.xlsx'
+                                    output_filename = f'Modificación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.docx'
                                     output_path = os.path.join(destino, output_filename)
 
                                     with open(output_path, 'wb+') as destination:
@@ -618,7 +618,7 @@ def upload_imc_view(request):
                                                 nombre=output_filename
                                             )
 
-                                        if not AuditoriaArchivos.objects.filter(id_auditoria=auditoria).exists():
+                                        if not AuditoriaArchivos.objects.filter(id_auditoria=auditoria, tipo=3).exists():
                                             AuditoriaArchivos.objects.create(
                                                 tipo=3,
                                                 id_auditoria=auditoria,
@@ -1353,6 +1353,9 @@ def minuta_mes_view(request, fiscalizacion_id, mes):
     auditoria_band = auditoria.first() is not None
     intervencion_band = intervencion.first() is not None
     control_band = control_interno.first() is not None
+    if not auditoria_band and not intervencion_band and not control_band:
+        messages.error(request, 'Hubo un error en la creación de la minuta, no hay actividades de fiscalización activas del periodo seleccionado.')
+        return redirect('home')
 
     minuta = Minuta.objects.filter(id_actividad_fiscalizacion=fiscalizacion, mes=mes).first()
     if not minuta:
@@ -2020,12 +2023,59 @@ def estructuras_periodos_view(request, actividad_id):
 
 @login_required
 def auditoria_archivos_view(request, auditoria_id):
-    return render(request, 'wip.html')
+    auditoria = get_object_or_404(Auditoria, id=auditoria_id)
+
+    archivos_auditoria = AuditoriaArchivos.objects.filter(id_auditoria=auditoria)
+
+    context = {
+        'tipo': 'Auditoria',
+        'numero': f'A-{auditoria.numero}/{auditoria.id_actividad_fiscalizacion.anyo}',
+        'archivos': archivos_auditoria,
+        'oic': auditoria.id_actividad_fiscalizacion.id_oic
+    }
+
+    return render(request, 'archivos_view.html', context)
+
+
 
 @login_required
 def control_archivos_view(request, control_id):
-    return render(request, 'wip.html')
+    control = get_object_or_404(ControlInterno, id=control_id)
+
+    archivos_control = ControlArchivos.objects.filter(id_control=control)
+
+    context = {
+        'tipo': 'Control',
+        'numero': f'CI-{control.numero}/{control.id_actividad_fiscalizacion.anyo}',
+        'archivos': archivos_control,
+        'oic': control.id_actividad_fiscalizacion.id_oic,
+    }
+
+    return render(request, 'archivos_view.html', context)
+
 
 @login_required
 def intervencion_archivos_view(request, intervencion_id):
-    return render(request, 'wip.html')
+    intervencion = get_object_or_404(Intervencion, id=intervencion_id)
+
+    # Formateo del número de intervención
+    if intervencion.id_tipo_intervencion.clave == 13:
+        prefijo = "R"
+    elif intervencion.id_tipo_intervencion.clave == 14:
+        prefijo = "V"
+    else:
+        prefijo = "O"
+
+    # Formato para número de intervención
+    numero_intervencion = f"{prefijo}-{intervencion.numero:02d}/{intervencion.id_actividad_fiscalizacion.anyo}"
+
+    archivos_intervencion = IntervencionArchivos.objects.filter(id_intervencion=intervencion)
+
+    context = {
+        'tipo': 'Intervención',
+        'numero': numero_intervencion,
+        'archivos': archivos_intervencion,
+        'oic': intervencion.id_actividad_fiscalizacion.id_oic,
+    }
+
+    return render(request, 'archivos_view.html', context)
