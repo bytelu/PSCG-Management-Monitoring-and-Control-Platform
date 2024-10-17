@@ -47,7 +47,6 @@ def extract_datas(df):
         "Numero": df.iloc[2,0],
         "Clave": df.iloc[2,1],
         "Denominacion": df.iloc[2,3],
-        "Tipo": df.iloc[2,4],
         "Año/Trimestre": {
             "Ejecucion": df.iloc[2,5],
             "Conclusion": df.iloc[2,6]

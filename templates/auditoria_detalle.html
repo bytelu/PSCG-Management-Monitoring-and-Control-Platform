@@ -1,12 +1,37 @@
 {% extends 'navbar.html' %}
 {% block title %}Detalle de auditoria{% endblock %}
 {% block content %}
+    <style>
+        .estado-icon {
+            display: inline-block;
+        }
+
+        .estado-icon[data-estado="Activa"]::before {
+            content: '🟢 Activa';
+            color: green;
+        }
+
+        .estado-icon[data-estado="Cancelada"]::before {
+            content: '🔴 Cancelada';
+            color: red;
+        }
+    </style>
+
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="display-4">Detalle de auditoria</h1>
+
+        <!-- Estado visual con ícono -->
+        <div class="form-group">
+            <label>Estado de auditoria:</label>
+            <div class="estado-icon"
+                 data-estado="{% if object.estado == 1 %}Activa{% else %}Cancelada{% endif %}"></div>
+        </div>
+
         <div>
             <button type="button" class="btn btn-outline-dark" data-toggle="modal" data-target="#modal_delete">
                 Borrar
             </button>
+            <!-- Aquí está tu modal para borrar -->
             <div class="modal fade" id="modal_delete" tabindex="-1" role="dialog" aria-labelledby="label_delete"
                  aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -22,30 +47,22 @@
                             <p style="color: red">Esta acción es irreversible</p>
                         </div>
                         <div class="modal-footer">
-                            <p>
-                                <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">
-                                    Cerrar
-                                </button>
-                            </p>
-                            <p>
-                                <a href="{% url 'auditoria-delete' object_id %}"
-                                   class="btn btn-outline-danger">Aceptar</a>
-                            </p>
+                            <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar
+                            </button>
+                            <a href="{% url 'auditoria-delete' object_id %}" class="btn btn-outline-danger">Aceptar</a>
                         </div>
                     </div>
                 </div>
             </div>
-            <a href="{% url 'auditorias' %}" class="btn btn-outline-dark">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <a href="{% url 'auditoria_archivos' object_id %}" class="btn btn-outline-dark">
-                <i class="fas fa-history"></i>
-            </a>
+            <a href="{% url 'auditorias' %}" class="btn btn-outline-dark"><i class="fas fa-arrow-left"></i></a>
+            <a href="{% url 'auditoria_archivos' object_id %}" class="btn btn-outline-dark"><i
+                    class="fas fa-history"></i></a>
         </div>
     </div>
+
     {% if result %}
         <div class="alert alert-success mt-3" role="alert">
-            <strong>Los cambios han sido guardados con exito.</strong>
+            <strong>Los cambios han sido guardados con éxito.</strong>
         </div>
     {% endif %}
     {% if error %}
@@ -73,17 +90,13 @@
                         </button>
                     </div>
                     <div class="modal-body text-center">
-                        <p>¿Estas seguro de que deseas guardar los cambios?</p>
-                        <p style="color: red">Esta accion es irreversible</p>
+                        <p>¿Estás seguro de que deseas guardar los cambios?</p>
+                        <p style="color: red">Esta acción es irreversible</p>
                     </div>
                     <div class="modal-footer">
-                        <p>
-                            <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar
-                            </button>
-                        </p>
-                        <p>
-                            <button type="submit" class="btn btn-outline-danger btn-block">Aceptar</button>
-                        </p>
+                        <button type="button" class="btn btn-outline-dark btn-block" data-dismiss="modal">Cerrar
+                        </button>
+                        <button type="submit" class="btn btn-outline-danger btn-block">Aceptar</button>
                     </div>
                 </div>
             </div>

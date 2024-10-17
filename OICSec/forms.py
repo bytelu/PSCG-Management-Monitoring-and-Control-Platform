@@ -86,7 +86,8 @@ class AuditoriaForm(BaseForm):
             'id_materia': 'Materia:',
             'id_enfoque': 'Enfoque:',
             'id_programacion': 'Programación:',
-            'id_temporalidad': 'Temporalidad:'
+            'id_temporalidad': 'Temporalidad:',
+            'estado': 'Estado:'
         }
         widgets = {
             'denominacion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),

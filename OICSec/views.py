@@ -20,8 +20,9 @@ from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaFo
 from OICSec.funcs.Actividad import get_actividades
 from OICSec.funcs.Cedula import SupervisionData, ConceptosLista, Concepto
 from OICSec.funcs.Cedula import cedula as create_cedula
+from OICSec.funcs.IMC import read_format_a3
 from OICSec.funcs.Minuta import create_revision, minuta as create_minuta_doc
-from OICSec.funcs.PAA import extract_paa
+from OICSec.funcs.PAA import extract_paa, extract_number_and_year
 from OICSec.funcs.PACI import extract_paci
 from OICSec.funcs.PINT import extract_pint
 from OICSec.models import *
@@ -182,7 +183,7 @@ def handle_detail_view(request, model, form_class, object_id, template_name):
             })
     else:
         form = form_class(instance=obj)
-        return render(request, template_name, {'form': form, 'object_id': object_id})
+        return render(request, template_name, {'form': form, 'object_id': object_id, 'object': obj})
 
 
 @login_required
@@ -263,6 +264,7 @@ def process_data(data, lista_oics, create_func, excel_file):
         :param data: Datos extraídos del Excel.
         :param lista_oics: Lista de OICs.
         :param create_func: Función específica para crear los objetos (auditoria o control interno).
+        :param excel_file: Archivo de excel que se guardara en el sistema de archivos
         """
     for excel_processing_result in data:
         similar_oic = get_most_similar_oic(excel_processing_result[0], lista_oics)
@@ -276,7 +278,7 @@ def get_most_similar_oic(excel_oic_name, lista_oics):
     max_similarity = 0
     similar_oic = None
     for oic in lista_oics:
-        similarity = SequenceMatcher(None, excel_oic_name, oic.nombre).ratio()
+        similarity = SequenceMatcher(None, clean_oic_text(excel_oic_name), oic.nombre).ratio()
         if similarity > max_similarity:
             max_similarity = similarity
             similar_oic = oic
@@ -333,20 +335,21 @@ def create_or_update_auditoria(auditoria_data, actividad_fiscalizacion, excel_fi
         auditoria.save()
 
     auditoria_archivo = AuditoriaArchivos.objects.filter(tipo=0, id_auditoria=auditoria).first()
+
+    base_dir = os.path.dirname(__file__)
+    rel_path = '../media/auditoria/'
+    destino = os.path.normpath(os.path.join(base_dir, rel_path))
+
+    os.makedirs(destino, exist_ok=True)
+
+    output_filename = f'PAA - {auditoria.id_actividad_fiscalizacion.anyo}.xlsx'
+    output_path = os.path.join(destino, output_filename)
+
+    with open(output_path, 'wb+') as destination:
+        for chunk in excel_file.chunks():
+            destination.write(chunk)
+
     if auditoria_archivo is None:
-        base_dir = os.path.dirname(__file__)
-        rel_path = '../media/auditoria/'
-        destino = os.path.normpath(os.path.join(base_dir, rel_path))
-
-        os.makedirs(destino, exist_ok=True)
-
-        output_filename = f'PAA - {auditoria.id_actividad_fiscalizacion.anyo}.xlsx'
-        output_path = os.path.join(destino, output_filename)
-
-        with open(output_path, 'wb+') as destination:
-            for chunk in excel_file.chunks():
-                destination.write(chunk)
-
         archivo_obj = Archivo.objects.filter(nombre = output_filename).first()
         if not archivo_obj:
             archivo_obj = Archivo.objects.create(
@@ -389,21 +392,20 @@ def create_or_update_control_interno(control_data, actividad_fiscalizacion, exce
         control_interno.save()
 
     control_archivo = ControlArchivos.objects.filter(tipo=0, id_control=control_interno).first()
+    base_dir = os.path.dirname(__file__)
+    rel_path = '../media/controlinterno/'
+    destino = os.path.normpath(os.path.join(base_dir, rel_path))
+
+    # Se crea el directorio si no existe
+    os.makedirs(destino, exist_ok=True)
+
+    output_filename = f'PACI - {control_interno.id_actividad_fiscalizacion.anyo}.xlsx'
+    output_path = os.path.join(destino, output_filename)
+
+    with open(output_path, 'wb+') as destination:
+        for chunk in excel_file.chunks():
+            destination.write(chunk)
     if control_archivo is None:
-        base_dir = os.path.dirname(__file__)
-        rel_path = '../media/controlinterno/'
-        destino = os.path.normpath(os.path.join(base_dir, rel_path))
-
-        # Se crea el directorio si no existe
-        os.makedirs(destino, exist_ok=True)
-
-        output_filename = f'PACI - {control_interno.id_actividad_fiscalizacion.anyo}.xlsx'
-        output_path = os.path.join(destino, output_filename)
-
-        with open(output_path, 'wb+') as destination:
-            for chunk in excel_file.chunks():
-                destination.write(chunk)
-
         archivo_obj = Archivo.objects.filter(nombre = output_filename).first()
         if not archivo_obj:
             archivo_obj = Archivo.objects.create(
@@ -441,11 +443,222 @@ def upload_paa_view(request):
 
 
 @login_required
-def upload_IMC_view(request):
+def upload_imc_view(request):
     if request.method == 'POST':
-        pass
+        lista_oics = Oic.objects.all()
+        word_files = request.FILES.getlist('excel_files')
+        context = {
+            'lista_oics': lista_oics,
+        }
+        processed_files = []
+        error_files = []
+        if not word_files:
+            context['excel_processing_error'] = ['Ningún archivo fue seleccionado.']
+            return render(request, 'IMC.html', context=context)
+
+
+        for word_file in word_files:
+            try:
+                data = read_format_a3(word_file)
+
+                if data is None:
+                    raise ValueError(f'Error al leer el archivo: {word_file.name}')
+                else:
+                    # Se debería de hacer un procedimiento extra para identificar a que tipo de modelo pertenece, pero ahora solo funciona con auditorias
+                    kind = get_kind_imc(data.get('Tipo'))
+                    similar_oic = get_most_similar_oic(data.get('OIC'), lista_oics)
+                    num_year = extract_number_and_year(data.get('Numero'))
+                    numero = num_year['Numero']
+                    anyo = num_year['Año']
+                    denominacion = data.get('Denominacion')
+                    trimestre = data.get('Año/Trimestre').get('Ejecucion').split('/')[1]
+                    objetivo_modificado = data.get('Objeto').get('Modificado')
+                    alcance_modificado = data.get('Alcance').get('Modificado')
+                    clave = data.get('Clave').split('-')
+
+                    with transaction.atomic():
+                        if kind == 1: # incorporación
+                            materia_obj = get_object_or_404(Materia, clave=clave[0])
+                            programacion_obj = get_object_or_404(Programacion, clave=clave[1])
+                            enfoque_obj = get_object_or_404(Enfoque, clave=clave[2])
+                            temporalidad_obj = get_object_or_404(Temporalidad, clave=clave[3])
+                            cedula_obj = Cedula.objects.create()
+                            auditoria = Auditoria.objects.create(
+                                denominacion=denominacion,
+                                numero=numero,
+                                objetivo=objetivo_modificado,
+                                alcance=alcance_modificado,
+                                id_actividad_fiscalizacion=get_or_create_actividad_fiscalizacion({'Año': anyo, 'Trimestre': trimestre}, similar_oic),
+                                id_materia=materia_obj,
+                                id_programacion=programacion_obj,
+                                id_enfoque=enfoque_obj,
+                                id_temporalidad=temporalidad_obj,
+                                id_cedula=cedula_obj,
+                                estado=1
+                            )
+                            create_conceptos_cedula(cedula_obj, 60)
+
+                            auditoria_archivo = AuditoriaArchivos.objects.filter(tipo=1, id_auditoria=auditoria).first()
+
+                            base_dir = os.path.dirname(__file__)
+                            rel_path = '../media/IMC/'
+                            destino = os.path.normpath(os.path.join(base_dir, rel_path))
+
+                            os.makedirs(destino, exist_ok=True)
+
+                            output_filename = f'Incorporación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.xlsx'
+                            output_path = os.path.join(destino, output_filename)
+
+                            with open(output_path, 'wb+') as destination:
+                                for chunk in word_file.chunks():
+                                    destination.write(chunk)
+
+                            if auditoria_archivo is None:
+                                archivo_obj = Archivo.objects.filter(nombre = output_filename).first()
+                                if not archivo_obj:
+                                    archivo_obj = Archivo.objects.create(
+                                        archivo=output_path,
+                                        nombre=output_filename
+                                    )
+
+                                if not AuditoriaArchivos.objects.filter(id_auditoria=auditoria).exists():
+                                    AuditoriaArchivos.objects.create(
+                                        tipo=1,
+                                        id_auditoria=auditoria,
+                                        id_archivo=archivo_obj
+                                    )
+                            processed_files.append(word_file.name)
+
+                        if kind == 2: # cancelación
+                            actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
+                                anyo=anyo,
+                                trimestre=trimestre,
+                                id_oic=similar_oic
+                            ).first()
+                            if actividad_fiscalizacion:
+                                auditoria = Auditoria.objects.filter(
+                                    numero=numero,
+                                    id_actividad_fiscalizacion=actividad_fiscalizacion,
+                                    estado=1
+                                ).first()
+                                if auditoria:
+                                    auditoria.estado = 0
+                                    auditoria.save()
+
+                                    auditoria_archivo = AuditoriaArchivos.objects.filter(tipo=2, id_auditoria=auditoria).first()
+                                    base_dir = os.path.dirname(__file__)
+                                    rel_path = '../media/IMC/'
+                                    destino = os.path.normpath(os.path.join(base_dir, rel_path))
+
+                                    os.makedirs(destino, exist_ok=True)
+
+                                    output_filename = f'Cancelación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.xlsx'
+                                    output_path = os.path.join(destino, output_filename)
+
+                                    with open(output_path, 'wb+') as destination:
+                                        for chunk in word_file.chunks():
+                                            destination.write(chunk)
+
+                                    if auditoria_archivo is None:
+                                        archivo_obj = Archivo.objects.filter(nombre=output_filename).first()
+                                        if not archivo_obj:
+                                            archivo_obj = Archivo.objects.create(
+                                                archivo=output_path,
+                                                nombre=output_filename
+                                            )
+
+                                        if not AuditoriaArchivos.objects.filter(id_auditoria=auditoria).exists():
+                                            AuditoriaArchivos.objects.create(
+                                                tipo=2,
+                                                id_auditoria=auditoria,
+                                                id_archivo=archivo_obj
+                                            )
+
+                                    processed_files.append(word_file.name)
+                                else:
+                                    raise ValueError(f'No hay auditorias activas contenidas con los datos solicitados')
+                            else:
+                                raise ValueError(f'No hay auditorias activas contenidas con los datos solicitados')
+                        if kind == 3: # modificación
+                            actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
+                                anyo=anyo,
+                                trimestre=trimestre,
+                                id_oic=similar_oic
+                            ).first()
+                            if actividad_fiscalizacion:
+                                auditoria = Auditoria.objects.filter(
+                                    numero=numero,
+                                    id_actividad_fiscalizacion=actividad_fiscalizacion,
+                                    estado=1
+                                ).first()
+                                if auditoria:
+                                    auditoria.objetivo=objetivo_modificado
+                                    auditoria.alcance=alcance_modificado
+                                    auditoria.save()
+
+                                    auditoria_archivo = AuditoriaArchivos.objects.filter(tipo=3, id_auditoria=auditoria).first()
+                                    base_dir = os.path.dirname(__file__)
+                                    rel_path = '../media/IMC/'
+                                    destino = os.path.normpath(os.path.join(base_dir, rel_path))
+
+                                    os.makedirs(destino, exist_ok=True)
+
+                                    output_filename = f'Cancelación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.xlsx'
+                                    output_path = os.path.join(destino, output_filename)
+
+                                    with open(output_path, 'wb+') as destination:
+                                        for chunk in word_file.chunks():
+                                            destination.write(chunk)
+
+                                    if auditoria_archivo is None:
+                                        archivo_obj = Archivo.objects.filter(nombre=output_filename).first()
+                                        if not archivo_obj:
+                                            archivo_obj = Archivo.objects.create(
+                                                archivo=output_path,
+                                                nombre=output_filename
+                                            )
+
+                                        if not AuditoriaArchivos.objects.filter(id_auditoria=auditoria).exists():
+                                            AuditoriaArchivos.objects.create(
+                                                tipo=3,
+                                                id_auditoria=auditoria,
+                                                id_archivo=archivo_obj
+                                            )
+
+                                    processed_files.append(word_file.name)
+                                else:
+                                    raise ValueError(f'No hay auditorias activas contenidas con los datos solicitados')
+                            else:
+                                raise ValueError(f'No hay auditorias activas contenidas con los datos solicitados')
+
+            except Exception as e:
+                error_files.append(word_file.name)
+
+            if processed_files:
+                context['excel_processing_result'] = processed_files
+            if error_files:
+                context['excel_processing_error'] = error_files
+
+            return render(request, 'IMC.html', context=context)
+
     if request.method == 'GET':
         return render(request, 'IMC.html')
+
+
+def get_kind_imc(tipo_str):
+    tipos = {
+        'incorporación': 1,
+        'cancelación': 2,
+        'modificación': 3
+    }
+    best_match = None
+    highest_ratio = 0
+    for tipo in tipos:
+        similarity_ratio = SequenceMatcher(None, tipo_str, tipo).ratio()
+        if similarity_ratio > highest_ratio:
+            highest_ratio = similarity_ratio
+            best_match = tipo
+    return tipos[best_match] if best_match else None
 
 
 def clean_oic_text(organo: str):
@@ -596,20 +809,19 @@ def upload_pint_view(request):
                         intervencion.save()
 
                     intervencion_archivo = IntervencionArchivos.objects.filter(tipo=0, id_intervencion=intervencion).first()
+                    base_dir = os.path.dirname(__file__)
+                    rel_path = '../media/intervenciones/'
+                    destino = os.path.normpath(os.path.join(base_dir, rel_path))
+
+                    os.makedirs(destino, exist_ok=True)
+
+                    output_filename = f'PINT - {intervencion.id_actividad_fiscalizacion.anyo}.docx'
+                    output_path = os.path.join(destino, output_filename)
+
+                    with open(output_path, 'wb+') as destination:
+                        for chunk in word_file.chunks():
+                            destination.write(chunk)
                     if intervencion_archivo is None:
-                        base_dir = os.path.dirname(__file__)
-                        rel_path = '../media/intervenciones/'
-                        destino = os.path.normpath(os.path.join(base_dir, rel_path))
-
-                        os.makedirs(destino, exist_ok=True)
-
-                        output_filename = f'PINT - {intervencion.id_actividad_fiscalizacion.anyo}.docx'
-                        output_path = os.path.join(destino, output_filename)
-
-                        with open(output_path, 'wb+') as destination:
-                            for chunk in word_file.chunks():
-                                destination.write(chunk)
-
                         archivo_obj = Archivo.objects.filter(nombre=output_filename).first()
                         if not archivo_obj:
                             archivo_obj = Archivo.objects.create(
@@ -1134,7 +1346,7 @@ def get_actividades_lista(actividades):
 @login_required
 def minuta_mes_view(request, fiscalizacion_id, mes):
     fiscalizacion = get_object_or_404(ActividadFiscalizacion, pk=fiscalizacion_id)
-    auditoria = Auditoria.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
+    auditoria = Auditoria.objects.filter(id_actividad_fiscalizacion=fiscalizacion, estado=1)
     intervencion = Intervencion.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
     control_interno = ControlInterno.objects.filter(id_actividad_fiscalizacion=fiscalizacion)
     oic = fiscalizacion.id_oic

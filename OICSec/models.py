@@ -60,8 +60,8 @@ class Archivo(models.Model):
 
 class Auditoria(models.Model):
     ESTADO_CHOICES = [
-        (0, 'Inactivo'),
-        (1, 'Activo')
+        (0, 'Cancelada'),
+        (1, 'Activa')
     ]
     id = models.AutoField(primary_key=True)
     estado = models.IntegerField(choices=ESTADO_CHOICES, blank=True, null=True)
