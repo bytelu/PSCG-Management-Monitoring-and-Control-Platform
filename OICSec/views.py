@@ -318,7 +318,8 @@ def create_or_update_auditoria(auditoria_data, actividad_fiscalizacion, excel_fi
             id_programacion=programacion_obj,
             id_enfoque=enfoque_obj,
             id_temporalidad=temporalidad_obj,
-            id_cedula=cedula_obj
+            id_cedula=cedula_obj,
+            estado=1
         )
         create_conceptos_cedula(cedula_obj, 60)
     else:
@@ -342,7 +343,7 @@ def create_or_update_auditoria(auditoria_data, actividad_fiscalizacion, excel_fi
 
     os.makedirs(destino, exist_ok=True)
 
-    output_filename = f'PAA - {auditoria.id_actividad_fiscalizacion.anyo}.xlsx'
+    output_filename = f'{excel_file.name}'
     output_path = os.path.join(destino, output_filename)
 
     with open(output_path, 'wb+') as destination:
@@ -399,7 +400,7 @@ def create_or_update_control_interno(control_data, actividad_fiscalizacion, exce
     # Se crea el directorio si no existe
     os.makedirs(destino, exist_ok=True)
 
-    output_filename = f'PACI - {control_interno.id_actividad_fiscalizacion.anyo}.xlsx'
+    output_filename = f'{excel_file.name}'
     output_path = os.path.join(destino, output_filename)
 
     with open(output_path, 'wb+') as destination:
@@ -478,6 +479,19 @@ def upload_imc_view(request):
 
                     with transaction.atomic():
                         if kind == 1: # incorporación
+                            actividad_fiscalizacion = ActividadFiscalizacion.objects.filter(
+                                anyo=anyo,
+                                trimestre=trimestre,
+                                id_oic=similar_oic
+                            ).first()
+                            if actividad_fiscalizacion:
+                                auditoria = Auditoria.objects.filter(
+                                    numero=numero,
+                                    id_actividad_fiscalizacion=actividad_fiscalizacion,
+                                    estado=1
+                                ).first()
+                                if auditoria:
+                                    raise ValueError(f'Ya se encuentra una auditoria presente con los valores recolectados, favor de verificar.')
                             materia_obj = get_object_or_404(Materia, clave=clave[0])
                             programacion_obj = get_object_or_404(Programacion, clave=clave[1])
                             enfoque_obj = get_object_or_404(Enfoque, clave=clave[2])
@@ -506,7 +520,7 @@ def upload_imc_view(request):
 
                             os.makedirs(destino, exist_ok=True)
 
-                            output_filename = f'Incorporación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.docx'
+                            output_filename = f'{word_file.name}'
                             output_path = os.path.join(destino, output_filename)
 
                             with open(output_path, 'wb+') as destination:
@@ -552,7 +566,7 @@ def upload_imc_view(request):
 
                                     os.makedirs(destino, exist_ok=True)
 
-                                    output_filename = f'Cancelación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.docx'
+                                    output_filename = f'{word_file.name}'
                                     output_path = os.path.join(destino, output_filename)
 
                                     with open(output_path, 'wb+') as destination:
@@ -603,7 +617,7 @@ def upload_imc_view(request):
 
                                     os.makedirs(destino, exist_ok=True)
 
-                                    output_filename = f'Modificación - A-{auditoria.numero}_{auditoria.id_actividad_fiscalizacion.anyo} {auditoria.id_actividad_fiscalizacion.id_oic}.docx'
+                                    output_filename = f'{word_file.name}'
                                     output_path = os.path.join(destino, output_filename)
 
                                     with open(output_path, 'wb+') as destination:
@@ -632,6 +646,7 @@ def upload_imc_view(request):
                                 raise ValueError(f'No hay auditorias activas contenidas con los datos solicitados')
 
             except Exception as e:
+                messages.error(request, f'Error en {word_file.name}: {e}')
                 error_files.append(word_file.name)
 
             if processed_files:
@@ -815,7 +830,7 @@ def upload_pint_view(request):
 
                     os.makedirs(destino, exist_ok=True)
 
-                    output_filename = f'PINT - {intervencion.id_actividad_fiscalizacion.anyo}.docx'
+                    output_filename = f'{word_file.name}'
                     output_path = os.path.join(destino, output_filename)
 
                     with open(output_path, 'wb+') as destination:

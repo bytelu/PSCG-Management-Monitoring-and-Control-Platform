@@ -1,6 +1,15 @@
 {% extends 'navbar.html' %}
 {% block title %}Subida de archivo IMC{% endblock %}
 {% block content %}
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-danger">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="display-4">Formato especial de Incorporación, Modificación o Cancelación</h1>
         <a href="{% url 'auditorias' %}" class="btn btn-outline-dark">
