@@ -1,5 +1,10 @@
+from django.db.models import Sum
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
+from django.contrib import messages
+from axes.signals import user_login_failed
+from axes.models import AccessAttempt
+from django.utils.translation import gettext as _
 
 from .models import Auditoria, Intervencion, ControlInterno, ConceptoCedula, Minuta, ConceptoMinuta, AuditoriaArchivos, \
     IntervencionArchivos, ControlArchivos
@@ -99,3 +104,19 @@ def delete_related_records(sender, instance, **kwargs):
     if is_last_record_in_activity(instance):
         actividad = instance.id_actividad_fiscalizacion
         delete_minuta_related_records(actividad)
+
+
+@receiver(user_login_failed)
+def check_failed_attempts(sender, credentials, request, **kwargs):
+    ip_address = request.META.get('REMOTE_ADDR')
+
+    attempts = AccessAttempt.objects.filter(ip_address=ip_address).aggregate(total_failures=Sum('failures_since_start'))['total_failures'] or 0
+
+    failure_limit = 5
+
+    if attempts == failure_limit - 3:
+        request.session['warning_message'] = _("Advertencia: Tienes tres intentos más antes de ser bloqueado.")
+    if attempts == failure_limit - 2:
+        request.session['warning_message'] = _("Advertencia: Tienes dos intentos más antes de ser bloqueado.")
+    if attempts == failure_limit - 1:
+        request.session['warning_message'] = _("Advertencia: Tienes solo un intento antes de ser bloqueado.")

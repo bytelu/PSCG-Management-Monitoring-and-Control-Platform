@@ -38,13 +38,18 @@ def login_view(request):
             return redirect('home')
         else:
             messages.error(request, 'Usuario o contraseña invalidos')
-            return render(request, 'login.html')
+            if 'warning_message' in request.session:
+                messages.warning(request, request.session['warning_message'])
+                del request.session['warning_message']
     else:
         if request.user.is_authenticated:
             return redirect('home')
         else:
-            # Si no está autenticado, renderizar la página de inicio de sesión
+            if 'warning_message' in request.session:
+                messages.warning(request, request.session['warning_message'])
+                del request.session['warning_message']
             return render(request, 'login.html')
+    return render(request, 'login.html')
 
 
 @login_required
