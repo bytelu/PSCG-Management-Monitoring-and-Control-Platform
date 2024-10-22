@@ -495,7 +495,6 @@ def upload_imc_view(request):
                                 auditoria = Auditoria.objects.filter(
                                     numero=numero,
                                     id_actividad_fiscalizacion=actividad_fiscalizacion,
-                                    estado=1
                                 ).first()
                                 if auditoria:
                                     raise ValueError(f'Ya se encuentra una auditoria presente con los valores recolectados, favor de verificar.')
@@ -2113,7 +2112,7 @@ def account_locked_view(request):
         lockout_time = datetime.timedelta(minutes=2)
         remaining_time = lockout_time - time_since_last_attempt
 
-        remaining_seconds = max(0, remaining_time.total_seconds())
+        remaining_seconds = max(0, int(remaining_time.total_seconds()))
     else:
         remaining_seconds = 0
 

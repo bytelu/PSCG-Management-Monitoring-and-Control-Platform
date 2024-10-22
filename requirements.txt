@@ -1,6 +1,7 @@
 asgiref==3.8.1
 coverage==7.6.1
 Django==5.0.4
+django-axes==7.0.0
 docopt==0.6.2
 et-xmlfile==1.1.0
 fuzzywuzzy==0.18.0
