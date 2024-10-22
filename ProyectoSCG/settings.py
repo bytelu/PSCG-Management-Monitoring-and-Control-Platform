@@ -66,6 +66,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'axes.middleware.AxesMiddleware',
+    'OICSec.middleware.BlockedUserMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -74,9 +75,10 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 AXES_FAILURE_LIMIT = 5
-AXES_COOLOFF_TIME = 0.1
+AXES_COOLOFF_TIME = 2/60
 AXES_RESET_ON_SUCCESS = True
 AXES_LOCK_OUT_AT_FAILURE = True
+AXES_LOCKOUT_URL = '/account_locked/'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 

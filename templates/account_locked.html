@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" onclick="goBack()">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{% static 'LOGO_2023.png' %}">
+    <title>Cuenta bloqueada</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #333;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            animation: fadeIn 1.5s ease forwards;
+        }
+
+        .text {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .text::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background-color: #fff;
+            bottom: 0;
+            left: 0;
+            transition: width 0.5s ease;
+        }
+
+        .text:hover::after {
+            width: 100%;
+        }
+
+        .icon {
+            width: 100px;
+            height: 100px;
+            margin-top: 20px;
+            fill: #fff;
+            animation: slowSpin 6s linear infinite;
+        }
+
+        /* Animación para el SVG del reloj de arena */
+        @keyframes slowSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Efecto de entrada gradual */
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text">Cuenta bloqueada</div>
+        <div class="text">Inténtalo de nuevo en <span id="countdown">{{ remaining_seconds }}</span> segundos</div>
+        <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 2h12v2c0 2.61-1.67 4.83-4 5.66V14.34c2.33.83 4 3.05 4 5.66v2H6v-2c0-2.61 1.67-4.83 4-5.66V9.66C7.67 8.83 6 6.61 6 4V2zm2 2v.06c0 1.84 1.17 3.45 3 4.06 1.83-.61 3-2.22 3-4.06V4H8zm8 16v-.06c0-1.84-1.17-3.45-3-4.06-1.83.61-3 2.22-3 4.06V20h6z"></path>
+        </svg>
+    </div>
+
+    <script>
+        let countdown = document.getElementById('countdown');
+        let remainingTime = parseInt(countdown.textContent, 10);
+        let textContainer = document.querySelector('.container');
+        
+        let interval = setInterval(function() {
+            remainingTime--;
+            countdown.textContent = remainingTime;
+        
+            if (remainingTime <= 0) {
+                clearInterval(interval);
+                textContainer.innerHTML = '<div class="text">Ya puedes intentarlo nuevamente.</div>';
+            }
+        }, 1000);
+
+        function goBack() {
+            window.history.back();
+        }
+        
+    </script>
+</body>
+</html>

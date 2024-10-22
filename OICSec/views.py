@@ -4,6 +4,7 @@ import re
 from difflib import SequenceMatcher
 from urllib.parse import quote
 
+from axes.models import AccessAttempt
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -13,6 +14,7 @@ from django.db import transaction
 from django.http import HttpResponse, FileResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.utils.timezone import now
 from num2words import num2words
 
 from OICSec.forms import AuditoriaForm, ControlForm, IntervencionForm, PersonaForm, CargoPersonalForm, CrearTitularForm, \
@@ -2099,3 +2101,20 @@ def intervencion_archivos_view(request, intervencion_id):
     }
 
     return render(request, 'archivos_view.html', context)
+
+
+def account_locked_view(request):
+    ip_address = request.META.get('REMOTE_ADDR')
+
+    attempts = AccessAttempt.objects.filter(ip_address=ip_address).order_by('-attempt_time').first()
+
+    if attempts:
+        time_since_last_attempt = now() - attempts.attempt_time
+        lockout_time = datetime.timedelta(minutes=2)
+        remaining_time = lockout_time - time_since_last_attempt
+
+        remaining_seconds = max(0, remaining_time.total_seconds())
+    else:
+        remaining_seconds = 0
+
+    return render(request, 'account_locked.html', {'remaining_seconds': remaining_seconds})

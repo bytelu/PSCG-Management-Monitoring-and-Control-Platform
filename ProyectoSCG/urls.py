@@ -18,8 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import RedirectView
 
+from OICSec.views import account_locked_view
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(url='/OICSec', permanent=True)),
     path('OICSec/', include('OICSec.urls')),
+    path('account_locked/',
+         account_locked_view, name='account_locked'),
 ]
