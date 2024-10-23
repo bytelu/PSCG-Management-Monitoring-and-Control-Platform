@@ -97,7 +97,8 @@ class AuditoriaArchivos(models.Model):
         (0, 'PAA'),
         (1, 'Incorporación'),
         (2, 'Cancelación'),
-        (3, 'Modificación')
+        (3, 'Modificación'),
+        (4, 'Respaldo')
     ]
     id = models.AutoField(primary_key=True)
     tipo = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
@@ -176,7 +177,8 @@ class ControlArchivos(models.Model):
         (0, 'PACI'),
         (1, 'Incorporación'),
         (2, 'Cancelación'),
-        (3, 'Modificación')
+        (3, 'Modificación'),
+        (4, 'Respaldo')
     ]
     id = models.AutoField(primary_key=True)
     tipo = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)
@@ -269,7 +271,8 @@ class IntervencionArchivos(models.Model):
         (0, 'PINT'),
         (1, 'Incorporación'),
         (2, 'Cancelación'),
-        (3, 'Modificación')
+        (3, 'Modificación'),
+        (4, 'Respaldo')
     ]
     id = models.AutoField(primary_key=True)
     tipo = models.IntegerField(choices=TIPO_CHOICES, blank=True, null=True)

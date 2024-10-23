@@ -2052,7 +2052,9 @@ def auditoria_archivos_view(request, auditoria_id):
         'tipo': 'Auditoria',
         'numero': f'A-{auditoria.numero}/{auditoria.id_actividad_fiscalizacion.anyo}',
         'archivos': archivos_auditoria,
-        'oic': auditoria.id_actividad_fiscalizacion.id_oic
+        'oic': auditoria.id_actividad_fiscalizacion.id_oic,
+        'upload_url_name': 'upload_auditoria_archivo',
+        'instance_id': auditoria_id
     }
 
     return render(request, 'archivos_view.html', context)
@@ -2070,6 +2072,8 @@ def control_archivos_view(request, control_id):
         'numero': f'CI-{control.numero}/{control.id_actividad_fiscalizacion.anyo}',
         'archivos': archivos_control,
         'oic': control.id_actividad_fiscalizacion.id_oic,
+        'upload_url_name': 'upload_control_archivo',
+        'instance_id': control_id
     }
 
     return render(request, 'archivos_view.html', context)
@@ -2097,6 +2101,8 @@ def intervencion_archivos_view(request, intervencion_id):
         'numero': numero_intervencion,
         'archivos': archivos_intervencion,
         'oic': intervencion.id_actividad_fiscalizacion.id_oic,
+        'upload_url_name': 'upload_intervencion_archivo',
+        'instance_id': intervencion_id
     }
 
     return render(request, 'archivos_view.html', context)
@@ -2117,3 +2123,91 @@ def account_locked_view(request):
         remaining_seconds = 0
 
     return render(request, 'account_locked.html', {'remaining_seconds': remaining_seconds})
+
+
+def upload_archivo(request, model, archivo_model, id_model, template_name, url_name):
+    context = {'url_name': url_name, 'id_model': id_model}
+    if request.method == 'POST':
+        files = request.FILES.getlist('archivos')
+        if not files:
+            messages.error(request, 'No has seleccionado ningun archivo.')
+            return render(request, template_name, context)
+        try:
+            model_instance = model.objects.get(id=id_model)
+            for file in files:
+                base_dir = os.path.dirname(__file__)
+                rel_path = '../media/auditoria/' if model == Auditoria \
+                    else ('../media/controlinterno/' if model == ControlInterno
+                          else ('../media/intervenciones' if model == Intervencion
+                                else None))
+                if rel_path is None:
+                    messages.error(request, 'Ha ocurrido un error con la identificación de la instancia.')
+                    return render(request, template_name, context)
+                destino = os.path.normpath(os.path.join(base_dir, rel_path))
+
+                os.makedirs(destino, exist_ok=True)
+                output_filename = f'{file.name}'
+                output_path = os.path.join(destino, output_filename)
+
+                with open(output_path, 'wb+') as destination:
+                    for chunk in file.chunks():
+                        destination.write(chunk)
+
+                archivo_obj = Archivo.objects.create(
+                    archivo=output_path,
+                    nombre=output_filename
+                )
+
+                archivo_mapping = {
+                    AuditoriaArchivos: ('id_auditoria', model_instance),
+                    ControlArchivos: ('id_control', model_instance),
+                    IntervencionArchivos: ('id_intervencion', model_instance)
+                }
+
+                if archivo_model in archivo_mapping:
+                    field, instance = archivo_mapping[archivo_model]
+                    archivo_model.objects.create(
+                        tipo=4,
+                        **{field: instance, 'id_archivo': archivo_obj}
+                    )
+
+                return render(request, template_name, context)
+
+        except Exception as e:
+            messages.error(request, f'Error: {e}')
+    elif request.method == 'GET':
+        return render(request, template_name, context)
+
+
+@login_required
+def upload_archivo_auditoria(request, auditoria_id):
+    return upload_archivo(
+        request,
+        model=Auditoria,
+        archivo_model=AuditoriaArchivos,
+        id_model=auditoria_id,
+        template_name='upload_file.html',
+        url_name='upload_auditoria_archivo'
+    )
+
+@login_required
+def upload_archivo_intervencion(request, intervencion_id):
+    return upload_archivo(
+        request,
+        model=Intervencion,
+        archivo_model=IntervencionArchivos,
+        id_model=intervencion_id,
+        template_name='upload_file.html',
+        url_name='upload_intervencion_archivo'
+    )
+
+@login_required
+def upload_archivo_control(request, control_id):
+    return upload_archivo(
+        request,
+        model=ControlInterno,
+        archivo_model=ControlArchivos,
+        id_model=control_id,
+        template_name='upload_file.html',
+        url_name='upload_control_archivo'
+    )

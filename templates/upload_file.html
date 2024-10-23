@@ -1,0 +1,7 @@
+<form id="uploadArchivoForm" method="POST" enctype="multipart/form-data" action="{% url url_name id_model %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="archivo">Seleccionar archivo</label>
+        <input type="file" class="form-control-file" id="archivo" name="archivos" multiple required>
+    </div>
+</form>
