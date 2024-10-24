@@ -1,0 +1,123 @@
+{% extends 'navbar.html' %}
+
+{% block title %}Estadísticas{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-4">Estadísticas</h1>
+        </div>
+
+        <!-- Filtros para Estadísticas -->
+        <form id="filtroForm" action="{% url 'estadisticas' %}" method="GET" class="container-fluid mb-4">
+            <div class="row mt-4">
+                <!-- Filtro de OIC -->
+                <div class="col-md-6">
+                    <label for="oic" class="form-label">Seleccionar OIC:</label>
+                    <select name="oic_id" id="oic" class="select2 form-control">
+                        <option value="">Todos los OICs</option>
+                        {% for oic in oics %}
+                            <option value="{{ oic.id }}"
+                                {% if oic.id|stringformat:"s" == request.GET.oic_id %}selected{% endif %}>
+                                {{ oic.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtro de Dirección -->
+                <div class="col-md-6">
+                    <label for="direccion" class="form-label">Seleccionar Dirección:</label>
+                    <select name="direccion" id="direccion" class="select2 form-control">
+                        <option value="">Todas las Direcciones</option>
+                        {% for direccion in direcciones %}
+                            <option value="{{ direccion }}"
+                                {% if direccion == request.GET.direccion %}selected{% endif %}>
+                                {{ direccion }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <!-- Filtro de Trimestre -->
+                <div class="col-md-6">
+                    <label for="trimestre" class="form-label">Seleccionar Trimestre:</label>
+                    <select name="trimestre" id="trimestre" class="select2 form-control">
+                        <option value="">Todos los Trimestres</option>
+                        {% for tri in trimestres %}
+                            <option value="{{ tri }}"
+                                {% if tri|stringformat:"s" == request.GET.trimestre %}selected{% endif %}>
+                                Trimestre {{ tri }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtro de Año -->
+                <div class="col-md-6">
+                    <label for="anyo" class="form-label">Seleccionar Año:</label>
+                    <select name="anyo" id="anyo" class="select2 form-control">
+                        <option value="">Todos los Años</option>
+                        {% for year in anyos %}
+                            <option value="{{ year.anyo }}"
+                                {% if year.anyo|stringformat:"s" == request.GET.anyo %}selected{% endif %}>
+                                {{ year.anyo }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col text-right">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Mostrar mensaje de error si existe -->
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+        {% else %}
+            <!-- Sección de Resultados -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card text-white bg-primary mb-3">
+                        <div class="card-header">Número de Auditorías</div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ num_auditorias }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-success mb-3">
+                        <div class="card-header">Número de Controles Internos</div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ num_controles }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-warning mb-3">
+                        <div class="card-header">Número de Intervenciones</div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ num_intervenciones }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Activar Select2 para los filtros -->
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2();
+        });
+    </script>
+    
+{% endblock %}

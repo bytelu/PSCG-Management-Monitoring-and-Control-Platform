@@ -110,4 +110,6 @@ urlpatterns = [
          estructuras_periodos_view, name='estructuras_periodos'),
     path("IMC/",
          upload_imc_view, name="uploadIMC"),
+    path("estadisticas/",
+         estadisticas_view, name="estadisticas")
 ]

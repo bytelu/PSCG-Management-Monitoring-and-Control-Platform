@@ -2211,3 +2211,73 @@ def upload_archivo_control(request, control_id):
         template_name='upload_file.html',
         url_name='upload_control_archivo'
     )
+
+
+@login_required
+def estadisticas_view(request):
+    nombres_oics = ActividadFiscalizacion.objects.values_list('id_oic__nombre', flat=True)
+    context = {
+        'trimestres': [1, 2, 3, 4],
+        'direcciones': ['A', 'B', 'C'],
+        'oics': Oic.objects.filter(nombre__in=nombres_oics).distinct(),
+        'anyos': ActividadFiscalizacion.objects.values('anyo').distinct()
+    }
+
+    # Filtros de OIc, Trimestre, Año y Dirección
+    oic_id = request.GET.get('oic_id') if request.GET.get('oic_id') else ''
+    trimestre = request.GET.get('trimestre') if request.GET.get('trimestre') else ''
+    anyo = request.GET.get('anyo') if request.GET.get('anyo') else ''
+    id_direccion = '1' if request.GET.get('direccion') == 'A' else ('2' if request.GET.get('direccion') == 'B' else ('3' if request.GET.get('direccion') == 'C' else ''))
+
+    oic_band = oic_id not in ['', None]
+    trimestre_band = trimestre not in ['', None]
+    anyo_band = anyo not in ['', None]
+    direccion_band = id_direccion not in ['', None]
+
+    if oic_band and direccion_band:
+        oic = get_object_or_404(Oic, id=oic_id)
+        compatibility_oic_direccion = f'{oic.id_direccion.id}' == id_direccion
+        if not compatibility_oic_direccion:
+            context.update({'error': 'El OIC seleccionado no pertenece a la dirección seleccionada, favor de verificar el filtro.'})
+            return render(request, 'estadisticas.html', context)
+    # Buscar OIC's, relacionados a filtro
+    filter_oic_kwargs = {}
+    if oic_band:
+        filter_oic_kwargs['id'] = oic_id
+    if direccion_band:
+        filter_oic_kwargs['id_direccion__id'] = id_direccion
+    if filter_oic_kwargs != {}:
+        oics = Oic.objects.filter(**filter_oic_kwargs)
+    else:
+        oics = Oic.objects.all()
+
+    periodos = []
+    for oic in oics:
+        filter_periodo_kwargs = {'id_oic': oic}
+        if trimestre_band:
+            filter_periodo_kwargs['trimestre'] = trimestre
+        if anyo_band:
+            filter_periodo_kwargs['anyo'] = anyo
+        periodos.extend(ActividadFiscalizacion.objects.filter(**filter_periodo_kwargs))
+
+    if not periodos:
+        context.update({'error': 'No se han encontrado actividades de fiscalización con los filtros seleccionados.'})
+        return render(request, 'estadisticas.html', context)
+
+    auditorias_count = 0
+    controles_count = 0
+    intervenciones_count = 0
+    for periodo in periodos:
+        auditorias_count += Auditoria.objects.filter(id_actividad_fiscalizacion=periodo).count()
+        controles_count += ControlInterno.objects.filter(id_actividad_fiscalizacion=periodo).count()
+        intervenciones_count += Intervencion.objects.filter(id_actividad_fiscalizacion=periodo).count()
+
+    context.update(
+        {
+            'num_auditorias': auditorias_count,
+            'num_controles': controles_count,
+            'num_intervenciones': intervenciones_count,
+        }
+    )
+
+    return render(request, 'estadisticas.html', context)
