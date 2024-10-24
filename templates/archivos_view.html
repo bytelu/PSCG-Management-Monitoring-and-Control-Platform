@@ -88,7 +88,35 @@
                 .then(data => {
                     document.getElementById('uploadArchivoFormContainer').innerHTML = data;
                     $('#uploadArchivoModal').modal('show');
+                    initializeUploadForm();
                 });
+        }
+        function initializeUploadForm() {
+            const archivoInput = document.getElementById('archivo');
+            const fileListContainer = document.getElementById('fileListContainer');
+            if (archivoInput) {
+                archivoInput.addEventListener('change', function () {
+                    updateFileList(this);
+                });
+            }
+            function updateFileList(input) {
+                fileListContainer.innerHTML = '';
+                if (input.files.length > 0) {
+                    Array.from(input.files).forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.classList.add('file-item');
+                        const fileIcon = document.createElement('i');
+                        fileIcon.classList.add('fas', 'fa-file-alt');
+                        fileItem.appendChild(fileIcon);
+                        const fileNameSpan = document.createElement('span');
+                        fileNameSpan.textContent = file.name;
+                        fileItem.appendChild(fileNameSpan);
+                        fileListContainer.appendChild(fileItem);
+                    });
+                } else {
+                    fileListContainer.innerHTML = '<p class="text-muted">No se han seleccionado archivos.</p>';
+                }
+            }
         }
 
         function submitUploadForm() {
@@ -104,7 +132,7 @@
             }).then(response => {
                 if (response.ok) {
                     $('#uploadArchivoModal').modal('hide');
-                    location.reload();  // Para recargar la página y mostrar el nuevo archivo
+                    location.reload();
                 } else {
                     alert("Error al subir el archivo.");
                 }
@@ -113,4 +141,3 @@
     </script>
 
 {% endblock %}
-

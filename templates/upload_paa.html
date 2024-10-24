@@ -209,7 +209,6 @@
             const successFiles = {{ excel_processing_result|default:"[]"|safe }};
             const errorFiles = {{ excel_processing_error|default:"[]"|safe }};
 
-            // Llamar a la función para mostrar los resultados
             showProcessedFiles(successFiles, errorFiles);
         });
     </script>

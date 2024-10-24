@@ -1,7 +1,111 @@
 <form id="uploadArchivoForm" method="POST" enctype="multipart/form-data" action="{% url url_name id_model %}">
     {% csrf_token %}
-    <div class="form-group">
-        <label for="archivo">Seleccionar archivo</label>
-        <input type="file" class="form-control-file" id="archivo" name="archivos" multiple required>
+    <div class="form-group text-center">
+        <label for="archivo" class="btn btn-outline-dark btn-sm w-100">
+            <i class="fas fa-file-upload"></i> Seleccionar Archivos
+        </label>
+        <input type="file" class="form-control-file" id="archivo" name="archivos" multiple required hidden>
     </div>
+
+    <!-- Contenedor de archivos seleccionados -->
+    <div id="fileListContainer" class="file-list-container mb-4"></div>
 </form>
+
+<!-- Estilos -->
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .file-list-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 20px;
+        justify-content: center;
+    }
+
+    .file-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 180px;
+        height: 180px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        overflow: hidden;
+        margin: 0 auto;
+    }
+
+    .file-item i {
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .file-item span {
+        display: block;
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+        word-break: break-word;
+    }
+
+    .file-item.success {
+        border-color: #28a745;
+    }
+
+    .file-item.error {
+        border-color: #dc3545;
+    }
+
+    .btn-outline-dark {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        font-weight: 500;
+        text-align: center;
+        cursor: pointer;
+    }
+</style>
+
+<!-- Scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const archivoInput = document.getElementById('archivo');
+        const fileListContainer = document.getElementById('fileListContainer');
+
+        archivoInput.addEventListener('change', function () {
+            updateFileList(this);
+        });
+
+        function updateFileList(input) {
+            fileListContainer.innerHTML = '';
+
+            if (input.files.length > 0) {
+                Array.from(input.files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.classList.add('file-item');
+                    
+                    const fileIcon = document.createElement('i');
+                    fileIcon.classList.add('fas', 'fa-file-alt');
+                    fileItem.appendChild(fileIcon);
+                    
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.textContent = file.name;
+                    fileItem.appendChild(fileNameSpan);
+                    
+                    fileListContainer.appendChild(fileItem);
+                });
+            } else {
+                fileListContainer.innerHTML = '<p class="text-muted">No se han seleccionado archivos.</p>';
+            }
+        }
+    });
+</script>
