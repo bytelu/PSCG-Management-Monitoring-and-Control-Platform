@@ -18,7 +18,7 @@
                         <option value="">Todos los OICs</option>
                         {% for oic in oics %}
                             <option value="{{ oic.id }}"
-                                {% if oic.id|stringformat:"s" == request.GET.oic_id %}selected{% endif %}>
+                                    {% if oic.id|stringformat:"s" == request.GET.oic_id %}selected{% endif %}>
                                 {{ oic.nombre }}
                             </option>
                         {% endfor %}
@@ -32,7 +32,7 @@
                         <option value="">Todas las Direcciones</option>
                         {% for direccion in direcciones %}
                             <option value="{{ direccion }}"
-                                {% if direccion == request.GET.direccion %}selected{% endif %}>
+                                    {% if direccion == request.GET.direccion %}selected{% endif %}>
                                 {{ direccion }}
                             </option>
                         {% endfor %}
@@ -48,7 +48,7 @@
                         <option value="">Todos los Trimestres</option>
                         {% for tri in trimestres %}
                             <option value="{{ tri }}"
-                                {% if tri|stringformat:"s" == request.GET.trimestre %}selected{% endif %}>
+                                    {% if tri|stringformat:"s" == request.GET.trimestre %}selected{% endif %}>
                                 Trimestre {{ tri }}
                             </option>
                         {% endfor %}
@@ -62,11 +62,113 @@
                         <option value="">Todos los Años</option>
                         {% for year in anyos %}
                             <option value="{{ year.anyo }}"
-                                {% if year.anyo|stringformat:"s" == request.GET.anyo %}selected{% endif %}>
+                                    {% if year.anyo|stringformat:"s" == request.GET.anyo %}selected{% endif %}>
                                 {{ year.anyo }}
                             </option>
                         {% endfor %}
                     </select>
+                </div>
+            </div>
+
+            <!-- Filtros de actividades de fiscalización -->
+            <div class="row mt-4">
+                <!-- Filtros de Auditorías -->
+                <div class="col-md-12">
+                    <h5 class="mt-4">Auditorías</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="materia" class="form-label">Materia:</label>
+                            <select name="materia" id="materia" class="select2 form-control">
+                                <option value="">Todas las materias</option>
+                                {% for materia in materias %}
+                                    <option value="{{ materia.id }}"
+                                            {% if materia.id|stringformat:"s" == request.GET.materia %}selected{% endif %}>
+                                        {{ materia.tipo }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="programacion" class="form-label">Programación:</label>
+                            <select name="programacion" id="programacion" class="select2 form-control">
+                                <option value="">Todas las programaciones</option>
+                                {% for programacion in programaciones %}
+                                    <option value="{{ programacion.id }}"
+                                            {% if programacion.id|stringformat:"s" == request.GET.programacion %}selected{% endif %}>
+                                        {{ programacion.tipo }}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="enfoque" class="form-label">Enfoque:</label>
+                            <select name="enfoque" id="enfoque" class="select2 form-control">
+                                <option value="">Todos los enfoques</option>
+                                {% for enfoque in enfoques %}
+                                    <option value="{{ enfoque.id }}"
+                                            {% if enfoque.id|stringformat:"s" == request.GET.enfoque %}selected{% endif %}>
+                                        {{ enfoque.tipo }}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="temporalidad" class="form-label">Temporalidad:</label>
+                            <select name="temporalidad" id="temporalidad" class="select2 form-control">
+                                <option value="">Todas las temporalidades</option>
+                                {% for temporalidad in temporalidades %}
+                                    <option value="{{ temporalidad.id }}"
+                                            {% if temporalidad.id|stringformat:"s" == request.GET.temporalidad %}selected{% endif %}>
+                                        {{ temporalidad.tipo }}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros de Intervenciones -->
+                <div class="col-md-12 mt-4">
+                    <h5>Intervenciones</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="tipo_intervencion" class="form-label">Tipo de Intervención:</label>
+                            <select name="tipo_intervencion" id="tipo_intervencion" class="select2 form-control">
+                                <option value="">Todos los Tipos</option>
+                                {% for tipo_intervencion in tipos_intervenciones %}
+                                    <option value="{{ tipo_intervencion.id }}"
+                                            {% if tipo_intervencion.id|stringformat:"s" == request.GET.tipo_intervencion %}selected{% endif %}>
+                                        {{ tipo_intervencion.tipo }}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros de Controles Internos -->
+                <div class="col-md-12 mt-4">
+                    <h5>Controles Internos</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="tipo_revision" class="form-label">Tipo de Revisión:</label>
+                            <select name="tipo_revision" id="tipo_revision" class="select2 form-control">
+                                <option value="">Todos los Tipos</option>
+                                {% for tipo_revision in tipos_revisiones %}
+                                    <option value="{{ tipo_revision.id }}"
+                                            {% if tipo_revision.id|stringformat:"s" == request.GET.tipo_revision %}selected{% endif %}>
+                                        {{ tipo_revision.tipo }}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="programa_revision" class="form-label">Programa de Revisión:</label>
+                            <select name="programa_revision" id="programa_revision" class="select2 form-control">
+                                <option value="">Todos los Programas</option>
+                                {% for programa in programas_revisiones %}
+                                    <option value="{{ programa.id }}"
+                                            {% if programa.id|stringformat:"s" == request.GET.programa_revision %}selected{% endif %}>
+                                        {{ programa.tipo }}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -119,5 +221,5 @@
             $('.select2').select2();
         });
     </script>
-    
+
 {% endblock %}

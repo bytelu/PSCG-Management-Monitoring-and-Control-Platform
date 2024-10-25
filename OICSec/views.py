@@ -2220,7 +2220,14 @@ def estadisticas_view(request):
         'trimestres': [1, 2, 3, 4],
         'direcciones': ['A', 'B', 'C'],
         'oics': Oic.objects.filter(nombre__in=nombres_oics).distinct(),
-        'anyos': ActividadFiscalizacion.objects.values('anyo').distinct()
+        'anyos': ActividadFiscalizacion.objects.values('anyo').distinct(),
+        'materias': Materia.objects.all(),
+        'programaciones': Programacion.objects.all(),
+        'enfoques': Enfoque.objects.all(),
+        'temporalidades': Temporalidad.objects.all(),
+        'tipos_intervenciones': TipoIntervencion.objects.all(),
+        'tipos_revisiones': TipoRevision.objects.all(),
+        'programas_revisiones': ProgramaRevision.objects.all()
     }
 
     # Filtros de OIc, Trimestre, Año y Dirección
@@ -2229,10 +2236,33 @@ def estadisticas_view(request):
     anyo = request.GET.get('anyo') if request.GET.get('anyo') else ''
     id_direccion = '1' if request.GET.get('direccion') == 'A' else ('2' if request.GET.get('direccion') == 'B' else ('3' if request.GET.get('direccion') == 'C' else ''))
 
+    # Filtros de Auditorias
+    materia_id = request.GET.get('materia') if request.GET.get('materia') else ''
+    programacion_id = request.GET.get('programacion') if request.GET.get('programacion') else ''
+    enfoque_id = request.GET.get('enfoque') if request.GET.get('enfoque') else ''
+    temporalidad_id = request.GET.get('temporalidad') if request.GET.get('temporalidad') else ''
+
+    # Filtros de Intervenciones
+    tipo_intervencion_id = request.GET.get('tipo_intervencion') if request.GET.get('tipo_intervencion') else ''
+    
+    # Filtros de Controles Internos
+    tipo_revision_id = request.GET.get('tipo_revision') if request.GET.get('tipo_revision') else ''
+    programa_revision_id = request.GET.get('programa_revision') if request.GET.get('programa_revision') else ''
+
     oic_band = oic_id not in ['', None]
     trimestre_band = trimestre not in ['', None]
     anyo_band = anyo not in ['', None]
     direccion_band = id_direccion not in ['', None]
+
+    materia_band = materia_id not in ['', None]
+    programacion_band = programacion_id not in ['', None]
+    enfoque_band = enfoque_id not in ['', None]
+    temporalidad_band = temporalidad_id not in ['', None]
+
+    tipo_intervencion_band = tipo_intervencion_id not in ['', None]
+
+    tipo_revision_band = tipo_revision_id not in ['', None]
+    programa_revision_band = programa_revision_id not in ['', None]
 
     if oic_band and direccion_band:
         oic = get_object_or_404(Oic, id=oic_id)
@@ -2268,9 +2298,36 @@ def estadisticas_view(request):
     controles_count = 0
     intervenciones_count = 0
     for periodo in periodos:
-        auditorias_count += Auditoria.objects.filter(id_actividad_fiscalizacion=periodo).count()
-        controles_count += ControlInterno.objects.filter(id_actividad_fiscalizacion=periodo).count()
-        intervenciones_count += Intervencion.objects.filter(id_actividad_fiscalizacion=periodo).count()
+        # Obtener objetos de auditorias, controles e intervenciones si es que existen
+        filter_auditorias_kwargs = {'id_actividad_fiscalizacion': periodo}
+        filter_controles_kwargs = {'id_actividad_fiscalizacion': periodo}
+        filter_intervenciones_kwargs = {'id_actividad_fiscalizacion': periodo}
+
+        if materia_band:
+            filter_auditorias_kwargs['id_materia__id'] = materia_id
+        if programacion_band:
+            filter_auditorias_kwargs['id_programacion__id'] = programacion_id
+        if enfoque_band:
+            filter_auditorias_kwargs['id_enfoque__id'] = enfoque_id
+        if temporalidad_band:
+            filter_auditorias_kwargs['id_temporalidad__id'] = temporalidad_id
+
+        if tipo_intervencion_band:
+            filter_intervenciones_kwargs['id_tipo_intervencion__id'] = tipo_intervencion_id
+
+        if tipo_revision_band:
+            filter_controles_kwargs['id_tipo_revision__id'] = tipo_revision_id
+        if programa_revision_band:
+            filter_controles_kwargs['id_programa_revision__id'] = programa_revision_id
+
+        auditorias_count += Auditoria.objects.filter(**filter_auditorias_kwargs).count()
+        controles_count += ControlInterno.objects.filter(**filter_controles_kwargs).count()
+        intervenciones_count += Intervencion.objects.filter(**filter_intervenciones_kwargs).count()
+
+        if auditorias_count == 0 and controles_count == 0 and intervenciones_count == 0:
+            context.update(
+                {'error': 'No se han encontrado actividades de fiscalización con los filtros seleccionados.'})
+            return render(request, 'estadisticas.html', context)
 
     context.update(
         {
