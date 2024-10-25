@@ -95,7 +95,7 @@
                                 {% for programacion in programaciones %}
                                     <option value="{{ programacion.id }}"
                                             {% if programacion.id|stringformat:"s" == request.GET.programacion %}selected{% endif %}>
-                                        {{ programacion.tipo }}
+                                    {{ programacion.tipo }}
                                 {% endfor %}
                             </select>
                         </div>
@@ -106,7 +106,7 @@
                                 {% for enfoque in enfoques %}
                                     <option value="{{ enfoque.id }}"
                                             {% if enfoque.id|stringformat:"s" == request.GET.enfoque %}selected{% endif %}>
-                                        {{ enfoque.tipo }}
+                                    {{ enfoque.tipo }}
                                 {% endfor %}
                             </select>
                         </div>
@@ -117,7 +117,7 @@
                                 {% for temporalidad in temporalidades %}
                                     <option value="{{ temporalidad.id }}"
                                             {% if temporalidad.id|stringformat:"s" == request.GET.temporalidad %}selected{% endif %}>
-                                        {{ temporalidad.tipo }}
+                                    {{ temporalidad.tipo }}
                                 {% endfor %}
                             </select>
                         </div>
@@ -135,7 +135,7 @@
                                 {% for tipo_intervencion in tipos_intervenciones %}
                                     <option value="{{ tipo_intervencion.id }}"
                                             {% if tipo_intervencion.id|stringformat:"s" == request.GET.tipo_intervencion %}selected{% endif %}>
-                                        {{ tipo_intervencion.tipo }}
+                                    {{ tipo_intervencion.tipo }}
                                 {% endfor %}
                             </select>
                         </div>
@@ -153,7 +153,7 @@
                                 {% for tipo_revision in tipos_revisiones %}
                                     <option value="{{ tipo_revision.id }}"
                                             {% if tipo_revision.id|stringformat:"s" == request.GET.tipo_revision %}selected{% endif %}>
-                                        {{ tipo_revision.tipo }}
+                                    {{ tipo_revision.tipo }}
                                 {% endfor %}
                             </select>
                         </div>
@@ -164,7 +164,7 @@
                                 {% for programa in programas_revisiones %}
                                     <option value="{{ programa.id }}"
                                             {% if programa.id|stringformat:"s" == request.GET.programa_revision %}selected{% endif %}>
-                                        {{ programa.tipo }}
+                                    {{ programa.tipo }}
                                 {% endfor %}
                             </select>
                         </div>
@@ -174,52 +174,64 @@
 
             <div class="row mt-4">
                 <div class="col text-right">
-                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                    <button type="submit" class="btn btn-outline-dark btn-block">Filtrar</button>
                 </div>
             </div>
         </form>
+
+        <!-- Gráfico de resultados -->
+        {% if not error %}
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <canvas id="estadisticasChart" style="max-height: 400px;"></canvas>
+                </div>
+            </div>
+        {% endif %}
 
         <!-- Mostrar mensaje de error si existe -->
         {% if error %}
             <div class="alert alert-danger">
                 {{ error }}
             </div>
-        {% else %}
-            <!-- Sección de Resultados -->
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card text-white bg-primary mb-3">
-                        <div class="card-header">Número de Auditorías</div>
-                        <div class="card-body">
-                            <h5 class="card-title">{{ num_auditorias }}</h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card text-white bg-success mb-3">
-                        <div class="card-header">Número de Controles Internos</div>
-                        <div class="card-body">
-                            <h5 class="card-title">{{ num_controles }}</h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card text-white bg-warning mb-3">
-                        <div class="card-header">Número de Intervenciones</div>
-                        <div class="card-body">
-                            <h5 class="card-title">{{ num_intervenciones }}</h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
         {% endif %}
     </div>
 
-    <!-- Activar Select2 para los filtros -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script>
         $(document).ready(function () {
             $('.select2').select2();
         });
+
+        document.addEventListener("DOMContentLoaded", function () {
+        const ctx = document.getElementById('estadisticasChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Auditorías', 'Controles Internos', 'Intervenciones'],
+                datasets: [{
+                    label: 'Cantidad de Actividades',
+                    data: [{{ num_auditorias }}, {{ num_controles }}, {{ num_intervenciones }}],
+                    backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e'],
+                    hoverBackgroundColor: ['#2e59d9', '#17a673', '#f4b619'],
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                },
+                layout: {
+                    padding: 20
+                }
+            }
+        });
+    });
     </script>
 
 {% endblock %}
